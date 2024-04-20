@@ -9,13 +9,14 @@ import java.util.List;
 public class AuroraUser {
     @Id
     @GeneratedValue
-    private Integer id;
+    private Long id;
     @Column(unique = true)
     private String username;
     @Column(unique = true)
     private String email;
     private String password;
 
+    private String role;
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<AuroraGIF> gifs;
 
@@ -27,11 +28,11 @@ public class AuroraUser {
         this.password = password;
     }
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -57,5 +58,13 @@ public class AuroraUser {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 }
