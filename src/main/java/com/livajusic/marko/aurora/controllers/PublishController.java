@@ -11,14 +11,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.http.HttpStatus;
-import com.livajusic.marko.aurora.SecurityConfig;
 
 import java.io.File;
 import java.io.IOException;
 import org.springframework.http.ResponseEntity;
 
 @Controller
-@RequestMapping(value = {"/publish"})
+@RequestMapping(value = {"/publish", "/publish/", "/publish.html", "/publish.html/"})
 public class PublishController {
     private final GifRepo gifRepo;
 
@@ -30,8 +29,9 @@ public class PublishController {
     }
 
     @GetMapping
-    public String publish() {
+    public String publish(Model model) {
         return "publish";
+
     }
 
     @PostMapping

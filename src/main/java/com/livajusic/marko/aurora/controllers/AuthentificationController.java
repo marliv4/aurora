@@ -1,16 +1,14 @@
 package com.livajusic.marko.aurora.controllers;
 import com.livajusic.marko.aurora.db_repos.UserRepo;
 import com.livajusic.marko.aurora.tables.AuroraUser;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 // import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.RestController;
+
 
 @Controller
 public class AuthentificationController {
@@ -22,9 +20,14 @@ public class AuthentificationController {
         this.userRepo = userRepo;
     }
 
-    @GetMapping(path = {"/register", "register.html"})
+    @GetMapping("/register")
     public String register() {
-        return "register";
+        return "join/register_tab";
+    }
+
+    @GetMapping("/login")
+    public String login() {
+        return "join/login_tab";
     }
 
     @PostMapping("/register")
@@ -41,9 +44,9 @@ public class AuthentificationController {
         return new ResponseEntity<>("Succesfully registered!", HttpStatus.OK);
     }
 
-    @GetMapping(path = {"/login", "/login.html"})
-    public String login() {
-        return "login";
+    @GetMapping(path = {"/join" })
+    public String join() {
+        return "join";
     }
 
     @PostMapping("/login")
@@ -61,6 +64,6 @@ public class AuthentificationController {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         // String token = jwtGenerator.generateToken(authentication);
 */
-        return new ResponseEntity<>("Sucessfull", HttpStatus.OK);
+        return new ResponseEntity<>("Successful!", HttpStatus.OK);
     }
 }
