@@ -4,12 +4,6 @@ import com.livajusic.marko.aurora.tables.AuroraUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,14 +23,9 @@ public class AuthentificationController {
         this.userRepo = userRepo;
     }
 
-    @GetMapping("/register")
-    public String register() {
-        return "join/register_tab";
-    }
-
     @GetMapping("/login")
     public String login() {
-        return "join/login_tab";
+        return "login";
     }
 
     @PostMapping("/register")
@@ -57,35 +46,27 @@ public class AuthentificationController {
         return new ResponseEntity<>("Succesfully registered!", HttpStatus.OK);
     }
 
-    @GetMapping(path = {"/join", "/join.html", "/join/" })
+    @GetMapping(path = {"/register"})
     public String join() {
-        return "join";
+        return "register";
     }
 
     @PostMapping("/login")
-    public ResponseEntity processLogin(@RequestParam("username") String username,
-                                       @RequestParam("password") String password) {
+    public ResponseEntity processLogin(@RequestParam("l_username") String username,
+                                       @RequestParam("l_password") String password) {
 
-        System.out.println("Username logging in: " + username);
+        System.out.println("PLS");
+        System.out.println("Username logging in: " + username + " with a password " + password);
 
 
-        /*
-        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+        final var user = userRepo.findByUsername(username);
+        boolean exists = user.isPresent();
 
-        UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(userDetails, password, userDetails.getAuthorities());
+        if (exists) {
+            System.out.println(user.get().getEmail());
+            System.out.println(user.get().getPassword());
+        }
 
-        Authentication authentication = authMgr.authenticate(authenticationToken);
-
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-       /*
-        Authentication authentication = authMgr.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        username,
-                        password));
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        // String token = jwtGenerator.generateToken(authentication);
-*/
         return new ResponseEntity<>("Successful!", HttpStatus.OK);
     }
 }

@@ -8,7 +8,7 @@ import org.springframework.ui.Model;
 @Controller
 @RequestMapping("/")
 public class AppController {
-    @GetMapping(path = {"/", "/index", "/index.html"})
+    @GetMapping(path = {"/", "/index", "/index.html", "/index.html/"})
     public String index(Model model) {
         model.addAttribute("username", "marko");
         model.addAttribute("loggedIn", true);
