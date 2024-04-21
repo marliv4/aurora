@@ -31,14 +31,18 @@ public class SecurityConfig {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> {
-                    auth.requestMatchers("/", "/index", "/register.html", "/login").permitAll();
-                    auth.requestMatchers("/create", "/publish").hasRole("USER");
-                    auth.requestMatchers("/admin/**").hasRole("ADMIN");
-                    auth.anyRequest().authenticated();
+                    auth
+                            .requestMatchers("/create", "/publish/", "/publish/**", "/profile").hasRole("USER")
+                            .requestMatchers("/admin/**").hasRole("ADMIN")
+                            .requestMatchers("/", "/index", "/login", "/register", "/images/**").permitAll();
                 })
-                .formLogin(AbstractAuthenticationFilterConfigurer::permitAll)
+                .formLogin(formLogin -> formLogin
+                        .loginPage("/login")
+                        .permitAll()
+                )
                 .build();
     }
+
     @Bean
     public UserDetailsService userDetailsService() {
         return userDetailService;
