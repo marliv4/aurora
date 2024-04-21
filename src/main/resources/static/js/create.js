@@ -1,80 +1,41 @@
 const canvas = document.querySelector("#glcanvas");
 const gl = canvas.getContext("webgl");
 
-function tf() {
+function renderImg() {
     const fileInput = document.getElementById("file");
-    const file = fileInput.files[0]; // Get the first file from the input
-    console.log("tf() call");
-    /*
-        if (file) {
-            // File was selected
-            const reader = new FileReader();
-            reader.readAsDataURL(file); // Read the file as a data URL
+    const file = fileInput.files[0];
 
-            // Handle the file once it's loaded
-            reader.onload = function (event) {
-                const fileDataUrl = event.target.result;
-                console.log("File loaded:", fileDataUrl);
-
-                // Now you can use the file data (fileDataUrl) as needed, such as uploading it
-                // to a server or processing it further
-            };
-        } else {
-            // No file was selected
-            console.log("No file selected.");
-        }
-
-    */
     if (!file) {
         console.error("No file selected.");
         return;
     }
 
-    // Read the file as an image
     const reader = new FileReader();
     reader.onload = function(event) {
         const image = new Image();
         image.onload = function() {
-            /*
-            // Create a texture object
-            const texture = gl.createTexture();
-            gl.bindTexture(gl.TEXTURE_2D, texture);
-
-            // Upload the image data to the texture
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-
-            // Set texture parameters
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-
-            // Use the texture in your WebGL rendering
-            // For example, you can render a quad with the texture applied...
-
-            // Example: Render a quad with the texture
-            // (This requires additional WebGL setup for shaders, buffers, etc.)
-             */
         };
-        image.src = event.target.result; // Set the image source to the loaded data URL
+        image.src = event.target.result;
     };
-    reader.readAsDataURL(file); // Read the file as a data URL
+    reader.readAsDataURL(file);
 }
 
-document.getElementById("uploadButton").addEventListener("click", tf);
+document.getElementById("uploadButton").addEventListener("click", renderImg);
 
 if (gl === null) {
     alert("Unable to initialize WebGL. Your browser or machine may not support it.");
 }
 
 var vertices = [
-    -1.0,  1.0, 0.0,  // Top left
-    -1.0, -1.0, 0.0,  // Bottom left
-    1.0, -1.0, 0.0,  // Bottom right
-    1.0,  1.0, 0.0   // Top right
+    -1.0,  1.0, 0.0,
+    -1.0, -1.0, 0.0,
+    1.0, -1.0, 0.0,
+    1.0,  1.0, 0.0
 ];
 
 var indices = [
-    0, 1, 2,  // First triangle
-    0, 2, 3   // Second triangle
+    0, 1, 2,
+    0, 2, 3
 ];
 
 function createVertexBuffer(vertices){
