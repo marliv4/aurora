@@ -32,9 +32,30 @@ public class AuthentificationController {
     public ResponseEntity processRegistration(
             @RequestParam("username") String username,
             @RequestParam("email") String email,
-            @RequestParam("password") String password
+            @RequestParam("password") String password,
+            @RequestParam("registerRepeatPassword") String passwordRepeat,
+            @RequestParam(value = "registerCheck") String registerCheck
     ) {
         System.out.println("Registered user: " + username + " " + email + " " + password);
+        System.out.println(registerCheck);
+
+        if (username.isEmpty() || email.isEmpty() || password.isEmpty() || passwordRepeat.isEmpty()) {
+            return new ResponseEntity<>("Error: not all fields are filled out!", HttpStatus.BAD_REQUEST);
+        }
+
+        if (!password.equals(passwordRepeat)) {
+            return new ResponseEntity<>("Error: passwords do not match!", HttpStatus.BAD_REQUEST);
+        }
+
+        final boolean usernameAlreadyExists = userRepo.findByUsername(username).isPresent();
+        if (usernameAlreadyExists) {
+            return new ResponseEntity<>("Error: username already given!", HttpStatus.BAD_REQUEST);
+        }
+
+        final boolean emailAlreadyExists = userRepo.findByEmail(email).isPresent();
+        if (emailAlreadyExists) {
+            return new ResponseEntity<>("Error: email already given!", HttpStatus.BAD_REQUEST);
+        }
 
         AuroraUser user = new AuroraUser();
         user.setUsername(username);
@@ -57,8 +78,6 @@ public class AuthentificationController {
 
         System.out.println("PLS");
         System.out.println("Username logging in: " + username + " with a password " + password);
-
-
         final var user = userRepo.findByUsername(username);
         boolean exists = user.isPresent();
 

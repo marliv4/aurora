@@ -11,7 +11,7 @@ public class AuroraGIF {
     @GeneratedValue
     private Integer gifId;
 
-    @Column
+    @Column(unique = true)
     private String path;
 
     @ManyToOne
@@ -32,4 +32,35 @@ public class AuroraGIF {
         this.licence = licence;
     }
 
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public AuroraUser getUser() {
+        return user;
+    }
+
+    public void setUser(AuroraUser user) {
+        this.user = user;
+    }
+
+    public Date getPublishDate() {
+        return publishDate;
+    }
+
+    public void setPublishDate(Date publishDate) {
+        this.publishDate = publishDate;
+    }
+
+    public String getLicence() {
+        return licence;
+    }
+
+    public void setLicence(String licence) {
+        this.licence = licence;
+    }
 }
