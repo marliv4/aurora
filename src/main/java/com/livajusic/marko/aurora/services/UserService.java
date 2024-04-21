@@ -3,6 +3,7 @@ package com.livajusic.marko.aurora.services;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
+import jakarta.transaction.Transactional;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -24,11 +25,12 @@ public class UserService {
         return (String) query.getSingleResult();
     }
 
-    public String updatePassword(String uname, String newPassword) {
+    @Transactional
+    public int updatePassword(String uname, String newPassword) {
         Query query = entityManager.createQuery("UPDATE AuroraUser SET password = :newPassword WHERE username = :uname");
         query.setParameter("newPassword", newPassword);
         query.setParameter("uname", uname);
-        return (String) query.getSingleResult();
+        return query.executeUpdate();
     }
 
     public String getCurrentUsername() {
