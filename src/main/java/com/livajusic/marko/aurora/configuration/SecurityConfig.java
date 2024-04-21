@@ -34,7 +34,7 @@ public class SecurityConfig {
                     auth
                             .requestMatchers("/create", "/publish/", "/publish/**", "/profile").hasRole("USER")
                             .requestMatchers("/admin/**").hasRole("ADMIN")
-                            .requestMatchers("/", "/index", "/login", "/register", "/images/**").permitAll();
+                            .requestMatchers("/", "/index", "/login", "/register", "/images/**", "/resources/**", "/static/**", "/js/**").permitAll();
                 })
                 .formLogin(formLogin -> formLogin
                         .loginPage("/login")
