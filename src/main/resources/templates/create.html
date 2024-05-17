@@ -25,19 +25,31 @@
         </div>
     </div>
 </nav>
-    <label for="file">Choose a file:</label><br>
+    <!-- <label for="file">Choose a file:</label><br>
     <input type="file" id="file" name="file" accept="image/gif,image/x-png"><br><br>
     <button id="uploadButton">upload</button>
+    --->
     <button id="renderButton">render</button>
-    <label for="customRange2" class="form-label">Example range</label>
-    <input type="range" class="form-range" min="0" max="5" id="customRange2">
 
+<button id="addTextButton">add text</button>
+<!--
+<label for="customRange2" class="form-label">Example range</label>
+    <input type="range" class="form-range" min="0" max="5" id="customRange2">
+    -->
     <canvas id="canvas"></canvas>
     <progress id="progress" value="0" max="1" style="display:none"></progress>
 
     <script th:src="@{js/omggif.js}"></script>
     <script th:src="@{js/three.min.js}"></script>
     <script>
+        let txt = "";
+        let addedText = 0;
+
+        document.getElementById("addTextButton").addEventListener("click", function() {
+            txt = prompt("text");
+            addedText = 1;
+        });
+
         function uploadImg() {
             const fileInput = document.getElementById("file").value;
             alert(fileInput);
@@ -99,7 +111,7 @@
 
                 progress.value = current / frames;
 
-                if ( current < frames ) {
+                if (current < frames) {
                     await setTimeout(addFrame, 0, resolve);
                 } else {
                     resolve(buffer.subarray(0, writer.end()));
@@ -134,17 +146,38 @@
         camera.position.z = 2;
 
         const scene = new THREE.Scene();
-
-        const geometry = new THREE.IcosahedronGeometry(0.75, 1);
+        const geometry = new THREE.ConeGeometry(1, 1);
         const material = new THREE.MeshNormalMaterial({ flatShading: true });
         const mesh = new THREE.Mesh(geometry, material);
         scene.add(mesh);
 
+        const loader = new THREE.ImageLoader();
+        loader.load(
+            // resource URL
+            '../static/images/1_tccg_1.png',
+
+            // onLoad callback
+            function ( image ) {
+                // use the image, e.g. draw part of it on a canvas
+                const canvas = document.createElement( 'canvas' );
+                const context = canvas.getContext( '2d' );
+                context.drawImage( image, 100, 100 );
+            },
+
+            // onProgress callback currently not supported
+            undefined,
+
+            // onError callback
+            function () {
+                console.error( 'An error happened.' );
+            }
+        );
+
         const renderer = new THREE.WebGLRenderer( { canvas: canvas } );
-        renderer.setClearColor(0xffffff, 1);
-        renderer.setSize(500, 500);
+        renderer.setClearColor(0x000000, 1);
+
+        renderer.setSize(window.innerWidth, window.innerHeight - 150);
         document.body.appendChild(renderer.domElement);
-        //
 
         function render(progress) {
             // progress goes from 0 to 1

@@ -25,7 +25,7 @@ public class AppController {
         List<String> paths = allGifs.stream().map(AuroraGIF::getPath).collect(Collectors.toList());
 
         for (String path : paths) {
-            System.out.println(path);
+            System.out.println("path: " + path);
         }
 
         model.addAttribute("gifPaths", paths);
