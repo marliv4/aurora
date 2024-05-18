@@ -38,12 +38,14 @@ public class AppController {
         for (AuroraGIF gif : allGifs) {
             Map<String, Object> gifData = new HashMap<>();
             gifData.put("path", gif.getPath());
+            System.out.println("test: " + gif.getPath());
             gifData.put("author", gif.getUser().getUsername());
             gifData.put("date", gif.getPublishDate());
             gifData.put("license", gif.getLicence());
             gifAttributes.add(gifData);
         }
         model.addAttribute("gifs", gifAttributes);
+
 
         return "index";
     }

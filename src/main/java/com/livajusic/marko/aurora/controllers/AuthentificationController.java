@@ -9,7 +9,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-// import org.springframework.security.core.context.SecurityContextHolder;
 
 
 @Controller
@@ -76,7 +75,6 @@ public class AuthentificationController {
     public ResponseEntity processLogin(@RequestParam("l_username") String username,
                                        @RequestParam("l_password") String password) {
 
-        System.out.println("PLS");
         System.out.println("Username logging in: " + username + " with a password " + password);
         final var user = userRepo.findByUsername(username);
         boolean exists = user.isPresent();

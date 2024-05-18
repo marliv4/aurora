@@ -3,9 +3,11 @@ package com.livajusic.marko.aurora.tables;
 import jakarta.persistence.*;
 
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
-@Table(name = "AuroraGIFs")
+@Table(name = "aurora_gifs")
 public class AuroraGIF {
     @Id
     @GeneratedValue
@@ -23,6 +25,17 @@ public class AuroraGIF {
 
     @Column
     private String licence;
+
+    @OneToMany(mappedBy = "gif")
+    private Set<BelongsTo> categories;
+
+    public Set<BelongsTo> getCategories() {
+        return categories;
+    }
+
+    public void setCategories(Set<BelongsTo> categories) {
+        this.categories = categories;
+    }
 
     public AuroraGIF() {}
     public AuroraGIF(String path, AuroraUser user, Date publishDate, String licence) {

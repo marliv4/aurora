@@ -2,6 +2,7 @@ package com.livajusic.marko.aurora.tables;
 
 import jakarta.persistence.*;
 
+import javax.annotation.processing.Generated;
 import java.util.List;
 
 @Entity

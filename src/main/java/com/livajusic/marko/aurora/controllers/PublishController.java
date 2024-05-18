@@ -52,14 +52,6 @@ public class PublishController {
         this.gifCategoryRepo = gifCategoryRepo;
         this.belongsToRepo = belongsToRepo;
         this.userRepo = userRepo;
-/*
-        final String[] CATEGORIES = {"meme", "render"};
-
-        for (String category : CATEGORIES) {
-            System.out.println("looppp" + category);
-            var entry = new GifCategory(category);
-            gifCategoryRepo.save(entry);
-        }*/
     }
 
     @GetMapping
@@ -99,7 +91,8 @@ public class PublishController {
 
             final var currentUser = userRepo.findByUsername(uname).get();
 
-            var filename = currentUser.getId() + "_" + uname + "_" + file.getOriginalFilename();
+            final var date = getDate();
+            var filename = date + "_" + currentUser.getId() + "_" + uname + "_" + file.getOriginalFilename();
             System.out.println("image path: " + filename);
 
             File f = new File(dir, filename);
@@ -107,18 +100,33 @@ public class PublishController {
 
             // model.addAttribute("imagePath", filename);
 
-            AuroraGIF gif = new AuroraGIF(filename, currentUser, getDate(), license);
+            AuroraGIF gif = new AuroraGIF(filename, currentUser, date, license);
             gifRepo.save(gif);
-            /*
             var categories = Arrays.asList(category.split(","));
             if (categories.size() <= 10) {
                 for (String c : categories) {
-                    // GifCategory gifCategory = new GifCategory(c, gif);
-                    // gifCategoryRepo.save(gifCategory);
+                    System.out.println(c);
+                    var t = gifCategoryRepo.findByCategory(c.trim().toLowerCase());
+
+                    GifCategory gifCategory;
+
+                    if (t.isEmpty()) {
+                        gifCategory = new GifCategory(c);
+                        gifCategoryRepo.save(gifCategory);
+                    } else {
+                        gifCategory = t.get();
+                    }
+
+                    boolean exists = belongsToRepo.existsByGifAndCategory(gif, gifCategory);
+
+                    if (!exists) {
+                        BelongsTo belongsToEntry = new BelongsTo(gif, gifCategory);
+                        belongsToRepo.save(belongsToEntry);
+                    }
+
+                    // if existing, dont do anything
                 }
             }
-*/
-            System.out.println("CATEGORY: " + category);
         } catch (IOException e) {
             e.printStackTrace();
         }
