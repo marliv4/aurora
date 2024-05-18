@@ -37,14 +37,15 @@
 <img th:src="@{'/gifs/' + ${gif.name} + '.gif'}" alt="gif"/>
 -->
 <h1>All GIFs</h1>
-<ul>
-    <li th:each="path : ${gifPaths}" class="img-fluid" style="max-width: 25%;">
-
-        <div>
-            <img th:src="@{/images/{path}(path=${path})}" alt="GIF" />
-            <p th:text="${path}"></p>
+<ul style="list-style-type: none;">
+    <li th:each="gif : ${gifs}" class="img-fluid" style="max-width: 25%;">
+        <div style="display: flex; flex-direction: column; align-items: center;">
+            <img th:src="@{/images/{path}(path=${gif.path})}" alt="GIF" />
+            <p th:text="${gif.path}"></p>
+            <p th:text="'Published by: ' + ${gif.author}"></p>
+            <p th:text="'Published on: ' + ${gif.date}"></p>
+            <p th:text="'License: ' + ${gif.license}"></p>
         </div>
-
     </li>
 </ul>
 </body>
