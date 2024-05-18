@@ -1,9 +1,13 @@
 package com.livajusic.marko.aurora.controllers;
 
+import com.livajusic.marko.aurora.db_repos.BelongsToRepo;
+import com.livajusic.marko.aurora.db_repos.GifCategoryRepo;
 import com.livajusic.marko.aurora.db_repos.GifRepo;
 import com.livajusic.marko.aurora.db_repos.UserRepo;
 import com.livajusic.marko.aurora.services.UserService;
 import com.livajusic.marko.aurora.tables.AuroraGIF;
+import com.livajusic.marko.aurora.tables.BelongsTo;
+import com.livajusic.marko.aurora.tables.GifCategory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.User;
@@ -18,6 +22,8 @@ import org.springframework.http.HttpStatus;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+
 import org.springframework.http.ResponseEntity;
 
 @Controller
@@ -25,8 +31,11 @@ import org.springframework.http.ResponseEntity;
 public class PublishController {
     private final GifRepo gifRepo;
 
-    @Autowired
     private final UserRepo userRepo;
+    private final GifCategoryRepo gifCategoryRepo;
+
+    private final BelongsToRepo belongsToRepo;
+
 
     @Autowired
     UserService userService;
@@ -34,9 +43,23 @@ public class PublishController {
     @Value("${upload.directory}")
     private String imgDir;
 
-    public PublishController(GifRepo gifRepo, UserRepo userRepo) {
+    public PublishController(
+            GifRepo gifRepo,
+            GifCategoryRepo gifCategoryRepo,
+            BelongsToRepo belongsToRepo,
+            UserRepo userRepo) {
         this.gifRepo = gifRepo;
+        this.gifCategoryRepo = gifCategoryRepo;
+        this.belongsToRepo = belongsToRepo;
         this.userRepo = userRepo;
+/*
+        final String[] CATEGORIES = {"meme", "render"};
+
+        for (String category : CATEGORIES) {
+            System.out.println("looppp" + category);
+            var entry = new GifCategory(category);
+            gifCategoryRepo.save(entry);
+        }*/
     }
 
     @GetMapping
@@ -49,6 +72,7 @@ public class PublishController {
     public String publishHandler(
             @RequestParam("file") MultipartFile file,
             @RequestParam("license") String license,
+            @RequestParam("category") String category,
             Model model) {
 
         System.out.println("LICENSE: " + license);
@@ -85,6 +109,16 @@ public class PublishController {
 
             AuroraGIF gif = new AuroraGIF(filename, currentUser, getDate(), license);
             gifRepo.save(gif);
+            /*
+            var categories = Arrays.asList(category.split(","));
+            if (categories.size() <= 10) {
+                for (String c : categories) {
+                    // GifCategory gifCategory = new GifCategory(c, gif);
+                    // gifCategoryRepo.save(gifCategory);
+                }
+            }
+*/
+            System.out.println("CATEGORY: " + category);
         } catch (IOException e) {
             e.printStackTrace();
         }

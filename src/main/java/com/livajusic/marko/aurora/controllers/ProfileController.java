@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 @Controller
 public class ProfileController {
@@ -51,5 +52,12 @@ public class ProfileController {
 
         return new ResponseEntity("Success!", HttpStatus.OK);
         // return "profile?";
+    }
+
+    @PostMapping("/change_pfp")
+    public ResponseEntity changeProfilePicture(
+            @RequestParam("file_pfp") MultipartFile file
+    ) {
+        return new ResponseEntity("Success!", HttpStatus.OK);
     }
 }
