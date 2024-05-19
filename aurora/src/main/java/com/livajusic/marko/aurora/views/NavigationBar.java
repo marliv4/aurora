@@ -1,8 +1,5 @@
 package com.livajusic.marko.aurora.views;
 
-import com.livajusic.marko.aurora.views.LoginView;
-import com.livajusic.marko.aurora.views.RegisterView;
-import com.livajusic.marko.aurora.views.HomeView;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;

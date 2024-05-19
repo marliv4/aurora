@@ -26,7 +26,6 @@ import java.io.InputStream;
 
 @PageTitle("Upload")
 @Route(value = "/upload")
-@AnonymousAllowed
 public class UploadView extends VerticalLayout {
     private final GifRepo gifRepo;
 
