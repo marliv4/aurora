@@ -23,10 +23,11 @@ public class AuroraUser {
 
     public AuroraUser() {}
 
-    public AuroraUser(String username, String email, String password) {
+    public AuroraUser(String username, String email, String password, String role) {
         this.username = username;
         this.email = email;
         this.password = password;
+        this.role = role;
     }
 
     public Long getId() {

@@ -115,14 +115,13 @@ public class RegisterView extends VerticalLayout {
         }
 
 
-        AuroraUser newUser = new AuroraUser();
-        newUser.setUsername(user);
-        newUser.setEmail(mail);
-        newUser.setPassword(passwordEncoder.encode(pass));
-        newUser.setRole("USER");
+        AuroraUser newUser = new AuroraUser(
+                user,
+                mail,
+                passwordEncoder.encode(pass),
+                "user"
+        );
         userRepo.save(newUser);
-
-
         Notification.show("Sucessfully registered!", 3000, Notification.Position.BOTTOM_END);
     }
 }

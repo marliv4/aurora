@@ -9,6 +9,9 @@ public class NavigationBar extends HorizontalLayout {
 
     public NavigationBar() {
         // Logo
+        setAlignItems(Alignment.CENTER); // Align items vertically in the center
+        setJustifyContentMode(JustifyContentMode.CENTER);
+
         Anchor logo = new Anchor("/", "Logo");
         logo.getStyle().set("font-weight", "bold");
 
@@ -24,9 +27,7 @@ public class NavigationBar extends HorizontalLayout {
 
         // Add components to the navbar
         add(logo, homeLink, registerLink, loginLink, publishLink, searchField);
-
-        // Style adjustments
-        setSpacing(true); // Add space between components
-        setAlignItems(Alignment.CENTER); // Align items vertically in the center
+        setSpacing(true);
     }
+
 }

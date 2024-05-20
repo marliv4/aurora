@@ -4,7 +4,11 @@ import com.livajusic.marko.aurora.db_repos.BelongsToRepo;
 import com.livajusic.marko.aurora.db_repos.GifCategoryRepo;
 import com.livajusic.marko.aurora.db_repos.GifRepo;
 import com.livajusic.marko.aurora.db_repos.UserRepo;
+import com.livajusic.marko.aurora.services.UserService;
 import com.livajusic.marko.aurora.tables.AuroraGIF;
+import com.livajusic.marko.aurora.tables.AuroraUser;
+import com.livajusic.marko.aurora.tables.BelongsTo;
+import com.livajusic.marko.aurora.tables.GifCategory;
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
@@ -21,11 +25,23 @@ import com.vaadin.flow.component.upload.receivers.FileBuffer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
+import jakarta.annotation.security.RolesAllowed;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 
+import java.io.File;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.Optional;
 
 @PageTitle("Upload")
 @Route(value = "/upload")
+@RolesAllowed("user")
 public class UploadView extends VerticalLayout {
     private final GifRepo gifRepo;
 
@@ -33,6 +49,12 @@ public class UploadView extends VerticalLayout {
     private final GifCategoryRepo gifCategoryRepo;
 
     private final BelongsToRepo belongsToRepo;
+
+    @Autowired
+    UserService userService;
+
+    @Value("${upload.directory}")
+    private String basePath;
 
     public UploadView(GifRepo gifRepo,
                       UserRepo userRepo,
@@ -51,25 +73,25 @@ public class UploadView extends VerticalLayout {
         Upload upload = new Upload(buffer);
         upload.setAcceptedFileTypes("image/gif");
 
-        upload.addSucceededListener(event -> {
-            InputStream inputStream = buffer.getInputStream();
-            // Do something with the uploaded file
-        });
+        ComboBox<String> licenseSelect = new ComboBox<>();
+        TextField categoryInput = new TextField();
+
         add(fileLabel, upload);
 
         Span licenseLabel = new Span("Choose a license:");
-        ComboBox<String> licenseSelect = new ComboBox<>();
         licenseSelect.setItems("CC BY (Attribution)", "CC BY-SA (Attribution-ShareAlike)", "CC BY-ND (Attribution-NoDerivatives)",
                 "CC BY-NC (Attribution-NonCommercial)", "CC BY-NC-SA (Attribution-NonCommercial-ShareAlike)",
                 "CC BY-NC-ND (Attribution-NonCommercial-NoDerivatives)", "Public Domain", "All Rights Reserved");
         licenseSelect.setReadOnly(false);
 
         Span categoryLabel = new Span("Enter a category:");
-        TextField categoryInput = new TextField();
         categoryInput.setRequired(true);
 
         Button submitButton = new Button("Submit");
+
         submitButton.addClickListener(e -> {
+            InputStream inputStream = buffer.getInputStream();
+            uploadFile(inputStream, licenseSelect.getValue(), categoryInput.getValue());
         });
 
         FormLayout formLayout = new FormLayout();
@@ -93,4 +115,99 @@ public class UploadView extends VerticalLayout {
         setAlignItems(Alignment.CENTER);
         setJustifyContentMode(JustifyContentMode.CENTER);
     }
+
+    public void uploadFile(InputStream is, String license, String category) {
+        // Check if directory with user's username exists
+        File imagesDir = new File(basePath);
+        if (!imagesDir.exists()) {
+            System.out.println("/images folder not existing, creating it...");
+            if (imagesDir.mkdirs()) {
+                System.out.println("Created /images/ successfully.");
+            }
+        }
+
+        String uname = userService.getCurrentUsername();
+        File userSpecificDir = new File(imagesDir  + "/" + uname + "/");
+
+        if (!userSpecificDir.exists()) {
+            System.out.println("User specific directory not existing, creating /" + uname);
+            if (userSpecificDir.mkdirs()) {
+                System.out.println("Created /" + uname + "/ successfully.");
+            }
+        }
+
+        Optional<AuroraUser> currentUser = userRepo.findByUsername(uname);
+        final var userEmpty = currentUser.isEmpty();
+
+        if (userEmpty) {
+            // Handle error
+            return;
+        }
+
+        final var user = currentUser.get();
+
+
+        final var utilDate = AuroraDateManager.getUtilDate();
+        LocalDateTime dateTime = LocalDateTime.parse(utilDate.toString(), DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss zzz yyyy"));
+        String time = dateTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+        System.out.println(time);
+
+        final var date = AuroraDateManager.getSqlDate(utilDate);
+        System.out.println(date);
+
+        var f = date + "_" + time + "_" + user.getId() + ".gif";
+        final var filename = f.replace(":", "_");
+        System.out.println("FILENAME: " + filename);
+        // AuroraGIF(String path, AuroraUser user, Date publishDate, String license)
+        AuroraGIF gif = new AuroraGIF(
+                filename,
+                user,
+                date,
+                license
+        );
+        gifRepo.save(gif);
+
+        try {
+            final var endPath = userSpecificDir + "/" + filename;
+            System.out.println("endPATH: " + endPath);
+
+            Files.copy(is, Paths.get(endPath));
+        } catch (java.io.IOException e) {
+            return;
+        }
+
+        final var categories = Arrays.asList(category.split(","));
+        if (categories.size() > 10) {
+            return;
+        }
+
+        for (String c : categories) {
+            System.out.println(c);
+            final var t = gifCategoryRepo.findByCategory(c.trim().toLowerCase());
+            GifCategory gifCategory;
+            if (t.isEmpty()) {
+                gifCategory = new GifCategory(c);
+                gifCategoryRepo.save(gifCategory);
+            } else {
+                gifCategory = t.get();
+            }
+
+            boolean exists = belongsToRepo.existsByGifAndCategory(gif, gifCategory);
+            if (!exists) {
+                BelongsTo belongsToEntry = new BelongsTo(gif, gifCategory);
+                belongsToRepo.save(belongsToEntry);
+            }
+        }
+
+    }
+
+    private static class AuroraDateManager {
+        public static java.util.Date getUtilDate() {
+            return new java.util.Date();
+        }
+
+        public static java.sql.Date getSqlDate(java.util.Date utilDate) {
+            return new java.sql.Date(utilDate.getTime());
+        }
+    };
 }
