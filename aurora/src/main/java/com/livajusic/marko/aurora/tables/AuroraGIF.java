@@ -29,6 +29,9 @@ public class AuroraGIF {
     @OneToMany(mappedBy = "gif")
     private Set<BelongsTo> categories;
 
+    @OneToMany(mappedBy = "gif")
+    private Set<Like> likes;
+
     public Set<BelongsTo> getCategories() {
         return categories;
     }
@@ -44,6 +47,8 @@ public class AuroraGIF {
         this.publishDate = publishDate;
         this.license = license;
     }
+
+    public Integer getId() { return gifId; }
 
     public String getPath() {
         return path;

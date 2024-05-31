@@ -2,15 +2,16 @@ package com.livajusic.marko.aurora.tables;
 
 import jakarta.persistence.*;
 
-import javax.annotation.processing.Generated;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "AuroraUsers")
 public class AuroraUser {
     @Id
     @GeneratedValue
-    private Long id;
+    @Column(name = "user_id")
+    private Long userId;
     @Column(unique = true)
     private String username;
     @Column(unique = true)
@@ -20,6 +21,9 @@ public class AuroraUser {
     private String role;
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<AuroraGIF> gifs;
+
+    @OneToMany(mappedBy = "user")
+    private Set<Like> likes;
 
     public AuroraUser() {}
 
@@ -31,11 +35,11 @@ public class AuroraUser {
     }
 
     public Long getId() {
-        return id;
+        return userId;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setId(Long userId) {
+        this.userId = userId;
     }
 
     public String getUsername() {
