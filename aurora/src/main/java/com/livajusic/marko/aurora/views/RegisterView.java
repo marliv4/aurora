@@ -1,6 +1,8 @@
 package com.livajusic.marko.aurora.views;
 
 import com.livajusic.marko.aurora.db_repos.UserRepo;
+import com.livajusic.marko.aurora.services.UserService;
+import com.livajusic.marko.aurora.services.ValuesService;
 import com.livajusic.marko.aurora.tables.AuroraUser;
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.Text;
@@ -16,8 +18,12 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 import com.vaadin.flow.server.auth.AnonymousAllowed;
+import org.hibernate.sql.ast.tree.insert.Values;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @PageTitle("Register")
 @Route(value = "/register")
@@ -28,10 +34,20 @@ public class RegisterView extends VerticalLayout {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    public RegisterView(UserRepo userRepo) {
-        this.userRepo = userRepo;
+    private final ValuesService valuesService;
 
-        NavigationBar navbar = new NavigationBar();
+    final String patternStr = "^[a-zA-Z0-9_.-]*$";
+    final Pattern pattern = Pattern.compile(patternStr);
+
+    private final UserService userService;
+    public RegisterView(UserRepo userRepo,
+                        ValuesService valuesService,
+                        UserService userService) {
+        this.userRepo = userRepo;
+        this.valuesService = valuesService;
+        this.userService = userService;
+
+        NavigationBar navbar = new NavigationBar(valuesService, userService);
         add(navbar);
 
         TextField username = new TextField("Username");
@@ -42,6 +58,13 @@ public class RegisterView extends VerticalLayout {
 
         resgisterButton.addClickListener(e -> {
             String user = username.getValue();
+            Matcher matcher = pattern.matcher(user);
+
+            if (!matcher.matches()) {
+                Notification.show("Usernames can only contain letters and numbers!", 3000, Notification.Position.BOTTOM_CENTER);
+                return;
+            }
+
             String mail = email.getValue();
             String pass = password.getValue();
             String passRepeat = repeatPassword.getValue();

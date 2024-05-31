@@ -5,6 +5,7 @@ import com.livajusic.marko.aurora.db_repos.GifCategoryRepo;
 import com.livajusic.marko.aurora.db_repos.GifRepo;
 import com.livajusic.marko.aurora.db_repos.UserRepo;
 import com.livajusic.marko.aurora.services.UserService;
+import com.livajusic.marko.aurora.services.ValuesService;
 import com.livajusic.marko.aurora.tables.AuroraGIF;
 import com.livajusic.marko.aurora.tables.AuroraUser;
 import com.livajusic.marko.aurora.tables.BelongsTo;
@@ -26,6 +27,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import jakarta.annotation.security.RolesAllowed;
+import org.hibernate.sql.ast.tree.insert.Values;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -56,16 +58,20 @@ public class UploadView extends VerticalLayout {
     @Value("${upload.directory}")
     private String basePath;
 
+    private final ValuesService valuesService;
+
     public UploadView(GifRepo gifRepo,
                       UserRepo userRepo,
                       GifCategoryRepo gifCategoryRepo,
-                      BelongsToRepo belongsToRepo) {
+                      BelongsToRepo belongsToRepo,
+                      ValuesService valuesService) {
         this.gifRepo = gifRepo;
         this.userRepo = userRepo;
         this.gifCategoryRepo = gifCategoryRepo;
         this.belongsToRepo = belongsToRepo;
+        this.valuesService = valuesService;
 
-        NavigationBar navbar = new NavigationBar();
+        NavigationBar navbar = new NavigationBar(valuesService, userService);
         add(navbar);
 
         Span fileLabel = new Span("Choose a file:");
@@ -88,22 +94,12 @@ public class UploadView extends VerticalLayout {
         categoryInput.setRequired(true);
 
         Button submitButton = new Button("Submit");
-
         submitButton.addClickListener(e -> {
             InputStream inputStream = buffer.getInputStream();
-            uploadFile(inputStream, licenseSelect.getValue(), categoryInput.getValue());
+            saveFile(inputStream, licenseSelect.getValue(), categoryInput.getValue());
         });
 
-        FormLayout formLayout = new FormLayout();
-        // formLayout.addFormItem(upload, "File");
-        formLayout.addFormItem(licenseSelect, "License");
-        formLayout.addFormItem(categoryInput, "Categories (CSV)");
-
-        formLayout.getStyle()
-                .set("box-shadow", "0 4px 8px 0 rgba(0, 0, 0, 0.2)")
-                .set("padding", "20px")
-                .set("border-radius", "10px")
-                .set("background-color", "#fff");
+        FormLayout formLayout = createFormLayout(licenseSelect, categoryInput);
 
         VerticalLayout formContainer = new VerticalLayout();
         formContainer.setWidth("400px"); // Set a fixed width for the form container
@@ -116,7 +112,22 @@ public class UploadView extends VerticalLayout {
         setJustifyContentMode(JustifyContentMode.CENTER);
     }
 
-    public void uploadFile(InputStream is, String license, String category) {
+    private FormLayout createFormLayout(ComboBox<String> licenseSelect, TextField categoryInput) {
+        FormLayout formLayout = new FormLayout();
+        // formLayout.addFormItem(upload, "File");
+        formLayout.addFormItem(licenseSelect, "License");
+        formLayout.addFormItem(categoryInput, "Categories (CSV)");
+
+        formLayout.getStyle()
+                .set("box-shadow", "0 4px 8px 0 rgba(0, 0, 0, 0.2)")
+                .set("padding", "20px")
+                .set("border-radius", "10px")
+                .set("background-color", "#fff");
+
+        return formLayout;
+    }
+
+    public void saveFile(InputStream is, String license, String category) {
         // Check if directory with user's username exists
         File imagesDir = new File(basePath);
         if (!imagesDir.exists()) {
