@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 
-public interface GifCategoryRepo extends JpaRepository<GifCategory, Integer> {
+public interface GifCategoryRepo extends JpaRepository<GifCategory, Long> {
     Optional<GifCategory> findByCategory(String category);
 
 }

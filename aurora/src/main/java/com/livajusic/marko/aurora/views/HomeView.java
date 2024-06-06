@@ -62,7 +62,6 @@ public class HomeView extends VerticalLayout {
         add(searchField);
 
         displayAllGifs();
-
         setAlignItems(Alignment.CENTER);
         setJustifyContentMode(JustifyContentMode.CENTER);
     }
@@ -126,7 +125,7 @@ public class HomeView extends VerticalLayout {
 
             likeUnlikeButton.addClickListener(buttonClickEvent -> {
                 // TODO: if user logged in
-                    likeService.likeGif(user.getId(), gif.getId());
+                likeService.likeGif(user.getId(), gif.getId());
                 Notification.show("Liked!", 3000, Notification.Position.MIDDLE);
             });
 

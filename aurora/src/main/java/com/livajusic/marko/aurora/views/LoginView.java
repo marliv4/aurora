@@ -14,7 +14,7 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.springframework.beans.factory.annotation.Value;
 
 @PageTitle("Login")
-@Route(value = "/login")
+@Route("login")
 @AnonymousAllowed
 public class LoginView extends VerticalLayout implements BeforeEnterObserver {
 
@@ -35,14 +35,15 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
         add(navbar);
         setSizeFull();
         setAlignItems(Alignment.CENTER);
-        /*
-        login.addLoginListener(event -> {
-            UI.getCurrent().navigate("/");
-        });
-        */
+
         login.setAction("login");
-        login.addLoginListener(l -> UI.getCurrent().navigate("/"));
         add(login);
+        login.addLoginListener(l -> {
+                    System.out.println("USERNAME: " + login.getChildren().findFirst().get().toString());
+                    UI.getCurrent().navigate("/");
+                }
+        );
+
     }
 
     @Override

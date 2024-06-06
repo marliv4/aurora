@@ -61,4 +61,10 @@ public class UserService {
         }
     }
 
+    public long getUserIdByUsername(String username) {
+        Query query = entityManager.createQuery("SELECT u.userId FROM AuroraUser u WHERE u.username = :username");
+        query.setParameter("username", username);
+        return (long)query.getSingleResult();
+    }
+
 }

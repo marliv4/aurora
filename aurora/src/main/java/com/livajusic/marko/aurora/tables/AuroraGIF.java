@@ -11,7 +11,7 @@ import java.util.Set;
 public class AuroraGIF {
     @Id
     @GeneratedValue
-    private Integer gifId;
+    private Long gifId;
 
     @Column(unique = true)
     private String path;
@@ -48,7 +48,7 @@ public class AuroraGIF {
         this.license = license;
     }
 
-    public Integer getId() { return gifId; }
+    public Long getId() { return gifId; }
 
     public String getPath() {
         return path;
