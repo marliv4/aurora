@@ -38,7 +38,7 @@ public class AdminDashboardView extends VerticalLayout {
         grid.addColumn(AuroraUser::getId).setHeader("ID");
         grid.addColumn(AuroraUser::getUsername).setHeader("Username");
         grid.addColumn(AuroraUser::getPassword).setHeader("Password");
-        grid.addColumn(AuroraUser::getRole).setHeader("Role");
+        // grid.addColumn(AuroraUser::getRole).setHeader("Role");
         grid.addColumn(AuroraUser::getEmail).setHeader("Email");
 
         grid.setItems(users);

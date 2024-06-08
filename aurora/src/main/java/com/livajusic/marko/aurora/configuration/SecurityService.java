@@ -16,8 +16,4 @@ public class SecurityService {
     public UserDetails getAuthenticatedUser() {
         return authenticationContext.getAuthenticatedUser(UserDetails.class).get();
     }
-
-    public void logout() {
-        authenticationContext.logout();
-    }
 }

@@ -1,11 +1,16 @@
 package com.livajusic.marko.aurora.views;
 
+import com.livajusic.marko.aurora.db_repos.PrivacySettingsRepo;
+import com.livajusic.marko.aurora.db_repos.RoleRepo;
 import com.livajusic.marko.aurora.db_repos.UserRepo;
 import com.livajusic.marko.aurora.services.UserService;
 import com.livajusic.marko.aurora.services.ValuesService;
 import com.livajusic.marko.aurora.tables.AuroraUser;
+import com.livajusic.marko.aurora.tables.PrivacySettings;
+import com.livajusic.marko.aurora.tables.Role;
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.Text;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.notification.Notification;
@@ -17,6 +22,7 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
+import com.vaadin.flow.router.RouteConfiguration;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.hibernate.sql.ast.tree.insert.Values;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,20 +37,28 @@ import java.util.regex.Pattern;
 public class RegisterView extends VerticalLayout {
     private final UserRepo userRepo;
 
+    private final PrivacySettingsRepo privacySettingsRepo;
+
     @Autowired
     private PasswordEncoder passwordEncoder;
 
     private final ValuesService valuesService;
+
+    private final RoleRepo roleRepo;
 
     final String patternStr = "^[a-zA-Z0-9_.-]*$";
     final Pattern pattern = Pattern.compile(patternStr);
 
     private final UserService userService;
     public RegisterView(UserRepo userRepo,
+                        PrivacySettingsRepo privacySettingsRepo,
                         ValuesService valuesService,
+                        RoleRepo roleRepo,
                         UserService userService) {
         this.userRepo = userRepo;
+        this.privacySettingsRepo = privacySettingsRepo;
         this.valuesService = valuesService;
+        this.roleRepo = roleRepo;
         this.userService = userService;
 
         NavigationBar navbar = new NavigationBar(valuesService, userService);
@@ -141,10 +155,18 @@ public class RegisterView extends VerticalLayout {
         AuroraUser newUser = new AuroraUser(
                 user,
                 mail,
-                passwordEncoder.encode(pass),
-                "user"
+                passwordEncoder.encode(pass)
         );
         userRepo.save(newUser);
+
+        PrivacySettings ps = new PrivacySettings(newUser, 1);
+        privacySettingsRepo.save(ps);
+
+        Role standardRole = new Role(newUser.getId(), "user");
+        roleRepo.save(standardRole);
+
         Notification.show("Sucessfully registered!", 3000, Notification.Position.BOTTOM_END);
+        RouteConfiguration.forSessionScope().setRoute("login", LoginView.class);
+        UI.getCurrent().navigate("login");
     }
 }

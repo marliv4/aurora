@@ -21,6 +21,7 @@ import com.livajusic.marko.aurora.views.HomeView;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.router.RouteConfiguration;
 import org.aspectj.apache.bcel.generic.SwitchBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class NavigationBar extends HorizontalLayout {
     private final ValuesService valuesService;
@@ -44,13 +45,17 @@ public class NavigationBar extends HorizontalLayout {
         // logo.getStyle().set("font-weight", "bold");
 
         RouterLink homeLink = new RouterLink("Home", HomeView.class);
+
         RouterLink registerLink = new RouterLink("Register", RegisterView.class);
         RouterLink loginLink = new RouterLink("Login", LoginView.class);
         RouterLink publishLink = new RouterLink("Upload", UploadView.class);
 
+        boolean addRegisterAndLoginLink = true;
         MenuBar profileMenu = new MenuBar();
-        if (isUserLoggedIn()) {
-            Image profileImage = new Image("lol", "Profile Picture");
+        if (userService.isLoggedIn()) {
+            final var basePfpDir = /* valuesService.getProfilePicturesDirectory() + */ "/images/profilepictures/" + userService.getCurrentUsername() + "/pfp.jpg";
+            System.out.println("BASEPFPDIR: " + basePfpDir);
+            Image profileImage = new Image(basePfpDir, "Profile Picture");
             profileImage.setWidth("30px");
             profileImage.setHeight("30px");
             profileImage.getStyle().set("border-radius", "50%");
@@ -58,13 +63,21 @@ public class NavigationBar extends HorizontalLayout {
             MenuItem profileMenuItem = profileMenu.addItem(profileImage);
             profileMenuItem.getSubMenu().addItem("My Profile", e -> navigateToProfile());
             profileMenuItem.getSubMenu().addItem("Settings", e -> navigateToSettings());
-            profileMenuItem.getSubMenu().addItem("Logout", e -> logout());
+            profileMenuItem.getSubMenu().addItem("Logout", e -> {
+                userService.logout();
+                getUI().get().getPage().reload();
+            });
+            addRegisterAndLoginLink = false;
         }
 
         TextField userSearch = createUserSearchField();
 
         // Add components to the navbar
-        add(/* logo, */ homeLink, registerLink, loginLink, publishLink, /* searchField, */ profileMenu, userSearch);
+        if (addRegisterAndLoginLink) {
+            add(/* logo, */ homeLink, registerLink, loginLink, publishLink, /* searchField, */ profileMenu, userSearch);
+        } else {
+            add(/* logo, */ homeLink, publishLink, /* searchField, */ profileMenu, userSearch);
+        }
         setSpacing(true);
     }
 
@@ -84,15 +97,5 @@ public class NavigationBar extends HorizontalLayout {
     private void navigateToSettings() {
         RouteConfiguration.forSessionScope().setRoute("settings", SettingsView.class);
         UI.getCurrent().navigate("settings");
-    }
-
-    private void logout() {
-        VaadinSession.getCurrent().getSession().invalidate();
-        getUI().get().getPage().reload();
-    }
-
-    private boolean isUserLoggedIn() {
-
-        return false;
     }
 }

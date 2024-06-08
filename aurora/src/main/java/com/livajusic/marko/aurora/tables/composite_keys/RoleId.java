@@ -5,44 +5,44 @@ import java.io.Serializable;
 import java.util.Objects;
 
 @Embeddable
-public class LikeId implements Serializable {
+public class RoleId implements Serializable {
+
     private Long userId;
-    private Long gifId;
+    private String role;
 
-    public LikeId() {}
+    public RoleId() {}
 
-    public LikeId(Long userId, Long gifId) {
+    public RoleId(Long userId, String role) {
         this.userId = userId;
-        this.gifId = gifId;
+        this.role = role;
     }
 
     public Long getUserId() {
         return userId;
     }
 
-    public Long getGifId() {
-        return gifId;
-    }
-
     public void setUserId(Long userId) {
         this.userId = userId;
     }
 
-    public void setGifId(Long gifId) {
-        this.gifId = gifId;
+    public String getRole() {
+        return role;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(userId, gifId);
+    public void setRole(String role) {
+        this.role = role;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        LikeId likeId = (LikeId) o;
-        return Objects.equals(userId, likeId.userId) &&
-                Objects.equals(gifId, likeId.gifId);
+        RoleId roleId = (RoleId) o;
+        return Objects.equals(userId, roleId.userId) && Objects.equals(role, roleId.role);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(userId, role);
     }
 }

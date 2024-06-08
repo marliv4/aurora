@@ -8,5 +8,4 @@ import java.util.Optional;
 public interface UserRepo extends JpaRepository<AuroraUser, Long> {
     Optional<AuroraUser> findByUsername(String username);
     Optional<AuroraUser> findByEmail(String email);
-
 }

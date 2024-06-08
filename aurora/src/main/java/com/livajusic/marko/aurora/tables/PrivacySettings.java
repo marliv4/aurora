@@ -3,8 +3,8 @@ package com.livajusic.marko.aurora.tables;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "likes")
-public class Like {
+@Table(name = "privacy_settings")
+public class PrivacySettings {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -14,23 +14,17 @@ public class Like {
     @JoinColumn(name = "user_id", nullable = false)
     private AuroraUser user;
 
-    @ManyToOne
-    @JoinColumn(name = "gif_id", nullable = false)
-    private AuroraGIF gif;
+    @Column
+    private int privacyEnabled;
 
-    public Like() {}
-
-    public Like(AuroraUser user, AuroraGIF gif) {
+    public PrivacySettings() {}
+    public PrivacySettings(AuroraUser user, int privacyEnabled) {
         this.user = user;
-        this.gif = gif;
+        this.privacyEnabled = privacyEnabled;
     }
 
     public Long getId() {
         return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public AuroraUser getUser() {
@@ -41,11 +35,12 @@ public class Like {
         this.user = user;
     }
 
-    public AuroraGIF getGif() {
-        return gif;
+    public int isPrivacyEnabled() {
+        return privacyEnabled;
     }
 
-    public void setGif(AuroraGIF gif) {
-        this.gif = gif;
+    public void setPrivacyEnabled(int privacyEnabled) {
+        this.privacyEnabled = privacyEnabled;
     }
 }
+

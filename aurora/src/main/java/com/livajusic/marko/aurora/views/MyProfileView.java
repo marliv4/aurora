@@ -1,6 +1,10 @@
 package com.livajusic.marko.aurora.views;
 
+import com.livajusic.marko.aurora.db_repos.FollowRepo;
+import com.livajusic.marko.aurora.db_repos.GifRepo;
 import com.livajusic.marko.aurora.db_repos.UserRepo;
+import com.livajusic.marko.aurora.services.FileService;
+import com.livajusic.marko.aurora.services.FollowService;
 import com.livajusic.marko.aurora.services.UserService;
 import com.livajusic.marko.aurora.services.ValuesService;
 import com.livajusic.marko.aurora.tables.AuroraGIF;
@@ -13,7 +17,9 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
@@ -23,6 +29,7 @@ import com.vaadin.flow.router.RouteAccessDeniedError;
 import jakarta.annotation.security.RolesAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.io.File;
@@ -39,8 +46,7 @@ import java.util.Optional;
 @RolesAllowed("user")
 public class MyProfileView extends VerticalLayout {
 
-    @Autowired
-    UserService userService;
+    private final UserService userService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -52,9 +58,25 @@ public class MyProfileView extends VerticalLayout {
 
     private final UserRepo userRepo;
 
-    public MyProfileView(ValuesService valuesService, UserRepo userRepo) {
+    private final FileService fileService;
+
+    private final FollowService followService;
+
+    private final GifRepo gifRepo;
+
+    public MyProfileView(
+            UserService userService,
+            ValuesService valuesService,
+            UserRepo userRepo,
+            FileService fileService,
+            FollowService followService,
+            GifRepo gifRepo) {
+        this.userService = userService;
         this.valuesService = valuesService;
         this.userRepo = userRepo;
+        this.fileService = fileService;
+        this.followService = followService;
+        this.gifRepo = gifRepo;
 
         NavigationBar navbar = new NavigationBar(valuesService, userService);
         add(navbar);
@@ -62,6 +84,19 @@ public class MyProfileView extends VerticalLayout {
         setAlignItems(Alignment.CENTER);
         setJustifyContentMode(JustifyContentMode.CENTER);
 
+        HorizontalLayout infoLayout = new HorizontalLayout();
+
+        final var username = userService.getCurrentUsername();
+        final var userId = userService.getUserIdByUsername(username);
+        Span followersSpan = new Span("Followers: " + followService.getFollowersCount(userId)); // + followService.getFollowersCount(userService.getCurrentUserId()));
+        infoLayout.add(followersSpan);
+
+        Span followingSpan = new Span("Following: " + followService.getFollowingCount(userId));
+        infoLayout.add(followingSpan);
+
+        Span postsCountSpan = new Span("Posts: " + gifRepo.countByUserId(userId));
+        infoLayout.add(postsCountSpan);
+        add(infoLayout);
         // Header
         Span header = new Span("My Profile");
         header.getStyle().set("font-size", "24px").set("font-weight", "bold");
@@ -84,6 +119,8 @@ public class MyProfileView extends VerticalLayout {
             InputStream inputStream = buffer.getInputStream();
             String endPath = valuesService.getProfilePicturesDirectory();
             System.out.println(endPath);
+
+            saveFile(inputStream);
             // TODO
             // Files.copy(inputStream, Paths.get(endPath));
         });
@@ -122,6 +159,23 @@ public class MyProfileView extends VerticalLayout {
 
         // Add the form container to the main layout
         add(formContainer);
+
+        RadioButtonGroup<String> radioButtonGroup = new RadioButtonGroup<>();
+        radioButtonGroup.setLabel("Privacy Settings");
+        radioButtonGroup.setItems("Enabled", "Disabled");
+
+        radioButtonGroup.addValueChangeListener(event -> {
+            String selected = event.getValue().toLowerCase();
+            System.out.println("Selected: " + selected);
+            final var sessionUsername = userService.getCurrentUsername();
+            int setting = 0;
+            if (selected.equals("enabled")) {
+                setting = 1;
+            }
+            userService.updateProfilePrivacy(sessionUsername, setting);
+        });
+
+        add(radioButtonGroup);
     }
 
     private void changePassword(String password) {
@@ -133,25 +187,13 @@ public class MyProfileView extends VerticalLayout {
         }
     }
 
-    public void saveFile(InputStream is, String license, String category) {
+    public void saveFile(InputStream is) {
+        System.out.println("saveFILE() pfp");
         // Check if directory with user's username exists
-        File imagesDir = new File(profilePicturesBasePath);
-        if (!imagesDir.exists()) {
-            System.out.println("/profilepictures/ folder not existing, creating it...");
-            if (imagesDir.mkdirs()) {
-                System.out.println("Created /profilepictures/ successfully.");
-            }
-        }
+        File imagesDir = fileService.createDirIfNeeded(profilePicturesBasePath);
 
         String uname = userService.getCurrentUsername();
-        File userSpecificDir = new File(imagesDir + "/" + uname + "/");
-
-        if (!userSpecificDir.exists()) {
-            System.out.println("User specific directory not existing, creating /" + uname);
-            if (userSpecificDir.mkdirs()) {
-                System.out.println("Created /" + uname + "/ successfully.");
-            }
-        }
+        File userSpecificDir = fileService.createDirIfNeeded(imagesDir + "/" + uname + "/");
 
         Optional<AuroraUser> currentUser = userRepo.findByUsername(uname);
         final var userEmpty = currentUser.isEmpty();
@@ -163,7 +205,7 @@ public class MyProfileView extends VerticalLayout {
 
         final var user = currentUser.get();
 
-        final var filename = "pfp";
+        final var filename = "pfp.jpg";
         System.out.println("FILENAME: " + filename);
         // AuroraGIF(String path, AuroraUser user, Date publishDate, String license)
 

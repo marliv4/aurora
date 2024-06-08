@@ -4,6 +4,7 @@ import com.livajusic.marko.aurora.db_repos.BelongsToRepo;
 import com.livajusic.marko.aurora.db_repos.GifCategoryRepo;
 import com.livajusic.marko.aurora.db_repos.GifRepo;
 import com.livajusic.marko.aurora.db_repos.UserRepo;
+import com.livajusic.marko.aurora.services.FileService;
 import com.livajusic.marko.aurora.services.UserService;
 import com.livajusic.marko.aurora.services.ValuesService;
 import com.livajusic.marko.aurora.tables.AuroraGIF;
@@ -52,8 +53,9 @@ public class UploadView extends VerticalLayout {
 
     private final BelongsToRepo belongsToRepo;
 
-    @Autowired
-    UserService userService;
+    private final UserService userService;
+
+    private final FileService fileService;
 
     @Value("${upload.directory}")
     private String basePath;
@@ -64,12 +66,16 @@ public class UploadView extends VerticalLayout {
                       UserRepo userRepo,
                       GifCategoryRepo gifCategoryRepo,
                       BelongsToRepo belongsToRepo,
-                      ValuesService valuesService) {
+                      UserService userService,
+                      ValuesService valuesService,
+                      FileService fileService) {
         this.gifRepo = gifRepo;
         this.userRepo = userRepo;
         this.gifCategoryRepo = gifCategoryRepo;
         this.belongsToRepo = belongsToRepo;
+        this.userService = userService;
         this.valuesService = valuesService;
+        this.fileService = fileService;
 
         NavigationBar navbar = new NavigationBar(valuesService, userService);
         add(navbar);
@@ -96,7 +102,7 @@ public class UploadView extends VerticalLayout {
         Button submitButton = new Button("Submit");
         submitButton.addClickListener(e -> {
             InputStream inputStream = buffer.getInputStream();
-            saveFile(inputStream, licenseSelect.getValue(), categoryInput.getValue());
+            saveFile(basePath, inputStream, licenseSelect.getValue(), categoryInput.getValue());
         });
 
         FormLayout formLayout = createFormLayout(licenseSelect, categoryInput);
@@ -127,25 +133,12 @@ public class UploadView extends VerticalLayout {
         return formLayout;
     }
 
-    public void saveFile(InputStream is, String license, String category) {
+    public void saveFile(String path, InputStream is, String license, String category) {
         // Check if directory with user's username exists
-        File imagesDir = new File(basePath);
-        if (!imagesDir.exists()) {
-            System.out.println("/images folder not existing, creating it...");
-            if (imagesDir.mkdirs()) {
-                System.out.println("Created /images/ successfully.");
-            }
-        }
+        File imagesDir = fileService.createDirIfNeeded(path);
 
         String uname = userService.getCurrentUsername();
-        File userSpecificDir = new File(imagesDir  + "/" + uname + "/");
-
-        if (!userSpecificDir.exists()) {
-            System.out.println("User specific directory not existing, creating /" + uname);
-            if (userSpecificDir.mkdirs()) {
-                System.out.println("Created /" + uname + "/ successfully.");
-            }
-        }
+        File userSpecificDir = fileService.createDirIfNeeded(imagesDir  + "/" + uname + "/");
 
         Optional<AuroraUser> currentUser = userRepo.findByUsername(uname);
         final var userEmpty = currentUser.isEmpty();
@@ -158,12 +151,12 @@ public class UploadView extends VerticalLayout {
         final var user = currentUser.get();
 
 
-        final var utilDate = AuroraDateManager.getUtilDate();
+        final var utilDate = UploadView.AuroraDateManager.getUtilDate();
         LocalDateTime dateTime = LocalDateTime.parse(utilDate.toString(), DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss zzz yyyy"));
         String time = dateTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
         System.out.println(time);
 
-        final var date = AuroraDateManager.getSqlDate(utilDate);
+        final var date = UploadView.AuroraDateManager.getSqlDate(utilDate);
         System.out.println(date);
 
         var f = date + "_" + time + "_" + user.getId() + ".gif";
@@ -209,7 +202,6 @@ public class UploadView extends VerticalLayout {
                 belongsToRepo.save(belongsToEntry);
             }
         }
-
     }
 
     private static class AuroraDateManager {

@@ -54,8 +54,9 @@ public class UserProfileView extends Div implements HasUrlParameter<String> {
         System.out.println("username: " + username);
 
 
+
         final var followedUserId = userService.getUserIdByUsername(username);
-        long getCurrentSessionsUserId = 902;
+        long getCurrentSessionsUserId = userService.getUserIdByUsername(userService.getCurrentUsername());
         followService.followUser(getCurrentSessionsUserId, followedUserId);
     }
 
