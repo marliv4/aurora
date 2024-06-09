@@ -9,11 +9,13 @@ import com.livajusic.marko.aurora.tables.Like;
 import com.vaadin.flow.component.notification.Notification;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
 import org.aspectj.weaver.ast.Not;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -54,16 +56,31 @@ public class LikeService {
     }
 
     public Long getAmountOfLikes(Long gifId) {
-        var query = entityManager.createQuery("SELECT COUNT(l.user.id) FROM Like l WHERE l.gif.id = :gifId", Long.class);
+        var query = entityManager.createQuery("SELECT COUNT(l.user.id) " +
+                "FROM Like l " +
+                "WHERE l.gif.id = :gifId", Long.class);
         query.setParameter("gifId", gifId);
         return (Long) query.getSingleResult();
     }
 
     public boolean hasUserAlreadyLikedGIF(Long userId, Long gifId) {
-        final var query = entityManager.createQuery("SELECT COUNT(1) FROM Like l WHERE l.user.userId = :userId AND l.gif.gifId = :gifId");
+        final var query = entityManager.createQuery("SELECT COUNT(1) " +
+                "FROM Like l " +
+                "WHERE l.user.userId = :userId " +
+                "AND l.gif.gifId = :gifId");
         query.setParameter("userId", userId);
         query.setParameter("gifId", gifId);
 
         return (Long)query.getSingleResult() > 0;
+    }
+
+    public List<Object> getMostLikedGifs() {
+        // Query query = entityManager.createQuery("SELECT COUNT(*) as likecount, AuroraGIF.path from Like JOIN AuroraGIF ON Like.gif.gifId = AuroraGIF.gifId GROUP BY AuroraGIF.gifId, AuroraGIF.path ORDER BY likecount DESC LIMIT 10");
+        Query query = entityManager.createQuery(
+                "SELECT COUNT(l), g.path FROM Like l JOIN l.gif g GROUP BY g.path ORDER BY COUNT(l) DESC"
+        );
+
+        final var list = query.getResultList();;
+        return list;
     }
 }

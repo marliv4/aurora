@@ -1,5 +1,6 @@
 package com.livajusic.marko.aurora.views;
 
+import com.livajusic.marko.aurora.UserInfoDisplayUtils;
 import com.livajusic.marko.aurora.db_repos.FollowRepo;
 import com.livajusic.marko.aurora.db_repos.GifRepo;
 import com.livajusic.marko.aurora.db_repos.UserRepo;
@@ -13,6 +14,7 @@ import com.livajusic.marko.aurora.tables.BelongsTo;
 import com.livajusic.marko.aurora.tables.GifCategory;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Span;
@@ -26,6 +28,7 @@ import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAccessDeniedError;
+import com.vaadin.flow.router.RouterLink;
 import jakarta.annotation.security.RolesAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -84,19 +87,12 @@ public class MyProfileView extends VerticalLayout {
         setAlignItems(Alignment.CENTER);
         setJustifyContentMode(JustifyContentMode.CENTER);
 
-        HorizontalLayout infoLayout = new HorizontalLayout();
-
         final var username = userService.getCurrentUsername();
         final var userId = userService.getUserIdByUsername(username);
-        Span followersSpan = new Span("Followers: " + followService.getFollowersCount(userId)); // + followService.getFollowersCount(userService.getCurrentUserId()));
-        infoLayout.add(followersSpan);
 
-        Span followingSpan = new Span("Following: " + followService.getFollowingCount(userId));
-        infoLayout.add(followingSpan);
+        UserInfoDisplayUtils userInfoDisplayUtils = new UserInfoDisplayUtils(gifRepo, userId, userService, followService);
+        add(userInfoDisplayUtils.getInfoLayout());
 
-        Span postsCountSpan = new Span("Posts: " + gifRepo.countByUserId(userId));
-        infoLayout.add(postsCountSpan);
-        add(infoLayout);
         // Header
         Span header = new Span("My Profile");
         header.getStyle().set("font-size", "24px").set("font-weight", "bold");

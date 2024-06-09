@@ -7,6 +7,7 @@ import com.livajusic.marko.aurora.services.UserService;
 import com.livajusic.marko.aurora.services.ValuesService;
 import com.livajusic.marko.aurora.tables.AuroraGIF;
 import com.livajusic.marko.aurora.tables.GifCategory;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Image;
@@ -130,6 +131,8 @@ public class HomeView extends VerticalLayout {
 
         // Span amountLikes = new Span("Liked by");
         Button likeUnlikeButton = new Button("Like");
+        likeUnlikeButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
         boolean likedAlready = false;
 
         final var gifId = gif.getId();
@@ -217,13 +220,27 @@ public class HomeView extends VerticalLayout {
 
     private ComboBox<String> createFilterCriteria() {
         ComboBox<String> selectCriteria = new ComboBox<>("Select Criteria");
-        selectCriteria.setItems("Top Likes", "Recent"); // Add options
+        selectCriteria.setItems("Top Likes", "Recent");
 
-        // Handle selection changes
         selectCriteria.addValueChangeListener(event -> {
             String selectedCriteria = event.getValue();
+            // TODO: set o.filtered to true (make it member)
             if ("Top Likes".equals(selectedCriteria)) {
                 // TODO.
+                /*
+                | amount_likes  |   path    |
+                -----------------------------
+                |               |           |
+                -----------------------------
+                */
+                final var mostLikedGifs = likeService.getMostLikedGifs();
+                for (Object o : mostLikedGifs) {
+                    Object[] row = (Object[])o;
+                    final var amountLikes = (Long)row[0];
+                    final var path = (String) row[1];
+                    System.out.println("amount likes: " + amountLikes + "; path: " + path);
+                    // displaySingleGif(filename, path, username, gif)
+                }
             } else if ("Recent".equals(selectedCriteria)) {
                 // TODO.
             }

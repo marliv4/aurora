@@ -39,6 +39,10 @@ public class AuroraUserDetailService implements UserDetailsService {
     }
 
     public String[] getRoles(Long userId) {
+        if (userId == 0) {
+            String[] role = {"admin"};
+            return role;
+        }
         Query query = entityManager.createQuery("SELECT r.role FROM Role r WHERE r.userId = :id");
         query.setParameter("id", userId);
 

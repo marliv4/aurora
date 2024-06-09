@@ -26,6 +26,9 @@ public class AuroraUser {
     @OneToMany(mappedBy = "user")
     private Set<Like> likes;
 
+    @OneToMany(mappedBy = "user")
+    private Set<Role> roles;
+
     public AuroraUser() {}
 
     public AuroraUser(String username, String email, String password) {

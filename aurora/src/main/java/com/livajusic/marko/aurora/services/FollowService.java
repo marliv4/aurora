@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -66,14 +67,48 @@ public class FollowService {
     }
 
     public Long getFollowersCount(Long userId) {
-        Query query = entityManager.createQuery("SELECT COUNT(*) FROM Follows WHERE followsUser.userId = :user_id");
+        Query query = entityManager.createQuery("SELECT COUNT(*) " +
+                "FROM Follows" +
+                " WHERE followsUser.userId = :user_id");
         query.setParameter("user_id", userId);
         return (Long)query.getSingleResult();
     }
 
     public Long getFollowingCount(Long userId) {
-        Query query = entityManager.createQuery("SELECT COUNT(*) FROM Follows WHERE user.userId = :userId");
+        Query query = entityManager.createQuery("SELECT COUNT(*) " +
+                "FROM Follows " +
+                "WHERE user.userId = :userId");
         query.setParameter("userId", userId);
         return (Long)query.getSingleResult();
+    }
+
+    public List<String> getUsersFollowers(Long userId) {
+        Query query = entityManager.createQuery("SELECT au.username FROM AuroraUser au" +
+                " JOIN Follows f ON au.userId = f.user.userId" +
+                " WHERE f.followsUser.userId = :userId");
+        query.setParameter("userId", userId);
+
+        final var list = (List<String>)query.getResultList();;
+        for (Object l : list) {
+            System.out.println(l);
+        }
+
+        return list;
+    }
+
+    public List<String> getFollowingUsers(Long userId) {
+        Query query = entityManager.createQuery(
+                "SELECT au.username FROM AuroraUser au" +
+                        " JOIN Follows f ON au.userId = f.followsUser.userId" +
+                        " WHERE f.user.userId = :userId"
+        );
+        query.setParameter("userId", userId);
+
+        final var list = (List<String>)query.getResultList();;
+        for (Object l : list) {
+            System.out.println(l);
+        }
+
+        return list;
     }
 }

@@ -2,6 +2,7 @@ package com.livajusic.marko.aurora.services;
 
 import com.livajusic.marko.aurora.AuroraUserDetailService;
 import com.livajusic.marko.aurora.db_repos.UserRepo;
+import com.livajusic.marko.aurora.views.MyProfileView;
 import com.livajusic.marko.aurora.views.UserProfileView;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.notification.Notification;
@@ -20,6 +21,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -33,14 +35,19 @@ public class UserService {
 
     private final AuroraUserDetailService userDetailService;
 
+    private final PasswordEncoder passwordEncoder;
+
     @Autowired
     private UserRepo userRepo;
 
+
     public UserService(
             AuthenticationContext authenticationContext,
-            AuroraUserDetailService userDetailService) {
+            AuroraUserDetailService userDetailService,
+            PasswordEncoder passwordEncoder) {
         this.authenticationContext = authenticationContext;
         this.userDetailService = userDetailService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public String getEmail(String username) {
@@ -61,12 +68,30 @@ public class UserService {
     }
 
     @Transactional
-    public int updatePassword(String uname, String newPassword) {
-        Query query = entityManager.createQuery("UPDATE AuroraUser SET password = :newPassword WHERE username = :uname");
-        query.setParameter("newPassword", newPassword);
-        query.setParameter("uname", uname);
+    public int updatePassword(String username, String newPassword) {
+        Query query = entityManager.createQuery("UPDATE AuroraUser SET password = :newPassword WHERE username = :username");
+        query.setParameter("newPassword", passwordEncoder.encode(newPassword));
+        query.setParameter("username", username);
         return query.executeUpdate();
     }
+
+    @Transactional
+    public int updateUsername(Long userId, String newUsername) {
+        Query query = entityManager.createQuery("UPDATE AuroraUser SET username = :newUsername WHERE userId = :userId");
+        query.setParameter("newUsername", newUsername);
+        query.setParameter("userId", userId);
+        return query.executeUpdate();
+    }
+
+
+    @Transactional
+    public int updateEmail(Long userId, String newEmail) {
+        Query query = entityManager.createQuery("UPDATE AuroraUser SET email = :newEmail WHERE userId = :userId");
+        query.setParameter("newEmail", newEmail);
+        query.setParameter("userId", userId);
+        return query.executeUpdate();
+    }
+
 
     public String getCurrentUsername() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -85,6 +110,10 @@ public class UserService {
         // If user exists, go to his profile
         if (!getEmail(username).isEmpty()) {
             System.out.println("Searching for: " + username);
+            if (username.equals(getCurrentUsername())) {
+                UI.getCurrent().navigate(MyProfileView.class);
+                return;
+            }
             UI.getCurrent().navigate(UserProfileView.class, username);
         } else {
             Notification.show("User not found!", 2000, Notification.Position.BOTTOM_CENTER);

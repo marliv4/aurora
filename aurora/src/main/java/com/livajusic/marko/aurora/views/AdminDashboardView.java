@@ -2,8 +2,10 @@ package com.livajusic.marko.aurora.views;
 
 import com.livajusic.marko.aurora.db_repos.GifRepo;
 import com.livajusic.marko.aurora.db_repos.UserRepo;
+import com.livajusic.marko.aurora.services.UserService;
 import com.livajusic.marko.aurora.tables.AuroraGIF;
 import com.livajusic.marko.aurora.tables.AuroraUser;
+import com.livajusic.marko.aurora.views.dialogs.CRUDDialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H2;
@@ -20,9 +22,14 @@ public class AdminDashboardView extends VerticalLayout {
 
     private final GifRepo gifRepo;
 
-    public AdminDashboardView(UserRepo userRepo, GifRepo gifRepo) {
+    private final UserService userService;
+
+    public AdminDashboardView(UserRepo userRepo,
+                              GifRepo gifRepo,
+                              UserService userService) {
         this.userRepo = userRepo;
         this.gifRepo = gifRepo;
+        this.userService = userService;
 
         add(new H1("Admin Dashboard"));
 
@@ -46,7 +53,10 @@ public class AdminDashboardView extends VerticalLayout {
         grid.addSelectionListener(selection -> {
             final var selectedUser = selection.getFirstSelectedItem();
             if (selectedUser.isPresent()) {
-                System.out.println(selectedUser.get().getUsername());
+                final var selectedUsername = selectedUser.get().getUsername();
+                System.out.println(selectedUsername);
+                CRUDDialog cd = new CRUDDialog(selectedUsername, userService);
+                cd.open();
             }
         });
 
