@@ -6,6 +6,7 @@ import com.livajusic.marko.aurora.db_repos.UserRepo;
 import com.livajusic.marko.aurora.tables.AuroraUser;
 import com.livajusic.marko.aurora.tables.Follows;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
@@ -35,7 +36,8 @@ public class FollowService {
     @Transactional
     public void followUser(Long userId, Long followsUserId) {
         if (userId.equals(followsUserId)) {
-            Notification.show("User can't follow himself.", 3000, Notification.Position.MIDDLE);
+            final var n = Notification.show("User can't follow himself.", 3000, Notification.Position.MIDDLE);
+            n.addThemeVariants(NotificationVariant.LUMO_ERROR);
             return;
         }
 
@@ -47,10 +49,12 @@ public class FollowService {
             if (!followRepo.existsById(followId)) {
                 Follows follow = new Follows(followId, user.get(), followedUser.get(), LocalDateTime.now());
                 followRepo.save(follow);
-                Notification.show("Followed user!", 1500, Notification.Position.MIDDLE);
+                final var n = Notification.show("Followed user!", 1500, Notification.Position.MIDDLE);
+                n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
             }
         } else {
-            Notification.show("User not found.", 3000, Notification.Position.MIDDLE);
+            final var n = Notification.show("User not found.", 3000, Notification.Position.MIDDLE);
+            n.addThemeVariants(NotificationVariant.LUMO_ERROR);
             return;
         }
     }

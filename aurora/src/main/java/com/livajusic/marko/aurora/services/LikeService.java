@@ -74,13 +74,30 @@ public class LikeService {
         return (Long)query.getSingleResult() > 0;
     }
 
-    public List<Object> getMostLikedGifs() {
-        // Query query = entityManager.createQuery("SELECT COUNT(*) as likecount, AuroraGIF.path from Like JOIN AuroraGIF ON Like.gif.gifId = AuroraGIF.gifId GROUP BY AuroraGIF.gifId, AuroraGIF.path ORDER BY likecount DESC LIMIT 10");
+    public List<Object> getMostLikedGIFs() {
         Query query = entityManager.createQuery(
-                "SELECT COUNT(l), g.path FROM Like l JOIN l.gif g GROUP BY g.path ORDER BY COUNT(l) DESC"
+                "SELECT COUNT(l), g.path, u.id, u.username, g " +
+                        "FROM Like l " +
+                        "JOIN l.gif g " +
+                        "JOIN g.user u " +
+                        "GROUP BY g.path, u.id, u.username, g " +
+                        "ORDER BY COUNT(l) DESC"
         );
 
+
         final var list = query.getResultList();;
+        return list;
+    }
+
+    public List<Object> getMostRecentGIFs() {
+        Query query = entityManager.createQuery(
+                "SELECT g.path, u.username, g " +
+                        "FROM AuroraGIF g " +
+                        "JOIN g.user u " +
+                        "ORDER BY g.publishDate DESC"
+        );
+
+        final var list = query.getResultList();
         return list;
     }
 }

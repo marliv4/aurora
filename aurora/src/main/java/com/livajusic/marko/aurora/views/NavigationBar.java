@@ -1,11 +1,13 @@
 package com.livajusic.marko.aurora.views;
 
+import com.livajusic.marko.aurora.LanguagesController;
 import com.livajusic.marko.aurora.services.UserService;
 import com.livajusic.marko.aurora.services.ValuesService;
 import com.livajusic.marko.aurora.views.LoginView;
 import com.livajusic.marko.aurora.views.RegisterView;
 import com.livajusic.marko.aurora.views.UploadView;
 import com.vaadin.flow.component.Key;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Anchor;
@@ -23,15 +25,19 @@ import com.vaadin.flow.router.RouteConfiguration;
 import org.aspectj.apache.bcel.generic.SwitchBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.Locale;
+
 public class NavigationBar extends HorizontalLayout {
     private final ValuesService valuesService;
 
     private final UserService userService;
+    private LanguagesController languagesController;
 
     public NavigationBar(ValuesService valuesService,
                          UserService userService) {
         this.valuesService = valuesService;
         this.userService = userService;
+
         // Logo
         setAlignItems(Alignment.CENTER); // Align items vertically in the center
         setJustifyContentMode(JustifyContentMode.CENTER);
@@ -43,8 +49,8 @@ public class NavigationBar extends HorizontalLayout {
 
         // Anchor logo = new Anchor("/", "Logo");
         // logo.getStyle().set("font-weight", "bold");
+        RouterLink homeLink = new RouterLink("menu.home", HomeView.class);
 
-        RouterLink homeLink = new RouterLink("Home", HomeView.class);
 
         RouterLink registerLink = new RouterLink("Register", RegisterView.class);
         RouterLink loginLink = new RouterLink("Login", LoginView.class);
@@ -70,6 +76,15 @@ public class NavigationBar extends HorizontalLayout {
             addRegisterAndLoginLink = false;
         }
 
+        ComboBox<String> languageSwitcher = new ComboBox<>();
+        languageSwitcher.setItems("English", "Deutsch");
+        languageSwitcher.setValue("English"); // Default language
+        languageSwitcher.addValueChangeListener(event -> {
+            String selectedLanguage = event.getValue();
+            switchLanguage(selectedLanguage);
+        });
+        add(languageSwitcher);
+
         TextField userSearch = createUserSearchField();
 
         // Add components to the navbar
@@ -79,6 +94,20 @@ public class NavigationBar extends HorizontalLayout {
             add(/* logo, */ homeLink, publishLink, /* searchField, */ profileMenu, userSearch);
         }
         setSpacing(true);
+    }
+
+    private void switchLanguage(String language) {
+        Locale locale;
+        switch (language) {
+            case "Deutsch":
+                locale = Locale.GERMAN;
+                break;
+            default:
+                locale = Locale.ENGLISH;
+                break;
+        }
+        VaadinSession.getCurrent().setLocale(locale);
+        UI.getCurrent().getPage().reload();
     }
 
     private TextField createUserSearchField() {

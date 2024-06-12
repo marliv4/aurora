@@ -19,6 +19,7 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
@@ -121,65 +122,16 @@ public class MyProfileView extends VerticalLayout {
             // Files.copy(inputStream, Paths.get(endPath));
         });
 
-        // New password field
-        PasswordField newPasswordField = new PasswordField("New Password");
-        newPasswordField.setPlaceholder("Enter new password");
-
-        // Change password button
-        Button changePasswordButton = new Button("Change Password");
-        changePasswordButton.addClickListener(e -> {
-            String newPassword = newPasswordField.getValue();
-            if (newPassword.isEmpty()) {
-                Notification.show("Please enter a new password");
-            } else {
-                changePassword(newPassword);
-            }
-        });
-
-        // Layout for profile picture upload and password change
-        FormLayout formLayout = new FormLayout();
-        formLayout.add(uploadLabel, upload, newPasswordField, changePasswordButton);
-        formLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1));
-
-        formLayout.getStyle()
-                .set("box-shadow", "0 4px 8px 0 rgba(0, 0, 0, 0.2)")
-                .set("padding", "20px")
-                .set("border-radius", "10px")
-                .set("background-color", "#fff");
-
-        // Container to center the form
-        VerticalLayout formContainer = new VerticalLayout();
-        formContainer.setWidth("400px"); // Fixed width for the form container
-        formContainer.getStyle().set("margin", "auto");
-        formContainer.add(formLayout);
-
-        // Add the form container to the main layout
-        add(formContainer);
-
-        RadioButtonGroup<String> radioButtonGroup = new RadioButtonGroup<>();
-        radioButtonGroup.setLabel("Privacy Settings");
-        radioButtonGroup.setItems("Enabled", "Disabled");
-
-        radioButtonGroup.addValueChangeListener(event -> {
-            String selected = event.getValue().toLowerCase();
-            System.out.println("Selected: " + selected);
-            final var sessionUsername = userService.getCurrentUsername();
-            int setting = 0;
-            if (selected.equals("enabled")) {
-                setting = 1;
-            }
-            userService.updateProfilePrivacy(sessionUsername, setting);
-        });
-
-        add(radioButtonGroup);
     }
 
+    // TODO: this is redundant, use UserService instead.
     private void changePassword(String password) {
         final var uname = userService.getCurrentUsername();
         System.out.println(uname + " " + password);
 
         if (userService.updatePassword(uname, passwordEncoder.encode(password)) == 1) {
-            Notification.show("Password updated successfully", 300, Notification.Position.BOTTOM_CENTER);
+            final var n = Notification.show("Password updated successfully", 300, Notification.Position.BOTTOM_CENTER);
+            n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
         }
     }
 

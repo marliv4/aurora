@@ -7,21 +7,27 @@ import com.livajusic.marko.aurora.services.UserService;
 import com.livajusic.marko.aurora.services.ValuesService;
 import com.livajusic.marko.aurora.tables.AuroraGIF;
 import com.livajusic.marko.aurora.tables.GifCategory;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.dom.Element;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.flow.component.button.Button;
 import com.livajusic.marko.aurora.tables.BelongsTo;
+import com.vaadin.flow.theme.Theme;
+import com.vaadin.flow.theme.lumo.Lumo;
+import com.vaadin.flow.theme.material.Material;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.*;
@@ -44,6 +50,11 @@ public class HomeView extends VerticalLayout {
 
     private TextField searchField;
 
+    private ArrayList<Div> displayedGifs;
+
+    private static class Filtered {
+        public static boolean filtered = false;
+    }
 
     public HomeView(GifRepo gifRepo,
                     GifCategoryRepo gifCategoryRepo,
@@ -56,22 +67,23 @@ public class HomeView extends VerticalLayout {
         this.likeService = likeService;
         this.userService = userService;
 
+        displayedGifs = new ArrayList<>();
+
         NavigationBar navbar = new NavigationBar(valuesService, userService);
         add(navbar);
 
         System.out.println(userService.getCurrentUsername());
 
         final var horizontalLayout = createHorizontalLayout();
-        var o = new Object(){ boolean filtered = false; };
 
         searchField.setPlaceholder("Filter by categories");
         searchField.addValueChangeListener(event -> {
             filterGifs(event.getValue());
-            o.filtered = true;
+            Filtered.filtered = true;
         });
         // add(searchField);
 
-        if (!o.filtered) {
+        if (!Filtered.filtered) {
             displayAllGifs();
         }
         setAlignItems(Alignment.CENTER);
@@ -80,6 +92,10 @@ public class HomeView extends VerticalLayout {
 
     private HorizontalLayout createHorizontalLayout() {
         HorizontalLayout horizontalLayout = new HorizontalLayout();
+        horizontalLayout.setWidthFull();
+        horizontalLayout.setAlignItems(Alignment.BASELINE);
+        horizontalLayout.setJustifyContentMode(JustifyContentMode.CENTER);
+
         final var sort = createFilterCriteria();
         searchField = new TextField();
         horizontalLayout.add(sort, searchField);
@@ -146,18 +162,19 @@ public class HomeView extends VerticalLayout {
                 if (likeService.hasUserAlreadyLikedGIF(currentUserId, gifId)) {
                     likeService.unlikeGif(currentUserId, gifId);
                     likeUnlikeButton.setText("Like");
-                    Notification.show("Unliked!", 500, Notification.Position.BOTTOM_CENTER);
-
+                    final var n = Notification.show("Unliked!", 500, Notification.Position.BOTTOM_CENTER);
+                    n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                     updateAmountLikesSpan(likeService, gifId, amountLikes);
                 } else {
                     likeService.likeGif(currentUserId, gifId);
                     likeUnlikeButton.setText("Unlike");
-                    Notification.show("Liked!", 500, Notification.Position.BOTTOM_CENTER);
-
+                    final var n = Notification.show("Liked!", 500, Notification.Position.BOTTOM_CENTER);
+                    n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                     updateAmountLikesSpan(likeService, gifId, amountLikes);
                 }
             } else {
-                Notification.show("Please log in to like posts.", 500, Notification.Position.BOTTOM_CENTER);
+                final var n = Notification.show("Please log in to like posts.", 500, Notification.Position.BOTTOM_CENTER);
+                n.addThemeVariants(NotificationVariant.LUMO_CONTRAST);
             }
         });
 
@@ -192,6 +209,7 @@ public class HomeView extends VerticalLayout {
             System.out.println("FILE:" + file);
 
             Div gifDiv = displaySingleGif(file, out, username, gif);
+            displayedGifs.add(gifDiv);
         }
 
     }
@@ -224,29 +242,45 @@ public class HomeView extends VerticalLayout {
 
         selectCriteria.addValueChangeListener(event -> {
             String selectedCriteria = event.getValue();
-            // TODO: set o.filtered to true (make it member)
+            clearCurrentlyDisplayedGIFs();
             if ("Top Likes".equals(selectedCriteria)) {
-                // TODO.
-                /*
-                | amount_likes  |   path    |
-                -----------------------------
-                |               |           |
-                -----------------------------
-                */
-                final var mostLikedGifs = likeService.getMostLikedGifs();
-                for (Object o : mostLikedGifs) {
+                // Clear all currently displayed GIFs
+                final var mostLikedGIFs = likeService.getMostLikedGIFs();
+                for (Object o : mostLikedGIFs) {
                     Object[] row = (Object[])o;
                     final var amountLikes = (Long)row[0];
-                    final var path = (String) row[1];
-                    System.out.println("amount likes: " + amountLikes + "; path: " + path);
-                    // displaySingleGif(filename, path, username, gif)
+                    final var filename = (String)row[1];
+                    final var userId = row[2];
+                    final var username = (String)row[3];
+                    final var gif = (AuroraGIF) row[4];
+
+                    System.out.println("amount likes: " + amountLikes + "; path: " + filename + " a: " + row[2] + " b: " + row[3]);
+
+                    final var path = "/images/" + username + "/" + filename;
+                    displaySingleGif(filename, path, username, gif);
                 }
             } else if ("Recent".equals(selectedCriteria)) {
-                // TODO.
+                final var mostRecentGIFs = likeService.getMostRecentGIFs();
+                for (Object o : mostRecentGIFs) {
+                    Object[] row = (Object[]) o;
+                    final var filename = (String) row[0];
+                    final var username = (String) row[1];
+                    final var gif = (AuroraGIF) row[2];
+                    System.out.println("path: " + filename + " username: " + username);
+                    final var path = "/images/" + username + "/" + filename;
+                    displaySingleGif(filename, path, username, gif);
+                }
             }
         });
 
         // add(selectCriteria);
         return selectCriteria;
+    }
+
+    private void clearCurrentlyDisplayedGIFs() {
+        for (Div d : displayedGifs) {
+            remove(d);
+        }
+        displayedGifs.clear();
     }
 }
