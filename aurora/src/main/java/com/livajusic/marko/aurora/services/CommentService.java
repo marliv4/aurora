@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class CommentService {
     @Autowired
@@ -33,5 +35,9 @@ public class CommentService {
         comment.setCommentText(commentText);
 
         return commentRepo.save(comment);
+    }
+
+    public List<Comment> getCommentsByGifId(Long gifId) {
+        return commentRepo.findByGifId(gifId);
     }
 }

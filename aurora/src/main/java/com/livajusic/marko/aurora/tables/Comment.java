@@ -68,4 +68,15 @@ public class Comment {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
+
+    @Override
+    public String toString() {
+        return "Comment{" +
+                "commentId=" + commentId +
+                ", user=" + user +
+                ", gif=" + gif +
+                ", commentText='" + commentText + '\'' +
+                ", createdAt=" + createdAt +
+                '}';
+    }
 }

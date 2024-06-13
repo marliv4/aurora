@@ -3,18 +3,17 @@ package com.livajusic.marko.aurora.views;
 import com.livajusic.marko.aurora.db_repos.CommentRepo;
 import com.livajusic.marko.aurora.db_repos.GifCategoryRepo;
 import com.livajusic.marko.aurora.db_repos.GifRepo;
-import com.livajusic.marko.aurora.services.CommentService;
-import com.livajusic.marko.aurora.services.LikeService;
-import com.livajusic.marko.aurora.services.UserService;
-import com.livajusic.marko.aurora.services.ValuesService;
+import com.livajusic.marko.aurora.services.*;
 import com.livajusic.marko.aurora.tables.AuroraGIF;
 import com.livajusic.marko.aurora.tables.GifCategory;
+import com.livajusic.marko.aurora.views.dialogs.CommentsDialog;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -43,11 +42,11 @@ public class HomeView extends VerticalLayout {
 
     private final GifCategoryRepo gifCategoryRepo;
 
-    private final CommentRepo commentRepo;
-    private final CommentService commentService;
     private final ValuesService valuesService;
 
     private final LikeService likeService;
+
+    private final GIFDisplayService gifDisplayService;
 
     @Autowired
     UserService userService;
@@ -66,14 +65,14 @@ public class HomeView extends VerticalLayout {
                     CommentService commentService,
                     ValuesService valuesService,
                     LikeService likeService,
-                    UserService userService) {
+                    UserService userService,
+                    GIFDisplayService gifDisplayService) {
         this.gifRepo = gifRepo;
         this.gifCategoryRepo = gifCategoryRepo;
-        this.commentRepo = commentRepo;
-        this.commentService = commentService;
         this.valuesService = valuesService;
         this.likeService = likeService;
         this.userService = userService;
+        this.gifDisplayService = gifDisplayService;
 
         displayedGifs = new ArrayList<>();
 
@@ -137,91 +136,6 @@ public class HomeView extends VerticalLayout {
         }
     }
 
-    private Div displaySingleGif(
-                                 String filename,
-                                 String path,
-                                 String username,
-                                 AuroraGIF gif) {
-        StreamResource resource = new StreamResource(filename,
-                () -> getClass().getResourceAsStream(path));
-
-        System.out.println("RESOURCE: " + resource);
-        Image image = new Image(resource, "GIF");
-
-        Div gifDiv = new Div();
-        gifDiv.addClassName("gif-container");
-
-        Span usernameLabel = new Span("By: " + username);
-
-        // Span amountLikes = new Span("Liked by");
-        Button likeUnlikeButton = new Button("Like");
-        likeUnlikeButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-
-        boolean likedAlready = false;
-
-        final var gifId = gif.getId();
-        Span amountLikes = new Span("Liked by " + likeService.getAmountOfLikes(gifId) + " people");
-        updateLikeUnlikeBtnState(likeUnlikeButton, gifId);
-        likeUnlikeButton.addClickListener(buttonClickEvent -> {
-            if (userService.isLoggedIn()) {
-                final var currentUsername = userService.getCurrentUsername();
-                final var currentUserId = userService.getUserIdByUsername(currentUsername);
-
-                if (likeService.hasUserAlreadyLikedGIF(currentUserId, gifId)) {
-                    likeService.unlikeGif(currentUserId, gifId);
-                    likeUnlikeButton.setText("Like");
-                    final var n = Notification.show("Unliked!", 500, Notification.Position.BOTTOM_CENTER);
-                    n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-                    updateAmountLikesSpan(likeService, gifId, amountLikes);
-                } else {
-                    likeService.likeGif(currentUserId, gifId);
-                    likeUnlikeButton.setText("Unlike");
-                    final var n = Notification.show("Liked!", 500, Notification.Position.BOTTOM_CENTER);
-                    n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-                    updateAmountLikesSpan(likeService, gifId, amountLikes);
-                }
-            } else {
-                final var n = Notification.show("Please log in to like posts.", 500, Notification.Position.BOTTOM_CENTER);
-                n.addThemeVariants(NotificationVariant.LUMO_CONTRAST);
-            }
-        });
-
-        TextField commentField = new TextField();
-        commentField.setPlaceholder("Add a comment...");
-        commentField.setWidthFull();
-
-        Button submitCommentButton = new Button("Comment");
-        submitCommentButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        submitCommentButton.addClickListener(l -> {
-            System.out.println("Add comment.");
-            final var txt = commentField.getValue();
-            if (!txt.isEmpty()) {
-                final var userId = userService.getUserIdByUsername(username);
-                commentService.addComment(userId, gifId, commentField.getValue());
-                System.out.println("commenting: " + txt);
-            }
-        });
-
-        VerticalLayout commentsLayout = new VerticalLayout();
-        // displayComments(gifId, commentsLayout);
-
-        HorizontalLayout commentInputLayout = new HorizontalLayout(commentField, submitCommentButton);
-        commentInputLayout.setWidthFull();
-
-        VerticalLayout gifLayout = new VerticalLayout(usernameLabel, image, likeUnlikeButton, amountLikes, commentInputLayout, commentsLayout);
-        gifLayout.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
-        gifLayout.getStyle().set("border", "1px solid #ccc")
-                .set("padding", "10px")
-                .set("border-radius", "10px")
-                .set("margin", "10px")
-                .set("box-shadow", "0 4px 8px rgba(0, 0, 0, 0.1)");
-        gifDiv.add(gifLayout);
-
-        add(gifDiv);
-
-        return gifDiv;
-    }
-
     private void displayAllGifs() {
         // Get all GIFs
         List<AuroraGIF> allGifs = gifRepo.findAll();
@@ -238,32 +152,11 @@ public class HomeView extends VerticalLayout {
             System.out.println("OUT:" + out);
             System.out.println("FILE:" + file);
 
-            Div gifDiv = displaySingleGif(file, out, username, gif);
+            Div gifDiv = gifDisplayService.displaySingleGif(file, out, username, gif);
+            add(gifDiv);
             displayedGifs.add(gifDiv);
         }
 
-    }
-
-    private void updateLikeUnlikeBtnState(Button likeUnlikeButton, Long gifId) {
-        if (userService.isLoggedIn()) {
-            final var currentUsername = userService.getCurrentUsername();
-            final var currentUserId = userService.getUserIdByUsername(currentUsername);
-
-            if (likeService.hasUserAlreadyLikedGIF(currentUserId, gifId)) {
-                likeUnlikeButton.setText("Unlike");
-            } else {
-                likeUnlikeButton.setText("Like");
-            }
-        } else {
-            likeUnlikeButton.setText("Like");
-        }
-    }
-
-    private void updateAmountLikesSpan(LikeService likeService,
-                                       Long gifId,
-                                       Span amountLikes) {
-        Long currentAmountLikes = likeService.getAmountOfLikes(gifId);
-        amountLikes.setText("Liked by " + String.valueOf(currentAmountLikes) + " people");
     }
 
     private ComboBox<String> createFilterCriteria() {
@@ -288,7 +181,7 @@ public class HomeView extends VerticalLayout {
                     System.out.println("amount likes: " + amountLikes + "; path: " + filename + " a: " + row[2] + " b: " + row[3]);
 
                     final var path = "/images/" + username + "/" + filename;
-                    displaySingleGif(filename, path, username, gif);
+                    gifDisplayService.displaySingleGif(filename, path, username, gif);
                 }
             } else if ("Recent".equals(selectedCriteria)) {
                 final var mostRecentGIFs = likeService.getMostRecentGIFs();
@@ -299,7 +192,7 @@ public class HomeView extends VerticalLayout {
                     final var gif = (AuroraGIF) row[2];
                     System.out.println("path: " + filename + " username: " + username);
                     final var path = "/images/" + username + "/" + filename;
-                    displaySingleGif(filename, path, username, gif);
+                    gifDisplayService.displaySingleGif(filename, path, username, gif);
                 }
             }
         });

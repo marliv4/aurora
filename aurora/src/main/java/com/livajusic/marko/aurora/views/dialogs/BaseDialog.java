@@ -18,6 +18,18 @@ public class BaseDialog {
         dialog.open();
     }
 
+    public void setWidth(String width) {
+        dialog.setWidth(width);
+    }
+
+    public void addComponentToDialog(com.vaadin.flow.component.Component component) {
+        dialog.add(component);
+    }
+
+    public void open(Long gifId) {
+        dialog.open();
+    }
+
     public void close() {
         dialog.close();
     }

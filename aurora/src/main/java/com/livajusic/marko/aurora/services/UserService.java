@@ -98,6 +98,10 @@ public class UserService {
         return auth.getName();
     }
 
+    public Long getCurrentUserId() {
+        return getUserIdByUsername(getCurrentUsername());
+    }
+
     public boolean isLoggedIn() {
         return !getCurrentUsername().equals("anonymousUser");
     }
