@@ -6,6 +6,7 @@ import com.livajusic.marko.aurora.db_repos.UserRepo;
 import com.livajusic.marko.aurora.services.FollowService;
 import com.livajusic.marko.aurora.services.UserService;
 import com.livajusic.marko.aurora.services.ValuesService;
+import com.livajusic.marko.aurora.tables.AuroraGIF;
 import com.livajusic.marko.aurora.tables.AuroraUser;
 import com.sun.jna.platform.win32.Netapi32Util;
 import com.vaadin.flow.component.Component;
@@ -14,6 +15,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.BeforeEvent;
 import com.vaadin.flow.router.HasUrlParameter;
 import com.vaadin.flow.router.PageTitle;
@@ -96,6 +98,21 @@ public class UserProfileView extends Div implements HasUrlParameter<String> {
 
         componentsToDelete.add(userInfoDisplayUtils.getInfoLayout());
         componentsToDelete.add(userInfoDisplayUtils.getFollowersSpan());
+
+        // gifsLayout.addClassName("user-gifs-layout");
+        VerticalLayout gifsLayout = new VerticalLayout();
+        add(gifsLayout);
+        componentsToDelete.add(gifsLayout);
+
+        // display users GIFS
+        Long id = userId;
+        List<AuroraGIF> gifs = gifRepo.findAllByUserId(id);
+        for (AuroraGIF gif : gifs) {
+            String gifFilename = gif.getPath();
+            String gifPath = gif.getPath();
+            // Div singleGifDiv = displaySingleGif(gifFilename, gifPath, gifUsername, gif);
+            // gifsLayout.add(singleGifDiv);
+        }
     }
 
     private void clearUserProfile() {

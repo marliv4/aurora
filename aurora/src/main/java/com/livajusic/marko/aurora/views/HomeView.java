@@ -1,7 +1,9 @@
 package com.livajusic.marko.aurora.views;
 
+import com.livajusic.marko.aurora.db_repos.CommentRepo;
 import com.livajusic.marko.aurora.db_repos.GifCategoryRepo;
 import com.livajusic.marko.aurora.db_repos.GifRepo;
+import com.livajusic.marko.aurora.services.CommentService;
 import com.livajusic.marko.aurora.services.LikeService;
 import com.livajusic.marko.aurora.services.UserService;
 import com.livajusic.marko.aurora.services.ValuesService;
@@ -41,6 +43,8 @@ public class HomeView extends VerticalLayout {
 
     private final GifCategoryRepo gifCategoryRepo;
 
+    private final CommentRepo commentRepo;
+    private final CommentService commentService;
     private final ValuesService valuesService;
 
     private final LikeService likeService;
@@ -58,11 +62,15 @@ public class HomeView extends VerticalLayout {
 
     public HomeView(GifRepo gifRepo,
                     GifCategoryRepo gifCategoryRepo,
+                    CommentRepo commentRepo,
+                    CommentService commentService,
                     ValuesService valuesService,
                     LikeService likeService,
                     UserService userService) {
         this.gifRepo = gifRepo;
         this.gifCategoryRepo = gifCategoryRepo;
+        this.commentRepo = commentRepo;
+        this.commentService = commentService;
         this.valuesService = valuesService;
         this.likeService = likeService;
         this.userService = userService;
@@ -178,7 +186,29 @@ public class HomeView extends VerticalLayout {
             }
         });
 
-        VerticalLayout gifLayout = new VerticalLayout(usernameLabel, image, likeUnlikeButton, amountLikes);
+        TextField commentField = new TextField();
+        commentField.setPlaceholder("Add a comment...");
+        commentField.setWidthFull();
+
+        Button submitCommentButton = new Button("Comment");
+        submitCommentButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        submitCommentButton.addClickListener(l -> {
+            System.out.println("Add comment.");
+            final var txt = commentField.getValue();
+            if (!txt.isEmpty()) {
+                final var userId = userService.getUserIdByUsername(username);
+                commentService.addComment(userId, gifId, commentField.getValue());
+                System.out.println("commenting: " + txt);
+            }
+        });
+
+        VerticalLayout commentsLayout = new VerticalLayout();
+        // displayComments(gifId, commentsLayout);
+
+        HorizontalLayout commentInputLayout = new HorizontalLayout(commentField, submitCommentButton);
+        commentInputLayout.setWidthFull();
+
+        VerticalLayout gifLayout = new VerticalLayout(usernameLabel, image, likeUnlikeButton, amountLikes, commentInputLayout, commentsLayout);
         gifLayout.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
         gifLayout.getStyle().set("border", "1px solid #ccc")
                 .set("padding", "10px")
@@ -243,6 +273,7 @@ public class HomeView extends VerticalLayout {
         selectCriteria.addValueChangeListener(event -> {
             String selectedCriteria = event.getValue();
             clearCurrentlyDisplayedGIFs();
+            Filtered.filtered = true;
             if ("Top Likes".equals(selectedCriteria)) {
                 // Clear all currently displayed GIFs
                 final var mostLikedGIFs = likeService.getMostLikedGIFs();

@@ -1,4 +1,6 @@
 spring:
+  application:
+    name: aurora
   datasource:
     url: jdbc:postgresql://localhost:5432/auroradb
     username: marko
@@ -9,11 +11,26 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        ddl-auto: validate
+        ddl-auto: update
     database: postgresql
+    generate-ddl: true
   servlet:
     multipart:
       max-file-size: 50MB
       max-request-size: 50MB
-  mvc:
-    static-path-pattern: /images/**
+  web:
+    resources:
+      static-locations: aurora/src/main/resources/images/**
+  messages:
+    basename: lang/
+upload:
+  directory: aurora/src/main/resources/images/
+  profilepictures:
+    directory: aurora/src/main/resources/images/profilepictures
+logging:
+  level:
+    org:
+      springframework:
+        web: DEBUG
+        security: DEBUG
+    root: info
