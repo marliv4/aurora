@@ -1,5 +1,6 @@
 package com.livajusic.marko.aurora.views;
 
+import com.livajusic.marko.aurora.LanguagesController;
 import com.livajusic.marko.aurora.UserInfoDisplayUtils;
 import com.livajusic.marko.aurora.db_repos.GifRepo;
 import com.livajusic.marko.aurora.db_repos.UserRepo;
@@ -46,13 +47,14 @@ public class UserProfileView extends Div implements HasUrlParameter<String> {
                            UserService userService,
                            FollowService followService,
                            UserRepo userRepo,
-                           GifRepo gifRepo) {
+                           GifRepo gifRepo,
+                           LanguagesController languagesController) {
         clearUserProfile();
         this.valuesService = valuesService;
         this.userService = userService;
         this.gifRepo = gifRepo;
 
-        NavigationBar navbar = new NavigationBar(valuesService, userService);
+        NavigationBar navbar = new NavigationBar(valuesService, userService, languagesController);
         add(navbar);
         this.followService = followService;
         this.userRepo = userRepo;
@@ -108,8 +110,8 @@ public class UserProfileView extends Div implements HasUrlParameter<String> {
         Long id = userId;
         List<AuroraGIF> gifs = gifRepo.findAllByUserId(id);
         for (AuroraGIF gif : gifs) {
-            String gifFilename = gif.getPath();
-            String gifPath = gif.getPath();
+            // String gifFilename = gif.getPath();
+            // String gifPath = gif.getPath();
             // Div singleGifDiv = displaySingleGif(gifFilename, gifPath, gifUsername, gif);
             // gifsLayout.add(singleGifDiv);
         }

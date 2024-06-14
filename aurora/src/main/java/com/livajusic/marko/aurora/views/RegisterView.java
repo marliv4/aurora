@@ -1,5 +1,6 @@
 package com.livajusic.marko.aurora.views;
 
+import com.livajusic.marko.aurora.LanguagesController;
 import com.livajusic.marko.aurora.db_repos.PrivacySettingsRepo;
 import com.livajusic.marko.aurora.db_repos.RoleRepo;
 import com.livajusic.marko.aurora.db_repos.UserRepo;
@@ -54,14 +55,15 @@ public class RegisterView extends VerticalLayout {
                         PrivacySettingsRepo privacySettingsRepo,
                         ValuesService valuesService,
                         RoleRepo roleRepo,
-                        UserService userService) {
+                        UserService userService,
+                        LanguagesController languagesController) {
         this.userRepo = userRepo;
         this.privacySettingsRepo = privacySettingsRepo;
         this.valuesService = valuesService;
         this.roleRepo = roleRepo;
         this.userService = userService;
 
-        NavigationBar navbar = new NavigationBar(valuesService, userService);
+        NavigationBar navbar = new NavigationBar(valuesService, userService, languagesController);
         add(navbar);
 
         TextField username = new TextField("Username");

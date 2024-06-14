@@ -1,6 +1,7 @@
 package com.livajusic.marko.aurora.services;
 
 import com.livajusic.marko.aurora.AuroraUserDetailService;
+import com.livajusic.marko.aurora.db_repos.RoleRepo;
 import com.livajusic.marko.aurora.db_repos.UserRepo;
 import com.livajusic.marko.aurora.views.MyProfileView;
 import com.livajusic.marko.aurora.views.UserProfileView;
@@ -39,6 +40,9 @@ public class UserService {
 
     @Autowired
     private UserRepo userRepo;
+
+    @Autowired
+    private RoleRepo roleRepo;
 
 
     public UserService(
@@ -144,6 +148,25 @@ public class UserService {
         authenticationContext.logout();
         System.out.println("LOGOUT");
         VaadinSession.getCurrent().getSession().invalidate();
+    }
+
+    public List<String> getRoles(Long userId) {
+        Query query = entityManager.createQuery("SELECT r.role " +
+                "FROM Role r " +
+                "WHERE r.userId = 1552");
+        // query.setParameter("userId", userId);
+
+        final var list = (List<String>)query.getResultList();;
+        for (Object l : list) {
+            System.out.println(l);
+        }
+
+        return list;
+    }
+
+    public boolean isUserMod(Long userId) {
+        if (getRoles(userId).contains("mod")) return true;
+        return false;
     }
 
 }

@@ -1,10 +1,12 @@
 package com.livajusic.marko.aurora.views;
 
+import com.livajusic.marko.aurora.LanguagesController;
 import com.livajusic.marko.aurora.db_repos.BelongsToRepo;
 import com.livajusic.marko.aurora.db_repos.GifCategoryRepo;
 import com.livajusic.marko.aurora.db_repos.GifRepo;
 import com.livajusic.marko.aurora.db_repos.UserRepo;
 import com.livajusic.marko.aurora.services.FileService;
+import com.livajusic.marko.aurora.services.GIFService;
 import com.livajusic.marko.aurora.services.UserService;
 import com.livajusic.marko.aurora.services.ValuesService;
 import com.livajusic.marko.aurora.tables.AuroraGIF;
@@ -28,15 +30,17 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import jakarta.annotation.security.RolesAllowed;
+import jakarta.persistence.Query;
+import org.hibernate.QueryException;
 import org.hibernate.sql.ast.tree.insert.Values;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
-import java.io.File;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.PreparedStatement;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -62,13 +66,17 @@ public class UploadView extends VerticalLayout {
 
     private final ValuesService valuesService;
 
+    private final GIFService gifService;
+
     public UploadView(GifRepo gifRepo,
                       UserRepo userRepo,
                       GifCategoryRepo gifCategoryRepo,
                       BelongsToRepo belongsToRepo,
                       UserService userService,
                       ValuesService valuesService,
-                      FileService fileService) {
+                      FileService fileService,
+                      LanguagesController languagesController,
+                      GIFService gifService) {
         this.gifRepo = gifRepo;
         this.userRepo = userRepo;
         this.gifCategoryRepo = gifCategoryRepo;
@@ -76,8 +84,9 @@ public class UploadView extends VerticalLayout {
         this.userService = userService;
         this.valuesService = valuesService;
         this.fileService = fileService;
+        this.gifService = gifService;
 
-        NavigationBar navbar = new NavigationBar(valuesService, userService);
+        NavigationBar navbar = new NavigationBar(valuesService, userService, languagesController);
         add(navbar);
 
         Span fileLabel = new Span("Choose a file:");
@@ -134,22 +143,17 @@ public class UploadView extends VerticalLayout {
     }
 
     public void saveFile(String path, InputStream is, String license, String category) {
-        // Check if directory with user's username exists
-        File imagesDir = fileService.createDirIfNeeded(path);
-
         String uname = userService.getCurrentUsername();
-        File userSpecificDir = fileService.createDirIfNeeded(imagesDir  + "/" + uname + "/");
 
         Optional<AuroraUser> currentUser = userRepo.findByUsername(uname);
         final var userEmpty = currentUser.isEmpty();
 
-        if (userEmpty) {
+        if (userEmpty || license == null) {
             // Handle error
             return;
         }
 
         final var user = currentUser.get();
-
 
         final var utilDate = UploadView.AuroraDateManager.getUtilDate();
         LocalDateTime dateTime = LocalDateTime.parse(utilDate.toString(), DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss zzz yyyy"));
@@ -162,23 +166,21 @@ public class UploadView extends VerticalLayout {
         var f = date + "_" + time + "_" + user.getId() + ".gif";
         final var filename = f.replace(":", "_");
         System.out.println("FILENAME: " + filename);
-        // AuroraGIF(String path, AuroraUser user, Date publishDate, String license)
+
+        byte[] imageData = {};
+        try {
+            imageData = readBytesFromInputStream(is);
+        } catch (java.io.IOException e) {
+            e.printStackTrace();
+        }
+
         AuroraGIF gif = new AuroraGIF(
-                filename,
+                imageData,
                 user,
                 date,
                 license
         );
         gifRepo.save(gif);
-
-        try {
-            final var endPath = userSpecificDir + "/" + filename;
-            System.out.println("endPATH: " + endPath);
-
-            Files.copy(is, Paths.get(endPath));
-        } catch (java.io.IOException e) {
-            return;
-        }
 
         final var categories = Arrays.asList(category.split(","));
         if (categories.size() > 10) {
@@ -202,6 +204,20 @@ public class UploadView extends VerticalLayout {
                 belongsToRepo.save(belongsToEntry);
             }
         }
+    }
+
+    private byte[] readBytesFromInputStream(InputStream is) throws IOException {
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+
+        int nRead;
+        byte[] data = new byte[1024];
+
+        while ((nRead = is.read(data, 0, data.length)) != -1) {
+            buffer.write(data, 0, nRead);
+        }
+
+        buffer.flush();
+        return buffer.toByteArray();
     }
 
     private static class AuroraDateManager {

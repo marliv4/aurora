@@ -17,6 +17,8 @@ import com.vaadin.flow.server.StreamResource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayInputStream;
+
 @Service
 public class GIFDisplayService {
     private final LikeService likeService;
@@ -33,12 +35,10 @@ public class GIFDisplayService {
     }
 
     public Div displaySingleGif(
-            String filename,
-            String path,
             String username,
             AuroraGIF gif) {
-        StreamResource resource = new StreamResource(filename,
-                () -> getClass().getResourceAsStream(path));
+        StreamResource resource = new StreamResource("ThisNameIsIrrelevant.",
+                () -> new ByteArrayInputStream(gif.getImageData()));
 
         System.out.println("RESOURCE: " + resource);
         Image image = new Image(resource, "GIF");
@@ -56,8 +56,9 @@ public class GIFDisplayService {
         final var gifId = gif.getId();
         Span amountLikes = new Span("Liked by " + likeService.getAmountOfLikes(gifId) + " people");
         updateLikeUnlikeBtnState(likeUnlikeButton, gifId);
+        final var loggedIn = userService.isLoggedIn();
         likeUnlikeButton.addClickListener(buttonClickEvent -> {
-            if (userService.isLoggedIn()) {
+            if (loggedIn) {
                 final var currentUsername = userService.getCurrentUsername();
                 final var currentUserId = userService.getUserIdByUsername(currentUsername);
 
@@ -92,12 +93,31 @@ public class GIFDisplayService {
 
         VerticalLayout gifLayout = new VerticalLayout(usernameLabel, image, buttonsLayout, amountLikes);
         gifLayout.setDefaultHorizontalComponentAlignment(FlexComponent.Alignment.CENTER);
-        gifLayout.getStyle().set("border", "1px solid #ccc")
+        gifLayout.getStyle().set("border", "1.5px solid #FFFFFF")
                 .set("padding", "10px")
                 .set("border-radius", "10px")
                 .set("margin", "10px")
                 .set("box-shadow", "0 4px 8px rgba(0, 0, 0, 0.1)");
         gifDiv.add(gifLayout);
+
+        if (loggedIn) {
+            final var userId = userService.getCurrentUserId();
+            if (userService.isUserMod(userId)) {
+                /*
+                Button removePostButton = new Button("Remove Post");
+                removePostButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
+                removePostButton.addClickListener(buttonClickEvent -> {
+                    // gifRepo.deleteById(gif.getId());
+
+                    Notification.show("Post removed successfully!", 3000, Notification.Position.BOTTOM_CENTER)
+                            .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                    // remove(gifDiv
+                });
+
+                gifLayout.add(removePostButton);
+                */
+            }
+        }
 
         return gifDiv;
     }

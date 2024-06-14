@@ -70,7 +70,7 @@ public class AdminDashboardView extends VerticalLayout {
 
         grid.addColumn(AuroraGIF::getId).setHeader("GIF_ID");
         grid.addColumn(AuroraGIF::getLicense).setHeader("License");
-        grid.addColumn(AuroraGIF::getPath).setHeader("Path");
+        // grid.addColumn(AuroraGIF::getPath).setHeader("Path");
         grid.addColumn(AuroraGIF::getPublishDate).setHeader("Publish date");
         grid.addColumn(gif -> gif.getUser().getId()).setHeader("User_ID");
 

@@ -24,8 +24,7 @@ import jakarta.annotation.security.RolesAllowed;
 public class SettingsView extends VerticalLayout {
 
     public SettingsView() {
-        /*
-        getContent().add(new H2("Settings"));
+        add(new H2("Settings"));
 
         FormLayout formLayout = new FormLayout();
         formLayout.setResponsiveSteps(
@@ -45,12 +44,11 @@ public class SettingsView extends VerticalLayout {
         themeSelect.setValue("Light"); // Set default value
         formLayout.addFormItem(themeSelect, "Select Theme");
 
-        getContent().add(formLayout);
-        getContent().add(new Hr());
+        add(formLayout);
 
         Button saveButton = new Button("Save");
         saveButton.addClickListener(event -> saveSettings());
-        getContent().add(saveButton);
+        add(saveButton);
 
         // New password field
         PasswordField newPasswordField = new PasswordField("New Password");
@@ -101,10 +99,11 @@ public class SettingsView extends VerticalLayout {
             // userService.updateProfilePrivacy(sessionUsername, setting);
         });
 
-        add(radioButtonGroup);*/
+        add(radioButtonGroup);
     }
 
     private void saveSettings() {
         System.out.println("saving");
     }
 }
+

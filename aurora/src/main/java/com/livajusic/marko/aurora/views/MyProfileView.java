@@ -1,5 +1,6 @@
 package com.livajusic.marko.aurora.views;
 
+import com.livajusic.marko.aurora.LanguagesController;
 import com.livajusic.marko.aurora.UserInfoDisplayUtils;
 import com.livajusic.marko.aurora.db_repos.FollowRepo;
 import com.livajusic.marko.aurora.db_repos.GifRepo;
@@ -74,7 +75,8 @@ public class MyProfileView extends VerticalLayout {
             UserRepo userRepo,
             FileService fileService,
             FollowService followService,
-            GifRepo gifRepo) {
+            GifRepo gifRepo,
+            LanguagesController languagesController) {
         this.userService = userService;
         this.valuesService = valuesService;
         this.userRepo = userRepo;
@@ -82,7 +84,7 @@ public class MyProfileView extends VerticalLayout {
         this.followService = followService;
         this.gifRepo = gifRepo;
 
-        NavigationBar navbar = new NavigationBar(valuesService, userService);
+        NavigationBar navbar = new NavigationBar(valuesService, userService, languagesController);
         add(navbar);
 
         setAlignItems(Alignment.CENTER);

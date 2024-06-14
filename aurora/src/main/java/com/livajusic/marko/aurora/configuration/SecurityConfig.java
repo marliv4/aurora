@@ -24,8 +24,6 @@ public class SecurityConfig extends VaadinWebSecurity {
     @Autowired
     private AuroraUserDetailService userDetailService;
 
-    @Autowired
-    private CustomAuthSuccessHandler customAuthSuccessHandler;
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(auth ->
@@ -34,7 +32,7 @@ public class SecurityConfig extends VaadinWebSecurity {
             )
                 .formLogin(login -> login
                         .loginPage("/login")
-                        .successHandler(customAuthSuccessHandler)
+                        // .successHandler(customAuthSuccessHandler)
                         .defaultSuccessUrl("/", true)
                 );
         super.configure(http);

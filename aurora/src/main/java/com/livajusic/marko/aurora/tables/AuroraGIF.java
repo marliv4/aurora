@@ -1,6 +1,8 @@
 package com.livajusic.marko.aurora.tables;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.Type;
+import org.hibernate.engine.jdbc.env.internal.LobTypes;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -13,8 +15,8 @@ public class AuroraGIF {
     @GeneratedValue
     private Long gifId;
 
-    @Column(unique = true)
-    private String path;
+    @Column(name = "data", columnDefinition="bytea")
+    private byte[] imageData;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -41,8 +43,8 @@ public class AuroraGIF {
     }
 
     public AuroraGIF() {}
-    public AuroraGIF(String path, AuroraUser user, Date publishDate, String license) {
-        this.path = path;
+    public AuroraGIF(byte[] imageData, AuroraUser user, Date publishDate, String license) {
+        this.imageData = imageData;
         this.user = user;
         this.publishDate = publishDate;
         this.license = license;
@@ -50,12 +52,15 @@ public class AuroraGIF {
 
     public Long getId() { return gifId; }
 
-    public String getPath() {
-        return path;
+    public byte[] getImageData() {
+        return imageData;
+    }
+    public void setImageData(byte[] imageData) {
+        this.imageData = imageData;
     }
 
-    public void setPath(String path) {
-        this.path = path;
+    public void setPath(byte[] imageData) {
+        this.imageData = imageData;
     }
 
     public AuroraUser getUser() {
