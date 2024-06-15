@@ -71,6 +71,7 @@ public class HomeView extends VerticalLayout {
                     LikeService likeService,
                     UserService userService,
                     GIFDisplayService gifDisplayService,
+                    ProfilePictureService profilePictureService,
                     LanguagesController languagesController) {
         this.gifRepo = gifRepo;
         this.gifCategoryRepo = gifCategoryRepo;
@@ -81,7 +82,7 @@ public class HomeView extends VerticalLayout {
 
         displayedGifs = new ArrayList<>();
 
-        NavigationBar navbar = new NavigationBar(valuesService, userService, languagesController);
+        NavigationBar navbar = new NavigationBar(valuesService, userService, profilePictureService, languagesController);
         add(navbar);
 
         System.out.println(userService.getCurrentUsername());
@@ -175,19 +176,17 @@ public class HomeView extends VerticalLayout {
                 for (Object o : mostLikedGIFs) {
                     Object[] row = (Object[])o;
                     final var amountLikes = (Long)row[0];
-                    final var filename = (String)row[1];
                     final var userId = row[2];
                     final var username = (String)row[3];
                     final var gif = (AuroraGIF) row[4];
 
-                    System.out.println("amount likes: " + amountLikes + "; path: " + filename + " a: " + row[2] + " b: " + row[3]);
+                    System.out.println("amount likes: " + amountLikes + "; path: " + " a: " + row[2] + " b: " + row[3]);
                     add(gifDisplayService.displaySingleGif(username, gif));
                 }
             } else if ("Recent".equals(selectedCriteria)) {
                 final var mostRecentGIFs = likeService.getMostRecentGIFs();
                 for (Object o : mostRecentGIFs) {
                     Object[] row = (Object[]) o;
-                    final var filename = (String) row[0];
                     final var username = (String) row[1];
                     final var gif = (AuroraGIF) row[2];
                     add(gifDisplayService.displaySingleGif(username, gif));

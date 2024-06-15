@@ -2,6 +2,7 @@ package com.livajusic.marko.aurora.views;
 
 import com.livajusic.marko.aurora.LanguagesController;
 import com.livajusic.marko.aurora.db_repos.UserRepo;
+import com.livajusic.marko.aurora.services.ProfilePictureService;
 import com.livajusic.marko.aurora.services.UserService;
 import com.livajusic.marko.aurora.services.ValuesService;
 import com.vaadin.flow.component.UI;
@@ -28,12 +29,13 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
     public LoginView(UserRepo userRepo,
                      ValuesService valuesService,
                      UserService userService,
+                     ProfilePictureService profilePictureService,
                      LanguagesController languagesController) {
         this.userRepo = userRepo;
         this.valuesService = valuesService;
         this.userService = userService;
 
-        NavigationBar navbar = new NavigationBar(valuesService, userService, languagesController);
+        NavigationBar navbar = new NavigationBar(valuesService, userService, profilePictureService, languagesController);
         add(navbar);
         setSizeFull();
         setAlignItems(Alignment.CENTER);

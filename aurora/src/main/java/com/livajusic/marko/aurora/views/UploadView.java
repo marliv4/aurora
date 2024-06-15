@@ -5,10 +5,7 @@ import com.livajusic.marko.aurora.db_repos.BelongsToRepo;
 import com.livajusic.marko.aurora.db_repos.GifCategoryRepo;
 import com.livajusic.marko.aurora.db_repos.GifRepo;
 import com.livajusic.marko.aurora.db_repos.UserRepo;
-import com.livajusic.marko.aurora.services.FileService;
-import com.livajusic.marko.aurora.services.GIFService;
-import com.livajusic.marko.aurora.services.UserService;
-import com.livajusic.marko.aurora.services.ValuesService;
+import com.livajusic.marko.aurora.services.*;
 import com.livajusic.marko.aurora.tables.AuroraGIF;
 import com.livajusic.marko.aurora.tables.AuroraUser;
 import com.livajusic.marko.aurora.tables.BelongsTo;
@@ -75,6 +72,7 @@ public class UploadView extends VerticalLayout {
                       UserService userService,
                       ValuesService valuesService,
                       FileService fileService,
+                      ProfilePictureService profilePictureService,
                       LanguagesController languagesController,
                       GIFService gifService) {
         this.gifRepo = gifRepo;
@@ -86,7 +84,7 @@ public class UploadView extends VerticalLayout {
         this.fileService = fileService;
         this.gifService = gifService;
 
-        NavigationBar navbar = new NavigationBar(valuesService, userService, languagesController);
+        NavigationBar navbar = new NavigationBar(valuesService, userService, profilePictureService, languagesController);
         add(navbar);
 
         Span fileLabel = new Span("Choose a file:");
@@ -167,12 +165,7 @@ public class UploadView extends VerticalLayout {
         final var filename = f.replace(":", "_");
         System.out.println("FILENAME: " + filename);
 
-        byte[] imageData = {};
-        try {
-            imageData = readBytesFromInputStream(is);
-        } catch (java.io.IOException e) {
-            e.printStackTrace();
-        }
+        final byte[] imageData = fileService.getDataBytes(is);
 
         AuroraGIF gif = new AuroraGIF(
                 imageData,
@@ -204,20 +197,6 @@ public class UploadView extends VerticalLayout {
                 belongsToRepo.save(belongsToEntry);
             }
         }
-    }
-
-    private byte[] readBytesFromInputStream(InputStream is) throws IOException {
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-
-        int nRead;
-        byte[] data = new byte[1024];
-
-        while ((nRead = is.read(data, 0, data.length)) != -1) {
-            buffer.write(data, 0, nRead);
-        }
-
-        buffer.flush();
-        return buffer.toByteArray();
     }
 
     private static class AuroraDateManager {

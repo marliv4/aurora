@@ -32,16 +32,14 @@ public class SettingsView extends VerticalLayout {
                 new FormLayout.ResponsiveStep("25em", 2)
         );
 
-        // Language selection
         ComboBox<String> languageSelect = new ComboBox<>("Language");
         languageSelect.setItems("English", "German");
         languageSelect.setValue("English"); // Set default value
         formLayout.addFormItem(languageSelect, "Select Language");
 
-        // Theme selection
         ComboBox<String> themeSelect = new ComboBox<>("Theme");
         themeSelect.setItems("Light", "Dark");
-        themeSelect.setValue("Light"); // Set default value
+        themeSelect.setValue("Light");
         formLayout.addFormItem(themeSelect, "Select Theme");
 
         add(formLayout);
@@ -50,11 +48,9 @@ public class SettingsView extends VerticalLayout {
         saveButton.addClickListener(event -> saveSettings());
         add(saveButton);
 
-        // New password field
         PasswordField newPasswordField = new PasswordField("New Password");
         newPasswordField.setPlaceholder("Enter new password");
 
-        // Change password button
         Button changePasswordButton = new Button("Change Password");
         changePasswordButton.addClickListener(e -> {
             String newPassword = newPasswordField.getValue();
@@ -85,7 +81,7 @@ public class SettingsView extends VerticalLayout {
         add(formContainer);
 
         RadioButtonGroup<String> radioButtonGroup = new RadioButtonGroup<>();
-        radioButtonGroup.setLabel("Privacy Settings");
+        radioButtonGroup.setLabel("Private profile");
         radioButtonGroup.setItems("Enabled", "Disabled");
 
         radioButtonGroup.addValueChangeListener(event -> {

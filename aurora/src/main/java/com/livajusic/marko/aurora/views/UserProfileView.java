@@ -5,6 +5,7 @@ import com.livajusic.marko.aurora.UserInfoDisplayUtils;
 import com.livajusic.marko.aurora.db_repos.GifRepo;
 import com.livajusic.marko.aurora.db_repos.UserRepo;
 import com.livajusic.marko.aurora.services.FollowService;
+import com.livajusic.marko.aurora.services.ProfilePictureService;
 import com.livajusic.marko.aurora.services.UserService;
 import com.livajusic.marko.aurora.services.ValuesService;
 import com.livajusic.marko.aurora.tables.AuroraGIF;
@@ -48,13 +49,14 @@ public class UserProfileView extends Div implements HasUrlParameter<String> {
                            FollowService followService,
                            UserRepo userRepo,
                            GifRepo gifRepo,
+                           ProfilePictureService profilePictureService,
                            LanguagesController languagesController) {
         clearUserProfile();
         this.valuesService = valuesService;
         this.userService = userService;
         this.gifRepo = gifRepo;
 
-        NavigationBar navbar = new NavigationBar(valuesService, userService, languagesController);
+        NavigationBar navbar = new NavigationBar(valuesService, userService, profilePictureService, languagesController);
         add(navbar);
         this.followService = followService;
         this.userRepo = userRepo;

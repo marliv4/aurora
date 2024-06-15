@@ -2,12 +2,15 @@ package com.livajusic.marko.aurora.views;
 
 import com.livajusic.marko.aurora.LanguagesController;
 import com.livajusic.marko.aurora.db_repos.PrivacySettingsRepo;
+import com.livajusic.marko.aurora.db_repos.ProfilePictureRepo;
 import com.livajusic.marko.aurora.db_repos.RoleRepo;
 import com.livajusic.marko.aurora.db_repos.UserRepo;
+import com.livajusic.marko.aurora.services.ProfilePictureService;
 import com.livajusic.marko.aurora.services.UserService;
 import com.livajusic.marko.aurora.services.ValuesService;
 import com.livajusic.marko.aurora.tables.AuroraUser;
 import com.livajusic.marko.aurora.tables.PrivacySettings;
+import com.livajusic.marko.aurora.tables.ProfilePicture;
 import com.livajusic.marko.aurora.tables.Role;
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.Text;
@@ -29,6 +32,7 @@ import org.hibernate.sql.ast.tree.insert.Values;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -51,19 +55,22 @@ public class RegisterView extends VerticalLayout {
     final Pattern pattern = Pattern.compile(patternStr);
 
     private final UserService userService;
+    private final ProfilePictureService profilePictureService;
     public RegisterView(UserRepo userRepo,
                         PrivacySettingsRepo privacySettingsRepo,
                         ValuesService valuesService,
                         RoleRepo roleRepo,
                         UserService userService,
-                        LanguagesController languagesController) {
+                        LanguagesController languagesController,
+                        ProfilePictureService profilePictureService) {
         this.userRepo = userRepo;
         this.privacySettingsRepo = privacySettingsRepo;
         this.valuesService = valuesService;
         this.roleRepo = roleRepo;
         this.userService = userService;
+        this.profilePictureService = profilePictureService;
 
-        NavigationBar navbar = new NavigationBar(valuesService, userService, languagesController);
+        NavigationBar navbar = new NavigationBar(valuesService, userService, profilePictureService, languagesController);
         add(navbar);
 
         TextField username = new TextField("Username");
@@ -88,10 +95,8 @@ public class RegisterView extends VerticalLayout {
             registerUser(user, mail, pass, passRepeat);
         });
 
-        // Add a shortcut to the login button for convenience
         resgisterButton.addClickShortcut(Key.ENTER);
 
-        // Create a FormLayout and set it to 1 column
         FormLayout formLayout = new FormLayout();
         formLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1));
         formLayout.addFormItem(username, "Username");
@@ -99,29 +104,24 @@ public class RegisterView extends VerticalLayout {
         formLayout.addFormItem(password, "Password");
         formLayout.addFormItem(repeatPassword, "Repeat password");
 
-        // Apply shadow styling
         formLayout.getStyle()
                 .set("box-shadow", "0 4px 8px 0 rgba(0, 0, 0, 0.2)")
                 .set("padding", "20px")
                 .set("border-radius", "10px")
                 .set("background-color", "#fff");
 
-        // Create a container to center the form
         VerticalLayout formContainer = new VerticalLayout();
         formContainer.setWidth("400px"); // Set a fixed width for the form container
         formContainer.setAlignItems(Alignment.CENTER);
         formContainer.getStyle().set("margin", "auto");
 
-        // Add welcome text to the form container
         Text welcomeText = new Text("Welcome!");
         formContainer.add(welcomeText, formLayout, resgisterButton);
 
-        // Center the form container on the page
         setSizeFull();
         setAlignItems(Alignment.CENTER);
         setJustifyContentMode(JustifyContentMode.CENTER);
 
-        // Add the form container to the main layout
         add(formContainer);
     }
 
@@ -167,6 +167,12 @@ public class RegisterView extends VerticalLayout {
         Role standardRole = new Role(newUser.getId(), "user");
         roleRepo.save(standardRole);
 
+        /*
+        final var pfpBytes = profilePictureService.getDefaultPfpBytes();
+        final var pfpInputStream = profilePictureService.getDefaultPfpAsInputStream();
+        ProfilePicture pfp = new ProfilePicture(pfpBytes, newUser);
+        profilePictureService.basicSave(pfp);
+        */
         Notification.show("Sucessfully registered!", 3000, Notification.Position.BOTTOM_END);
         RouteConfiguration.forSessionScope().setRoute("login", LoginView.class);
         UI.getCurrent().navigate("login");

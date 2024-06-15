@@ -4,15 +4,10 @@ import com.livajusic.marko.aurora.LanguagesController;
 import com.livajusic.marko.aurora.UserInfoDisplayUtils;
 import com.livajusic.marko.aurora.db_repos.FollowRepo;
 import com.livajusic.marko.aurora.db_repos.GifRepo;
+import com.livajusic.marko.aurora.db_repos.ProfilePictureRepo;
 import com.livajusic.marko.aurora.db_repos.UserRepo;
-import com.livajusic.marko.aurora.services.FileService;
-import com.livajusic.marko.aurora.services.FollowService;
-import com.livajusic.marko.aurora.services.UserService;
-import com.livajusic.marko.aurora.services.ValuesService;
-import com.livajusic.marko.aurora.tables.AuroraGIF;
-import com.livajusic.marko.aurora.tables.AuroraUser;
-import com.livajusic.marko.aurora.tables.BelongsTo;
-import com.livajusic.marko.aurora.tables.GifCategory;
+import com.livajusic.marko.aurora.services.*;
+import com.livajusic.marko.aurora.tables.*;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -31,13 +26,16 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAccessDeniedError;
 import com.vaadin.flow.router.RouterLink;
+import com.vaadin.flow.server.StreamResource;
 import jakarta.annotation.security.RolesAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -68,6 +66,7 @@ public class MyProfileView extends VerticalLayout {
     private final FollowService followService;
 
     private final GifRepo gifRepo;
+    private final ProfilePictureService profilePictureService;
 
     public MyProfileView(
             UserService userService,
@@ -76,15 +75,18 @@ public class MyProfileView extends VerticalLayout {
             FileService fileService,
             FollowService followService,
             GifRepo gifRepo,
-            LanguagesController languagesController) {
+            LanguagesController languagesController,
+            ProfilePictureRepo profilePictureRepo,
+            ProfilePictureService profilePictureService) {
         this.userService = userService;
         this.valuesService = valuesService;
         this.userRepo = userRepo;
         this.fileService = fileService;
         this.followService = followService;
         this.gifRepo = gifRepo;
+        this.profilePictureService = profilePictureService;
 
-        NavigationBar navbar = new NavigationBar(valuesService, userService, languagesController);
+        NavigationBar navbar = new NavigationBar(valuesService, userService, profilePictureService, languagesController);
         add(navbar);
 
         setAlignItems(Alignment.CENTER);
@@ -96,19 +98,25 @@ public class MyProfileView extends VerticalLayout {
         UserInfoDisplayUtils userInfoDisplayUtils = new UserInfoDisplayUtils(gifRepo, userId, userService, followService);
         add(userInfoDisplayUtils.getInfoLayout());
 
-        // Header
         Span header = new Span("My Profile");
         header.getStyle().set("font-size", "24px").set("font-weight", "bold");
         add(header);
 
-        // Current profile picture
-        Image profileImage = new Image("TODO", "Current Profile Picture");
-        profileImage.setWidth("100px");
-        profileImage.setHeight("100px");
-        profileImage.getStyle().set("border-radius", "50%");
-        add(profileImage);
+        if (profilePictureService.userHasPfp(userId)) {
+            final var pfpOptional = profilePictureService.getPfpByUserId(userId);
+            if (pfpOptional.isPresent()) {
+                final var pfp = pfpOptional.get();
+                StreamResource resource = new StreamResource("Profile Picture",
+                        () -> new ByteArrayInputStream(pfp.getImageData()));
 
-        // Profile picture upload
+                Image profileImage = new Image(resource, "Current Profile Picture");
+                profileImage.setWidth("100px");
+                profileImage.setHeight("100px");
+                profileImage.getStyle().set("border-radius", "50%");
+                add(profileImage);
+            }
+        }
+
         Span uploadLabel = new Span("Upload New Profile Picture:");
         MemoryBuffer buffer = new MemoryBuffer();
         Upload upload = new Upload(buffer);
@@ -116,56 +124,30 @@ public class MyProfileView extends VerticalLayout {
 
         upload.addSucceededListener(event -> {
             InputStream inputStream = buffer.getInputStream();
-            String endPath = valuesService.getProfilePicturesDirectory();
-            System.out.println(endPath);
-
-            saveFile(inputStream);
-            // TODO
-            // Files.copy(inputStream, Paths.get(endPath));
+            savePfp(inputStream);
         });
+        add(upload);
 
     }
 
-    // TODO: this is redundant, use UserService instead.
-    private void changePassword(String password) {
-        final var uname = userService.getCurrentUsername();
-        System.out.println(uname + " " + password);
-
-        if (userService.updatePassword(uname, passwordEncoder.encode(password)) == 1) {
-            final var n = Notification.show("Password updated successfully", 300, Notification.Position.BOTTOM_CENTER);
-            n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-        }
-    }
-
-    public void saveFile(InputStream is) {
-        System.out.println("saveFILE() pfp");
-        // Check if directory with user's username exists
-        File imagesDir = fileService.createDirIfNeeded(profilePicturesBasePath);
-
+    public void savePfp(InputStream is) {
         String uname = userService.getCurrentUsername();
-        File userSpecificDir = fileService.createDirIfNeeded(imagesDir + "/" + uname + "/");
-
         Optional<AuroraUser> currentUser = userRepo.findByUsername(uname);
         final var userEmpty = currentUser.isEmpty();
 
         if (userEmpty) {
-            // Handle error
+            final var n = Notification.show("Error: User can't be empty!", 300, Notification.Position.MIDDLE);
+            n.addThemeVariants(NotificationVariant.LUMO_ERROR);
             return;
         }
 
         final var user = currentUser.get();
-
-        final var filename = "pfp.jpg";
-        System.out.println("FILENAME: " + filename);
-        // AuroraGIF(String path, AuroraUser user, Date publishDate, String license)
-
         try {
-            final var endPath = userSpecificDir + "/" + filename;
-            System.out.println("endPATH: " + endPath);
-
-            Files.copy(is, Paths.get(endPath));
-        } catch (java.io.IOException e) {
-            return;
+            profilePictureService.savePfp(is, user);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (RuntimeException e) {
+            e.printStackTrace();
         }
     }
 }

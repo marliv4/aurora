@@ -1,6 +1,7 @@
 package com.livajusic.marko.aurora.views;
 
 import com.livajusic.marko.aurora.LanguagesController;
+import com.livajusic.marko.aurora.services.ProfilePictureService;
 import com.livajusic.marko.aurora.services.UserService;
 import com.livajusic.marko.aurora.services.ValuesService;
 import com.livajusic.marko.aurora.views.LoginView;
@@ -23,6 +24,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.RouterLink;
+import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.livajusic.marko.aurora.views.HomeView;
@@ -34,6 +36,7 @@ import org.springframework.cglib.core.Local;
 import org.springframework.context.MessageSource;
 import org.springframework.web.servlet.LocaleResolver;
 
+import java.io.ByteArrayInputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -44,7 +47,7 @@ public class NavigationBar extends HorizontalLayout {
     private final ValuesService valuesService;
 
     private final UserService userService;
-
+    private final ProfilePictureService profilePictureService;
     private LanguagesController languagesController;
 
     private static final List<String> LANGUAGES = Arrays.asList("English", "Deutsch");
@@ -52,9 +55,11 @@ public class NavigationBar extends HorizontalLayout {
 
     public NavigationBar(ValuesService valuesService,
                          UserService userService,
+                         ProfilePictureService profilePictureService,
                          LanguagesController languagesController) {
         this.valuesService = valuesService;
         this.userService = userService;
+        this.profilePictureService = profilePictureService;
         this.languagesController = languagesController;
 
         setAlignItems(HorizontalLayout.Alignment.CENTER);
@@ -108,22 +113,32 @@ public class NavigationBar extends HorizontalLayout {
         boolean addRegisterAndLoginLink = true;
         MenuBar profileMenu = new MenuBar();
         if (userService.isLoggedIn()) {
-            final var basePfpDir = /* valuesService.getProfilePicturesDirectory() + */ "/images/profilepictures/" + userService.getCurrentUsername() + "/pfp.jpg";
-            System.out.println("BASEPFPDIR: " + basePfpDir);
-            Image profileImage = new Image(basePfpDir, "Profile Picture");
-            profileImage.setWidth("30px");
-            profileImage.setHeight("30px");
-            profileImage.getStyle().set("border-radius", "50%");
+            final var userId = userService.getCurrentUserId();
+            final var pfpOptional = profilePictureService.getPfpByUserId(userId);
 
-            MenuItem profileMenuItem = profileMenu.addItem(profileImage);
-            profileMenuItem.getSubMenu().addItem(languagesController.get("myprofile"), e -> navigateToProfile());
-            profileMenuItem.getSubMenu().addItem(languagesController.get("settings"), e -> navigateToSettings());
-            profileMenuItem.getSubMenu().addItem(languagesController.get("create"), e -> navigateToCreate());
-            profileMenuItem.getSubMenu().addItem(languagesController.get("logout"), e -> {
-                userService.logout();
-                getUI().get().getPage().reload();
-            });
-            addRegisterAndLoginLink = false;
+            if (pfpOptional.isPresent()) {
+                final var pfp = pfpOptional.get();
+                StreamResource resource = new StreamResource("ThisNameIsIrrelevant.",
+                        () -> new ByteArrayInputStream(pfp.getImageData()));
+
+                if (profilePictureService.userHasPfp(userId)) {
+                    Image profileImage = new Image(resource, "Profile Picture");
+
+                    profileImage.setWidth("30px");
+                    profileImage.setHeight("30px");
+                    profileImage.getStyle().set("border-radius", "50%");
+
+                    MenuItem profileMenuItem = profileMenu.addItem(profileImage);
+                    profileMenuItem.getSubMenu().addItem(languagesController.get("myprofile"), e -> navigateToProfile());
+                    profileMenuItem.getSubMenu().addItem(languagesController.get("settings"), e -> navigateToSettings());
+                    profileMenuItem.getSubMenu().addItem(languagesController.get("create"), e -> navigateToCreate());
+                    profileMenuItem.getSubMenu().addItem(languagesController.get("logout"), e -> {
+                        userService.logout();
+                        getUI().get().getPage().reload();
+                    });
+                    addRegisterAndLoginLink = false;
+                }
+            }
         }
 
         ComboBox<String> languageSwitcher = new ComboBox<>();
@@ -190,8 +205,7 @@ public class NavigationBar extends HorizontalLayout {
     }
 
     private void navigateToProfile() {
-        RouteConfiguration.forSessionScope().setRoute("my_profile", MyProfileView.class);
-        UI.getCurrent().navigate("my_profile");
+        UI.getCurrent().navigate(MyProfileView.class);
     }
 
     private void navigateToSettings() {
