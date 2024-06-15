@@ -4,4 +4,4 @@ Documentation
 
 Following image shows Aurora's ER-Diagram:
 
-![ER-Diagram](/res/erd.png)
+![ER-Diagram](/docs/res/erd.png)
