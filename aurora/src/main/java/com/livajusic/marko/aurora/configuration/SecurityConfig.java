@@ -44,7 +44,6 @@ public class SecurityConfig extends VaadinWebSecurity {
         return userDetailService;
 
     }
-
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
@@ -57,17 +56,5 @@ public class SecurityConfig extends VaadinWebSecurity {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-    }
-
-    private VaadinSavedRequestAwareAuthenticationSuccessHandler getVaadinSavedRequestAwareAuthenticationSuccessHandler(HttpSecurity http) {
-        VaadinSavedRequestAwareAuthenticationSuccessHandler vaadinSavedRequestAwareAuthenticationSuccessHandler = new VaadinSavedRequestAwareAuthenticationSuccessHandler();
-        vaadinSavedRequestAwareAuthenticationSuccessHandler.setDefaultTargetUrl(this.applyUrlMapping(""));
-        RequestCache requestCache = (RequestCache)http.getSharedObject(RequestCache.class);
-        if (requestCache != null) {
-            vaadinSavedRequestAwareAuthenticationSuccessHandler.setRequestCache(requestCache);
-        }
-
-        http.setSharedObject(VaadinSavedRequestAwareAuthenticationSuccessHandler.class, vaadinSavedRequestAwareAuthenticationSuccessHandler);
-        return vaadinSavedRequestAwareAuthenticationSuccessHandler;
     }
 }

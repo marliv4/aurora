@@ -1,8 +1,11 @@
 package com.livajusic.marko.aurora.views;
 
+import com.livajusic.marko.aurora.LanguagesController;
+import com.livajusic.marko.aurora.services.*;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
@@ -16,15 +19,34 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
 import jakarta.annotation.security.RolesAllowed;
+import org.springframework.beans.factory.annotation.Autowired;
 
 
 @PageTitle("Settings")
 @Route(value = "/settings")
 @RolesAllowed({"user"})
 public class SettingsView extends VerticalLayout {
+    private final SettingsService settingsService;
 
-    public SettingsView() {
-        add(new H2("Settings"));
+    private final LanguagesController languagesController;
+
+    @Autowired
+    private final UserService userService;
+    public SettingsView(SettingsService settingsService,
+                        ValuesService valuesService,
+                        UserService userService,
+                        ProfilePictureService profilePictureService,
+                        LanguagesController languagesController) {
+        this.settingsService = settingsService;
+        this.userService = userService;
+        this.languagesController = languagesController;
+
+        NavigationBar navbar = new NavigationBar(valuesService, userService, profilePictureService, languagesController);
+        add(navbar);
+
+        H1 title = new H1(languagesController.get("settings"));
+        title.getStyle().set("text-align", "center");
+        add(title);
 
         FormLayout formLayout = new FormLayout();
         formLayout.setResponsiveSteps(
@@ -32,74 +54,95 @@ public class SettingsView extends VerticalLayout {
                 new FormLayout.ResponsiveStep("25em", 2)
         );
 
-        ComboBox<String> languageSelect = new ComboBox<>("Language");
+        ComboBox<String> languageSelect = new ComboBox<>(languagesController.get("language"));
         languageSelect.setItems("English", "German");
-        languageSelect.setValue("English"); // Set default value
-        formLayout.addFormItem(languageSelect, "Select Language");
 
-        ComboBox<String> themeSelect = new ComboBox<>("Theme");
-        themeSelect.setItems("Light", "Dark");
-        themeSelect.setValue("Light");
-        formLayout.addFormItem(themeSelect, "Select Theme");
+        final var userId = userService.getCurrentUserId();
+        languageSelect.setValue(settingsService.getUsersLanguage(userId));
 
+        languageSelect.addValueChangeListener(l -> {
+            String selectedLanguage = l.getValue();
+            languagesController.switchLanguage(selectedLanguage);
+            settingsService.updateUsersLanguage(userId, selectedLanguage);
+        });
+        formLayout.addFormItem(languageSelect, languagesController.get("select_language"));
+
+        ComboBox<String> themeSelect = getThemeSelector(userId);
+
+        formLayout.addFormItem(themeSelect, languagesController.get("select_theme"));
         add(formLayout);
 
-        Button saveButton = new Button("Save");
-        saveButton.addClickListener(event -> saveSettings());
-        add(saveButton);
+        PasswordField newPasswordField = new PasswordField(languagesController.get("password"));
+        newPasswordField.setPlaceholder(languagesController.get("new_password"));
 
-        PasswordField newPasswordField = new PasswordField("New Password");
-        newPasswordField.setPlaceholder("Enter new password");
-
-        Button changePasswordButton = new Button("Change Password");
-        changePasswordButton.addClickListener(e -> {
-            String newPassword = newPasswordField.getValue();
-            if (newPassword.isEmpty()) {
-                final var n = Notification.show("Please enter a new password");
-                n.addThemeVariants(NotificationVariant.LUMO_ERROR);
-            } else {
-                // changePassword(newPassword);
-            }
-        });
+        Button changePasswordButton = getNewPasswordButton(newPasswordField);
 
         formLayout.add(newPasswordField, changePasswordButton);
         formLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1));
+        formLayout.addClassName("register_form");
 
-        formLayout.getStyle()
-                .set("box-shadow", "0 4px 8px 0 rgba(0, 0, 0, 0.2)")
-                .set("padding", "20px")
-                .set("border-radius", "10px")
-                .set("background-color", "#fff");
-
-        // Container to center the form
         VerticalLayout formContainer = new VerticalLayout();
-        formContainer.setWidth("400px"); // Fixed width for the form container
+        formContainer.setWidth("400px");
         formContainer.getStyle().set("margin", "auto");
         formContainer.add(formLayout);
 
-        // Add the form container to the main layout
         add(formContainer);
 
-        RadioButtonGroup<String> radioButtonGroup = new RadioButtonGroup<>();
-        radioButtonGroup.setLabel("Private profile");
-        radioButtonGroup.setItems("Enabled", "Disabled");
-
-        radioButtonGroup.addValueChangeListener(event -> {
-            String selected = event.getValue().toLowerCase();
-            System.out.println("Selected: " + selected);
-            // final var sessionUsername = userService.getCurrentUsername();
-            int setting = 0;
-            if (selected.equals("enabled")) {
-                setting = 1;
-            }
-            // userService.updateProfilePrivacy(sessionUsername, setting);
-        });
-
-        add(radioButtonGroup);
+        RadioButtonGroup<String> privateProfileChooser = getStringRadioButtonGroup(userId);
+        formLayout.add(privateProfileChooser);
     }
 
-    private void saveSettings() {
-        System.out.println("saving");
+    private ComboBox<String> getThemeSelector(Long userId) {
+        ComboBox<String> themeSelect = new ComboBox<>(languagesController.get("theme"));
+        themeSelect.setItems("Light", "Dark");
+        themeSelect.setValue(settingsService.getUsersTheme(userId));
+        themeSelect.addValueChangeListener(l -> {
+            String selectedTheme = l.getValue();
+            settingsService.updateUsersTheme(userId, selectedTheme);
+        });
+
+        return themeSelect;
+    }
+
+    private RadioButtonGroup<String> getStringRadioButtonGroup(Long userId) {
+        RadioButtonGroup<String> privateProfileChooser = new RadioButtonGroup<>();
+        privateProfileChooser.setLabel(languagesController.get("private_profile"));
+        privateProfileChooser.setItems(languagesController.get("on"), languagesController.get("off"));
+
+        boolean privateProfile = settingsService.isUsersProfilePrivate(userId);
+        if (privateProfile) {
+            privateProfileChooser.setValue(languagesController.get("on"));
+        } else {
+            privateProfileChooser.setValue(languagesController.get("off"));
+        }
+
+        privateProfileChooser.addValueChangeListener(event -> {
+            String selected = event.getValue().toLowerCase();
+            System.out.println("Selected: " + selected);
+            int wantsPrivateProfile = 0;
+            if (selected.equals(languagesController.get("on").toLowerCase())) {
+                wantsPrivateProfile = 1;
+            }
+            System.out.println("passing: " + wantsPrivateProfile);
+            settingsService.updateProfilePrivacy(userId, wantsPrivateProfile);
+        });
+        return privateProfileChooser;
+    }
+
+    private Button getNewPasswordButton(PasswordField passwordField) {
+        Button changePasswordButton = new Button(languagesController.get("change_password"));
+        changePasswordButton.addClickListener(e -> {
+            String newPassword = passwordField.getValue();
+            if (newPassword.isEmpty()) {
+                final var n = Notification.show(languagesController.get("enter_new_password"));
+                n.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            } else {
+                if (userService.updatePassword(userService.getCurrentUserId(), newPassword) == 1) {
+                    GIFDisplayService.notify("Changed password successfully!");
+                }
+            }
+        });
+        return changePasswordButton;
     }
 }
 

@@ -1,10 +1,15 @@
 package com.livajusic.marko.aurora.views;
 
+import com.livajusic.marko.aurora.LanguagesController;
 import com.livajusic.marko.aurora.db_repos.GifRepo;
+import com.livajusic.marko.aurora.db_repos.RoleRepo;
 import com.livajusic.marko.aurora.db_repos.UserRepo;
+import com.livajusic.marko.aurora.services.ProfilePictureService;
 import com.livajusic.marko.aurora.services.UserService;
+import com.livajusic.marko.aurora.services.ValuesService;
 import com.livajusic.marko.aurora.tables.AuroraGIF;
 import com.livajusic.marko.aurora.tables.AuroraUser;
+import com.livajusic.marko.aurora.tables.Role;
 import com.livajusic.marko.aurora.views.dialogs.CRUDDialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H1;
@@ -13,6 +18,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @PageTitle("Admin Dashboard")
 @Route(value = "/admin")
@@ -21,20 +27,29 @@ public class AdminDashboardView extends VerticalLayout {
     private final UserRepo userRepo;
 
     private final GifRepo gifRepo;
+    private final RoleRepo roleRepo;
 
     private final UserService userService;
 
     public AdminDashboardView(UserRepo userRepo,
                               GifRepo gifRepo,
-                              UserService userService) {
+                              RoleRepo roleRepo,
+                              UserService userService,
+                              ValuesService valuesService,
+                              ProfilePictureService profilePictureService,
+                              LanguagesController languagesController) {
         this.userRepo = userRepo;
         this.gifRepo = gifRepo;
+        this.roleRepo = roleRepo;
         this.userService = userService;
 
+        NavigationBar navbar = new NavigationBar(valuesService, userService, profilePictureService, languagesController);
+        add(navbar);
         add(new H1("Admin Dashboard"));
 
         addUsersTable();
         addGifsTable();
+        addRolesTable();
     }
 
     private void addUsersTable() {
@@ -45,7 +60,6 @@ public class AdminDashboardView extends VerticalLayout {
         grid.addColumn(AuroraUser::getId).setHeader("ID");
         grid.addColumn(AuroraUser::getUsername).setHeader("Username");
         grid.addColumn(AuroraUser::getPassword).setHeader("Password");
-        // grid.addColumn(AuroraUser::getRole).setHeader("Role");
         grid.addColumn(AuroraUser::getEmail).setHeader("Email");
 
         grid.setItems(users);
@@ -70,9 +84,27 @@ public class AdminDashboardView extends VerticalLayout {
 
         grid.addColumn(AuroraGIF::getId).setHeader("GIF_ID");
         grid.addColumn(AuroraGIF::getLicense).setHeader("License");
-        // grid.addColumn(AuroraGIF::getPath).setHeader("Path");
         grid.addColumn(AuroraGIF::getPublishDate).setHeader("Publish date");
         grid.addColumn(gif -> gif.getUser().getId()).setHeader("User_ID");
+
+        grid.setItems(gifs);
+        grid.setAllRowsVisible(true);
+        grid.addSelectionListener(selection -> {
+            final var selectedGIF = selection.getFirstSelectedItem();
+            if (selectedGIF.isPresent()) {
+            }
+        });
+
+        add(grid);
+    }
+
+    private void addRolesTable() {
+        add(new H2("Roles Table"));
+        Grid<Role> grid = new Grid<>(Role.class, false);
+        final var gifs = roleRepo.findAll();
+
+        grid.addColumn(Role::getUserId).setHeader("User_ID");
+        grid.addColumn(Role::getRole).setHeader("Role");
 
         grid.setItems(gifs);
         grid.setAllRowsVisible(true);

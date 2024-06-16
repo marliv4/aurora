@@ -25,13 +25,8 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.dom.Element;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
-import com.vaadin.flow.component.button.Button;
 import com.livajusic.marko.aurora.tables.BelongsTo;
-import com.vaadin.flow.theme.Theme;
-import com.vaadin.flow.theme.lumo.Lumo;
-import com.vaadin.flow.theme.material.Material;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.*;
@@ -58,6 +53,7 @@ public class HomeView extends VerticalLayout {
     private TextField searchField;
 
     private ArrayList<Div> displayedGifs;
+    private final LanguagesController languagesController;
 
     private static class Filtered {
         public static boolean filtered = false;
@@ -79,6 +75,7 @@ public class HomeView extends VerticalLayout {
         this.likeService = likeService;
         this.userService = userService;
         this.gifDisplayService = gifDisplayService;
+        this.languagesController = languagesController;
 
         displayedGifs = new ArrayList<>();
 
@@ -89,7 +86,7 @@ public class HomeView extends VerticalLayout {
 
         final var horizontalLayout = createHorizontalLayout();
 
-        searchField.setPlaceholder("Filter by categories");
+        searchField.setPlaceholder(languagesController.get("filter_by_categories"));
         searchField.addValueChangeListener(event -> {
             filterGifs(event.getValue());
             Filtered.filtered = true;
@@ -102,7 +99,7 @@ public class HomeView extends VerticalLayout {
         setAlignItems(Alignment.CENTER);
         setJustifyContentMode(JustifyContentMode.CENTER);
 
-        getElement().getStyle().set("background-color", "#0D1219");
+        // getElement().getStyle().set("background-color", "#0D1219");
     }
 
     private HorizontalLayout createHorizontalLayout() {
@@ -160,17 +157,16 @@ public class HomeView extends VerticalLayout {
     }
 
     private ComboBox<String> createFilterCriteria() {
-        ComboBox<String> selectCriteria = new ComboBox<>("Select Criteria");
-        selectCriteria.getStyle()
-                        .set("color", "white");
-        selectCriteria.setItems("Top Likes", "Recent");
+        ComboBox<String> selectCriteria = new ComboBox<>(languagesController.get("selectsriteria"));
+        // selectCriteria.getStyle()
+                        // .set("color", "white");
+        selectCriteria.setItems(languagesController.get("toplikes"), languagesController.get("recent"));
 
         selectCriteria.addValueChangeListener(event -> {
             String selectedCriteria = event.getValue();
             clearCurrentlyDisplayedGIFs();
             Filtered.filtered = true;
             if ("Top Likes".equals(selectedCriteria)) {
-                System.out.println("TOP LIKES FILTER");
                 // Clear all currently displayed GIFs
                 final var mostLikedGIFs = likeService.getMostLikedGIFs();
                 for (Object o : mostLikedGIFs) {

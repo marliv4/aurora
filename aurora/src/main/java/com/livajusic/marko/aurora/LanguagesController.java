@@ -1,5 +1,6 @@
 package com.livajusic.marko.aurora;
 
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.server.VaadinSession;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,7 +33,7 @@ public class LanguagesController {
         return messageSource.getMessage(item, null, VaadinSession.getCurrent().getLocale());
     }
 
-    public void setLocale(Locale locale) {
+    private void setLocale(Locale locale) {
         VaadinSession.getCurrent().setLocale(locale);
     }
 
@@ -45,5 +46,17 @@ public class LanguagesController {
         return out;
     }
 
+    public void switchLanguage(String language) {
+        Locale locale;
+        switch (language) {
+            case "Deutsch":
+                setLocale(Locale.GERMAN);
+                break;
+            default:
+                setLocale(Locale.ENGLISH);
+                break;
+        }
+        UI.getCurrent().getPage().reload();
+    }
 
 }

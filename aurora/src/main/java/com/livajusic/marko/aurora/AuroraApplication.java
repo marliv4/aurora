@@ -14,7 +14,8 @@ import org.springframework.context.support.ResourceBundleMessageSource;
 import java.util.Locale;
 
 @SpringBootApplication(exclude = ErrorMvcAutoConfiguration.class)
-// @Theme(value = "aurora_theme", variant = Lumo.DARK)
+// @Theme(value = "aurora_theme", variant = Lumo)
+@Theme(variant = Lumo.DARK)
 public class AuroraApplication implements AppShellConfigurator {
 
 	public static void main(String[] args) {

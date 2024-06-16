@@ -1,7 +1,7 @@
 package com.livajusic.marko.aurora.views;
 
 import com.livajusic.marko.aurora.LanguagesController;
-import com.livajusic.marko.aurora.db_repos.PrivacySettingsRepo;
+import com.livajusic.marko.aurora.db_repos.SettingsRepo;
 import com.livajusic.marko.aurora.db_repos.ProfilePictureRepo;
 import com.livajusic.marko.aurora.db_repos.RoleRepo;
 import com.livajusic.marko.aurora.db_repos.UserRepo;
@@ -9,7 +9,7 @@ import com.livajusic.marko.aurora.services.ProfilePictureService;
 import com.livajusic.marko.aurora.services.UserService;
 import com.livajusic.marko.aurora.services.ValuesService;
 import com.livajusic.marko.aurora.tables.AuroraUser;
-import com.livajusic.marko.aurora.tables.PrivacySettings;
+import com.livajusic.marko.aurora.tables.Settings;
 import com.livajusic.marko.aurora.tables.ProfilePicture;
 import com.livajusic.marko.aurora.tables.Role;
 import com.vaadin.flow.component.Key;
@@ -42,7 +42,7 @@ import java.util.regex.Pattern;
 public class RegisterView extends VerticalLayout {
     private final UserRepo userRepo;
 
-    private final PrivacySettingsRepo privacySettingsRepo;
+    private final SettingsRepo settingsRepo;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -57,14 +57,14 @@ public class RegisterView extends VerticalLayout {
     private final UserService userService;
     private final ProfilePictureService profilePictureService;
     public RegisterView(UserRepo userRepo,
-                        PrivacySettingsRepo privacySettingsRepo,
+                        SettingsRepo settingsRepo,
                         ValuesService valuesService,
                         RoleRepo roleRepo,
                         UserService userService,
                         LanguagesController languagesController,
                         ProfilePictureService profilePictureService) {
         this.userRepo = userRepo;
-        this.privacySettingsRepo = privacySettingsRepo;
+        this.settingsRepo = settingsRepo;
         this.valuesService = valuesService;
         this.roleRepo = roleRepo;
         this.userService = userService;
@@ -103,15 +103,10 @@ public class RegisterView extends VerticalLayout {
         formLayout.addFormItem(email, "Email");
         formLayout.addFormItem(password, "Password");
         formLayout.addFormItem(repeatPassword, "Repeat password");
-
-        formLayout.getStyle()
-                .set("box-shadow", "0 4px 8px 0 rgba(0, 0, 0, 0.2)")
-                .set("padding", "20px")
-                .set("border-radius", "10px")
-                .set("background-color", "#fff");
+        formLayout.addClassName("register_form");
 
         VerticalLayout formContainer = new VerticalLayout();
-        formContainer.setWidth("400px"); // Set a fixed width for the form container
+        formContainer.setWidth("400px");
         formContainer.setAlignItems(Alignment.CENTER);
         formContainer.getStyle().set("margin", "auto");
 
@@ -161,9 +156,8 @@ public class RegisterView extends VerticalLayout {
         );
         userRepo.save(newUser);
 
-        PrivacySettings ps = new PrivacySettings(newUser, 1);
-        privacySettingsRepo.save(ps);
-
+        Settings settings = new Settings(newUser, 1, "English", "Dark");
+        settingsRepo.save(settings);
         Role standardRole = new Role(newUser.getId(), "user");
         roleRepo.save(standardRole);
 

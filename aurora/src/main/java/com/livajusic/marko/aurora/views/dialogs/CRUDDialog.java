@@ -56,7 +56,7 @@ public class CRUDDialog extends BaseDialog {
         } else if (event.getSource() == passwordField) {
             String newPassword = passwordField.getValue();
             System.out.println("changePassword");
-            userService.updatePassword(username, newPassword);
+            userService.updatePassword(userId, newPassword);
         } else if (event.getSource() == emailField) {
             String newEmail = emailField.getValue();
             System.out.println("changeEmail");

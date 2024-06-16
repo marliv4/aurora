@@ -40,6 +40,7 @@ import java.io.ByteArrayInputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Stream;
 
 @StyleSheet("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap")
 // @CssImport("styles.css")
@@ -64,105 +65,100 @@ public class NavigationBar extends HorizontalLayout {
 
         setAlignItems(HorizontalLayout.Alignment.CENTER);
         setJustifyContentMode(JustifyContentMode.CENTER);
-
-        getElement().getStyle()
-                .set("background-color", "#0D1219")
-                .set("box-shadow", "0px 2px 4px rgba(0, 0, 0, 0.1)")
-                .set("margin-top", "0")
-                .set("display", "flex")
-                .set("align-items", "center")
-                .set("padding", "0")
-                .set("border-bottom", "1px solid #3F4D62");
-
-        // getElement().getStyle().set("padding", "10px 20px");
-        // getElement().getStyle().set("border-radius", "30px");
-        getElement().getStyle().set("gap", "20px");
-        getElement().getStyle().set("box-shadow", "0px 2px 4px rgba(0, 0, 0, 0.1)");
-        getElement().getStyle().set("margin-top", "0");
-
+        addClassName("navbar");
         setWidthFull();
 
         RouterLink homeLink = new RouterLink(languagesController.get("home"), HomeView.class);
-        homeLink.getStyle()
-                .set("color", "white")
-                .set("font-weight", "bold")
-                .set("text-decoration", "none")
-                .set("transition", "color 0.3s")
-                .set("font-size", "15px");
-
         RouterLink registerLink = new RouterLink(languagesController.get("register"), RegisterView.class);
-        registerLink.getStyle()
-                .set("color", "white")
-                .set("font-weight", "bold")
-                .set("text-decoration", "none");
-
         RouterLink loginLink = new RouterLink(languagesController.get("login"), LoginView.class);
-        loginLink.getStyle()
-                .set("color", "white")
-                .set("font-weight", "bold")
-                .set("text-decoration", "none")
-                .set("font-size", "15px");
-
         RouterLink publishLink = new RouterLink(languagesController.get("upload"), UploadView.class);
-        publishLink.getStyle()
-                .set("color", "white")
-                .set("font-weight", "bold")
-                .set("text-decoration", "none")
-                .set("font-size", "15px");
 
         boolean addRegisterAndLoginLink = true;
         MenuBar profileMenu = new MenuBar();
+
         if (userService.isLoggedIn()) {
             final var userId = userService.getCurrentUserId();
             final var pfpOptional = profilePictureService.getPfpByUserId(userId);
+            StreamResource resource;
 
             if (pfpOptional.isPresent()) {
                 final var pfp = pfpOptional.get();
-                StreamResource resource = new StreamResource("ThisNameIsIrrelevant.",
-                        () -> new ByteArrayInputStream(pfp.getImageData()));
-
-                if (profilePictureService.userHasPfp(userId)) {
-                    Image profileImage = new Image(resource, "Profile Picture");
-
-                    profileImage.setWidth("30px");
-                    profileImage.setHeight("30px");
-                    profileImage.getStyle().set("border-radius", "50%");
-
-                    MenuItem profileMenuItem = profileMenu.addItem(profileImage);
-                    profileMenuItem.getSubMenu().addItem(languagesController.get("myprofile"), e -> navigateToProfile());
-                    profileMenuItem.getSubMenu().addItem(languagesController.get("settings"), e -> navigateToSettings());
-                    profileMenuItem.getSubMenu().addItem(languagesController.get("create"), e -> navigateToCreate());
-                    profileMenuItem.getSubMenu().addItem(languagesController.get("logout"), e -> {
-                        userService.logout();
-                        getUI().get().getPage().reload();
-                    });
-                    addRegisterAndLoginLink = false;
-                }
+                resource = new StreamResource("profile-picture", () -> new ByteArrayInputStream(pfp.getImageData()));
+            } else {
+                resource = new StreamResource("profile-picture", () -> new ByteArrayInputStream(profilePictureService.getDefaultPfpBytes()));
             }
-        }
+            Image profileImage = new Image(resource, "Profile Picture");
+            profileImage.setWidth("30px");
+            profileImage.setHeight("30px");
+            profileImage.getStyle().set("border-radius", "50%");
 
-        ComboBox<String> languageSwitcher = new ComboBox<>();
-        languageSwitcher.setItems("English", "Deutsch");
-        // languageSwitcher.setValue("English");
-        languageSwitcher.addValueChangeListener(event -> {
-            String selectedLanguage = event.getValue();
-            switchLanguage(selectedLanguage);
-        });
-        add(languageSwitcher);
+            MenuItem profileMenuItem = profileMenu.addItem(profileImage);
+            profileMenuItem.getSubMenu().addItem(languagesController.get("myprofile"), e -> navigateToProfile());
+            profileMenuItem.getSubMenu().addItem(languagesController.get("settings"), e -> navigateToSettings());
+            profileMenuItem.getSubMenu().addItem(languagesController.get("create"), e -> navigateToCreate());
+            profileMenuItem.getSubMenu().addItem(languagesController.get("logout"), e -> {
+                userService.logout();
+                getUI().get().getPage().reload();
+            });
+            addRegisterAndLoginLink = false;
+        }
+        add(profileMenu);
 
         Button themeToggleButton = new Button(new Icon(VaadinIcon.MOON));
-        themeToggleButton.getElement().getStyle().set("background-color", "#1c1f2b");
-        themeToggleButton.getElement().getStyle().set("border", "none");
-        themeToggleButton.getElement().getStyle().set("border-radius", "50%");
-        themeToggleButton.getElement().getStyle().set("width", "40px");
-        themeToggleButton.getElement().getStyle().set("height", "40px");
-        themeToggleButton.getElement().getStyle().set("display", "flex");
-        themeToggleButton.getElement().getStyle().set("align-items", "center");
-        themeToggleButton.getElement().getStyle().set("justify-content", "center");
-        themeToggleButton.getElement().getStyle().set("color", "white");
-        themeToggleButton.getElement().getStyle().set("cursor", "pointer");
+        themeToggleButton.getElement().
 
-        themeToggleButton.addClickListener(event -> {
+                getStyle().
+
+                set("background-color", "#1c1f2b");
+        themeToggleButton.getElement().
+
+                getStyle().
+
+                set("border", "none");
+        themeToggleButton.getElement().
+
+                getStyle().
+
+                set("border-radius", "50%");
+        themeToggleButton.getElement().
+
+                getStyle().
+
+                set("width", "40px");
+        themeToggleButton.getElement().
+
+                getStyle().
+
+                set("height", "40px");
+        themeToggleButton.getElement().
+
+                getStyle().
+
+                set("display", "flex");
+        themeToggleButton.getElement().
+
+                getStyle().
+
+                set("align-items", "center");
+        themeToggleButton.getElement().
+
+                getStyle().
+
+                set("justify-content", "center");
+        themeToggleButton.getElement().
+
+                getStyle().
+
+                set("color", "white");
+        themeToggleButton.getElement().
+
+                getStyle().
+
+                set("cursor", "pointer");
+
+        themeToggleButton.addClickListener(event ->
+
+        {
             Icon currentIcon = (Icon) themeToggleButton.getIcon();
             if (currentIcon.getElement().getAttribute("icon").equals(VaadinIcon.MOON.create().getElement().getAttribute("icon"))) {
                 themeToggleButton.setIcon(new Icon(VaadinIcon.SUN_DOWN));
@@ -180,20 +176,9 @@ public class NavigationBar extends HorizontalLayout {
         } else {
             add(/* logo, */ homeLink, publishLink, /* searchField, */ profileMenu, userSearch);
         }
-        setSpacing(true);
-    }
 
-    private void switchLanguage(String language) {
-        Locale locale;
-        switch (language) {
-            case "Deutsch":
-                languagesController.setLocale(Locale.GERMAN);
-                break;
-            default:
-                languagesController.setLocale(Locale.ENGLISH);
-                break;
-        }
-        UI.getCurrent().getPage().reload();
+        setSpacing(true);
+
     }
 
     private TextField createUserSearchField() {
@@ -209,12 +194,12 @@ public class NavigationBar extends HorizontalLayout {
     }
 
     private void navigateToSettings() {
-        RouteConfiguration.forSessionScope().setRoute("settings", SettingsView.class);
+        // RouteConfiguration.forSessionScope().setRoute("settings", SettingsView.class);
         UI.getCurrent().navigate("settings");
     }
 
     private void navigateToCreate() {
-        RouteConfiguration.forSessionScope().setRoute("create", SettingsView.class);
+        // RouteConfiguration.forSessionScope().setRoute("create", SettingsView.class);
         UI.getCurrent().navigate("create");
     }
 }

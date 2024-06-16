@@ -131,11 +131,7 @@ public class UploadView extends VerticalLayout {
         formLayout.addFormItem(licenseSelect, "License");
         formLayout.addFormItem(categoryInput, "Categories (CSV)");
 
-        formLayout.getStyle()
-                .set("box-shadow", "0 4px 8px 0 rgba(0, 0, 0, 0.2)")
-                .set("padding", "20px")
-                .set("border-radius", "10px")
-                .set("background-color", "#fff");
+        formLayout.addClassName("register_form");
 
         return formLayout;
     }

@@ -1,5 +1,6 @@
 package com.livajusic.marko.aurora.views.dialogs;
 
+import com.livajusic.marko.aurora.LanguagesController;
 import com.livajusic.marko.aurora.services.CommentService;
 import com.livajusic.marko.aurora.services.UserService;
 import com.livajusic.marko.aurora.tables.Comment;
@@ -18,15 +19,17 @@ public class CommentsDialog extends BaseDialog {
     private final VerticalLayout commentsLayout;
     private final VerticalLayout commentInputLayout;
     private TextField commentField;
+    private final LanguagesController languagesController;
 
     public CommentsDialog(CommentService commentService,
-                          UserService userService) {
+                          UserService userService,
+                          LanguagesController languagesController) {
         super();
         this.commentService = commentService;
         this.userService = userService;
         this.commentsLayout = new VerticalLayout();
         this.commentInputLayout = new VerticalLayout();
-
+        this.languagesController = languagesController;
     }
 
     @Override
@@ -67,10 +70,10 @@ public class CommentsDialog extends BaseDialog {
 
     private void addCommentField(Long gifId) {
         commentField = new TextField();
-        commentField.setPlaceholder("Add a comment...");
+        commentField.setPlaceholder(languagesController.get("add_a_comment"));
         commentField.setWidth("100%");
 
-        Button submitButton = new Button("Submit");
+        Button submitButton = new Button(languagesController.get("submit"));
         submitButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         if (userService.isLoggedIn()) {

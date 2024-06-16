@@ -28,6 +28,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+@Transactional
 public class UserService {
     @PersistenceContext
     private EntityManager entityManager;
@@ -72,10 +73,10 @@ public class UserService {
     }
 
     @Transactional
-    public int updatePassword(String username, String newPassword) {
-        Query query = entityManager.createQuery("UPDATE AuroraUser SET password = :newPassword WHERE username = :username");
+    public int updatePassword(Long userId, String newPassword) {
+        Query query = entityManager.createQuery("UPDATE AuroraUser SET password = :newPassword WHERE userId = :userId");
         query.setParameter("newPassword", passwordEncoder.encode(newPassword));
-        query.setParameter("username", username);
+        query.setParameter("userId", userId);
         return query.executeUpdate();
     }
 
@@ -132,16 +133,6 @@ public class UserService {
         Query query = entityManager.createQuery("SELECT u.userId FROM AuroraUser u WHERE u.username = :username");
         query.setParameter("username", username);
         return (long)query.getSingleResult();
-    }
-
-    @Transactional
-    public int updateProfilePrivacy(String username, int publicProfile) {
-        String jpql = "UPDATE PrivacySettings p SET p.privacyEnabled = :publicProfile " +
-                "WHERE p.user.id = (SELECT u.id FROM AuroraUser u WHERE u.username = :username)";
-        Query query = entityManager.createQuery(jpql);
-        query.setParameter("publicProfile", publicProfile);
-        query.setParameter("username", username);
-        return query.executeUpdate();
     }
 
     public void logout() {

@@ -76,7 +76,6 @@ public class MyProfileView extends VerticalLayout {
             FollowService followService,
             GifRepo gifRepo,
             LanguagesController languagesController,
-            ProfilePictureRepo profilePictureRepo,
             ProfilePictureService profilePictureService) {
         this.userService = userService;
         this.valuesService = valuesService;
@@ -98,7 +97,7 @@ public class MyProfileView extends VerticalLayout {
         UserInfoDisplayUtils userInfoDisplayUtils = new UserInfoDisplayUtils(gifRepo, userId, userService, followService);
         add(userInfoDisplayUtils.getInfoLayout());
 
-        Span header = new Span("My Profile");
+        Span header = new Span(languagesController.get("my_profile"));
         header.getStyle().set("font-size", "24px").set("font-weight", "bold");
         add(header);
 

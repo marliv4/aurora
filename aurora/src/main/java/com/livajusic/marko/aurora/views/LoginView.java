@@ -13,7 +13,7 @@ import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
-import org.springframework.beans.factory.annotation.Value;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 
 @PageTitle("Login")
 @Route("login")
@@ -23,17 +23,12 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
     private final UserRepo userRepo;
     private final LoginForm login = new LoginForm();
 
-    private final ValuesService valuesService;
-
-    private final UserService userService;
     public LoginView(UserRepo userRepo,
                      ValuesService valuesService,
                      UserService userService,
                      ProfilePictureService profilePictureService,
                      LanguagesController languagesController) {
         this.userRepo = userRepo;
-        this.valuesService = valuesService;
-        this.userService = userService;
 
         NavigationBar navbar = new NavigationBar(valuesService, userService, profilePictureService, languagesController);
         add(navbar);

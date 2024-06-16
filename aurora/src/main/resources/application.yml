@@ -34,3 +34,5 @@ logging:
         web: DEBUG
         security: DEBUG
     root: info
+server:
+  port: ${PORT:8080}

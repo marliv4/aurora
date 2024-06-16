@@ -1,5 +1,6 @@
 package com.livajusic.marko.aurora.services;
 
+import com.livajusic.marko.aurora.LanguagesController;
 import com.livajusic.marko.aurora.tables.AuroraGIF;
 import com.livajusic.marko.aurora.views.dialogs.CommentsDialog;
 import com.vaadin.flow.component.button.Button;
@@ -14,6 +15,7 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.server.StreamResource;
+import org.aspectj.weaver.ast.Not;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,14 +26,17 @@ public class GIFDisplayService {
     private final LikeService likeService;
     private final UserService userService;
     private final CommentService commentService;
+    private final LanguagesController languagesController;
 
     @Autowired
     public GIFDisplayService(LikeService likeService,
                              UserService userService,
-                             CommentService commentService) {
+                             CommentService commentService,
+                             LanguagesController languagesController) {
         this.likeService = likeService;
         this.userService = userService;
         this.commentService = commentService;
+        this.languagesController = languagesController;
     }
 
     public Div displaySingleGif(
@@ -46,7 +51,7 @@ public class GIFDisplayService {
         Div gifDiv = new Div();
         gifDiv.addClassName("gif-container");
 
-        Span usernameLabel = new Span("By: " + username);
+        Span usernameLabel = new Span(languagesController.get("by") + ": " + username);
 
         Button likeUnlikeButton = new Button("Like", VaadinIcon.HEART.create());
         likeUnlikeButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -54,7 +59,8 @@ public class GIFDisplayService {
         boolean likedAlready = false;
 
         final var gifId = gif.getId();
-        Span amountLikes = new Span("Liked by " + likeService.getAmountOfLikes(gifId) + " people");
+        Span amountLikes = new Span(languagesController.get("liked_by") + " " + likeService.getAmountOfLikes(gifId)
+                + " " +languagesController.get("people"));
         updateLikeUnlikeBtnState(likeUnlikeButton, gifId);
         final var loggedIn = userService.isLoggedIn();
         likeUnlikeButton.addClickListener(buttonClickEvent -> {
@@ -64,12 +70,12 @@ public class GIFDisplayService {
 
                 if (likeService.hasUserAlreadyLikedGIF(currentUserId, gifId)) {
                     likeService.unlikeGif(currentUserId, gifId);
-                    likeUnlikeButton.setText("Like");
+                    likeUnlikeButton.setText(languagesController.get("like"));
                     final var n = Notification.show("Unliked!", 500, Notification.Position.BOTTOM_CENTER);
                     n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                 } else {
                     likeService.likeGif(currentUserId, gifId);
-                    likeUnlikeButton.setText("Unlike");
+                    likeUnlikeButton.setText(languagesController.get("unlike"));
                     final var n = Notification.show("Liked!", 500, Notification.Position.BOTTOM_CENTER);
                     n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                 }
@@ -83,7 +89,7 @@ public class GIFDisplayService {
 
         Button openCommentsBtn = new Button(VaadinIcon.COMMENT.create());
         openCommentsBtn.addClickListener(l -> {
-            CommentsDialog commentsDialog = new CommentsDialog(commentService, userService);
+            CommentsDialog commentsDialog = new CommentsDialog(commentService, userService, languagesController);
             commentsDialog.setWidth("50%");
             commentsDialog.open(gifId);
         });
@@ -93,7 +99,7 @@ public class GIFDisplayService {
 
         VerticalLayout gifLayout = new VerticalLayout(usernameLabel, image, buttonsLayout, amountLikes);
         gifLayout.setDefaultHorizontalComponentAlignment(FlexComponent.Alignment.CENTER);
-        gifLayout.getStyle().set("border", "1.5px solid #FFFFFF")
+        gifLayout.getStyle().set("border", "1.5px solid hsl(214, 100%, 70%)")
                 .set("padding", "10px")
                 .set("border-radius", "10px")
                 .set("margin", "10px")
@@ -128,12 +134,12 @@ public class GIFDisplayService {
             final var currentUserId = userService.getUserIdByUsername(currentUsername);
 
             if (likeService.hasUserAlreadyLikedGIF(currentUserId, gifId)) {
-                likeUnlikeButton.setText("Unlike");
+                likeUnlikeButton.setText(languagesController.get("unlike"));
             } else {
-                likeUnlikeButton.setText("Like");
+                likeUnlikeButton.setText(languagesController.get("like"));
             }
         } else {
-            likeUnlikeButton.setText("Like");
+            likeUnlikeButton.setText(languagesController.get("like"));
         }
     }
 
@@ -141,6 +147,11 @@ public class GIFDisplayService {
                                        Long gifId,
                                        Span amountLikes) {
         Long currentAmountLikes = likeService.getAmountOfLikes(gifId);
-        amountLikes.setText("Liked by " + String.valueOf(currentAmountLikes) + " people");
+        amountLikes.setText(languagesController.get("liked_by") + " " + String.valueOf(currentAmountLikes) + " people");
+    }
+
+    public static void notify(String text) {
+        final var n = Notification.show(text, 1000, Notification.Position.BOTTOM_CENTER);
+        n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
     }
 }
