@@ -41,7 +41,7 @@ public class LanguagesController {
         final var locale = VaadinSession.getCurrent().getLocale();
         String out = "English";
         if (locale == Locale.GERMAN) {
-            out = "Deutsch";
+            out = "German";
         }
         return out;
     }
@@ -49,7 +49,7 @@ public class LanguagesController {
     public void switchLanguage(String language) {
         Locale locale;
         switch (language) {
-            case "Deutsch":
+            case "German":
                 setLocale(Locale.GERMAN);
                 break;
             default:

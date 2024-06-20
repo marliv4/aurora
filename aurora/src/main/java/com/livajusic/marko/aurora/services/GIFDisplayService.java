@@ -15,11 +15,12 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.server.StreamResource;
-import org.aspectj.weaver.ast.Not;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class GIFDisplayService {
@@ -27,16 +28,31 @@ public class GIFDisplayService {
     private final UserService userService;
     private final CommentService commentService;
     private final LanguagesController languagesController;
+    private final GIFService gifService;
 
     @Autowired
     public GIFDisplayService(LikeService likeService,
                              UserService userService,
                              CommentService commentService,
-                             LanguagesController languagesController) {
+                             LanguagesController languagesController,
+                             GIFService gifService) {
         this.likeService = likeService;
         this.userService = userService;
         this.commentService = commentService;
         this.languagesController = languagesController;
+        this.gifService = gifService;
+    }
+
+    public List<Div> createDivFromGifArray(List<AuroraGIF> gifs) {
+        List<Div> lout = new ArrayList<Div>();
+
+        for (AuroraGIF g : gifs) {
+            final var username = g.getUser().getUsername();
+            Div gifDiv = displaySingleGif(username, g);
+            lout.add(gifDiv);
+        }
+
+        return lout;
     }
 
     public Div displaySingleGif(
@@ -109,19 +125,17 @@ public class GIFDisplayService {
         if (loggedIn) {
             final var userId = userService.getCurrentUserId();
             if (userService.isUserMod(userId)) {
-                /*
                 Button removePostButton = new Button("Remove Post");
                 removePostButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
                 removePostButton.addClickListener(buttonClickEvent -> {
-                    // gifRepo.deleteById(gif.getId());
-
-                    Notification.show("Post removed successfully!", 3000, Notification.Position.BOTTOM_CENTER)
-                            .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-                    // remove(gifDiv
+                    if (gifService.delete(gif.getId())) {
+                        // gifDiv.getParent().ifPresent(parent -> parent.remove(gifDiv));
+                        Notification.show("Post removed successfully!", 3000, Notification.Position.BOTTOM_CENTER)
+                                .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                    }
                 });
 
                 gifLayout.add(removePostButton);
-                */
             }
         }
 

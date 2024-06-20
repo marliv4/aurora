@@ -53,10 +53,13 @@ public class CommentsDialog extends BaseDialog {
             commentText.setValue(comment.getCommentText());
             commentText.setReadOnly(true);
             commentText.setWidth("100%");
+            /*
             commentText.getStyle().set("border", "1px solid #ccc")
                     .set("padding", "10px")
                     .set("border-radius", "10px")
                     .set("margin-bottom", "10px");
+
+             */
 
             Span userDetails = new Span();
             userDetails.setText("@" + comment.getUser().getUsername() +

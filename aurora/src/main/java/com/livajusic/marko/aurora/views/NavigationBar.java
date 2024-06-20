@@ -2,13 +2,15 @@ package com.livajusic.marko.aurora.views;
 
 import com.livajusic.marko.aurora.LanguagesController;
 import com.livajusic.marko.aurora.services.ProfilePictureService;
+import com.livajusic.marko.aurora.services.SettingsService;
 import com.livajusic.marko.aurora.services.UserService;
-import com.livajusic.marko.aurora.services.ValuesService;
+import com.livajusic.marko.aurora.tables.ProfilePicture;
 import com.livajusic.marko.aurora.views.LoginView;
 import com.livajusic.marko.aurora.views.RegisterView;
 import com.livajusic.marko.aurora.views.UploadView;
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.applayout.AppLayout;
+import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.dependency.CssImport;
@@ -40,28 +42,25 @@ import java.io.ByteArrayInputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 @StyleSheet("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap")
 // @CssImport("styles.css")
 public class NavigationBar extends HorizontalLayout {
-    private final ValuesService valuesService;
-
     private final UserService userService;
     private final ProfilePictureService profilePictureService;
     private LanguagesController languagesController;
+    private final SettingsService settingsService;
 
-    private static final List<String> LANGUAGES = Arrays.asList("English", "Deutsch");
-    private static final List<VaadinIcon> ICONS = Arrays.asList(VaadinIcon.GLOBE, VaadinIcon.FLAG);
-
-    public NavigationBar(ValuesService valuesService,
-                         UserService userService,
+    public NavigationBar(UserService userService,
                          ProfilePictureService profilePictureService,
-                         LanguagesController languagesController) {
-        this.valuesService = valuesService;
+                         LanguagesController languagesController,
+                         SettingsService settingsService) {
         this.userService = userService;
         this.profilePictureService = profilePictureService;
         this.languagesController = languagesController;
+        this.settingsService = settingsService;
 
         setAlignItems(HorizontalLayout.Alignment.CENTER);
         setJustifyContentMode(JustifyContentMode.CENTER);
@@ -79,17 +78,7 @@ public class NavigationBar extends HorizontalLayout {
         if (userService.isLoggedIn()) {
             final var userId = userService.getCurrentUserId();
             final var pfpOptional = profilePictureService.getPfpByUserId(userId);
-            StreamResource resource;
-
-            if (pfpOptional.isPresent()) {
-                final var pfp = pfpOptional.get();
-                resource = new StreamResource("profile-picture", () -> new ByteArrayInputStream(pfp.getImageData()));
-            } else {
-                resource = new StreamResource("profile-picture", () -> new ByteArrayInputStream(profilePictureService.getDefaultPfpBytes()));
-            }
-            Image profileImage = new Image(resource, "Profile Picture");
-            profileImage.setWidth("30px");
-            profileImage.setHeight("30px");
+            Image profileImage = getImage(profilePictureService, pfpOptional);
             profileImage.getStyle().set("border-radius", "50%");
 
             MenuItem profileMenuItem = profileMenu.addItem(profileImage);
@@ -179,6 +168,20 @@ public class NavigationBar extends HorizontalLayout {
 
         setSpacing(true);
 
+    }
+
+    private static Image getImage(ProfilePictureService profilePictureService, Optional<ProfilePicture> pfpOptional) {
+        StreamResource resource;
+        if (pfpOptional.isPresent()) {
+            final var pfp = pfpOptional.get();
+            resource = new StreamResource("profile-picture", () -> new ByteArrayInputStream(pfp.getImageData()));
+        } else {
+            resource = new StreamResource("profile-picture", () -> new ByteArrayInputStream(profilePictureService.getDefaultPfpBytes()));
+        }
+        Image profileImage = new Image(resource, "Profile Picture");
+        profileImage.setWidth("30px");
+        profileImage.setHeight("30px");
+        return profileImage;
     }
 
     private TextField createUserSearchField() {

@@ -14,9 +14,9 @@
 	<name>aurora</name>
 	<description>Mithilfe von Aurora lassen sich GIFs in 2D und 3D erstellen. Diese GIFs können für Memes verwendet und anschließend gespeichert werden. Die erstellten GIFs sind herunterladbar und teilbar. Aurora bietet eine Plattform, um die Kreationen mit der Welt zu teilen. Es ist eine einfache und kreative Möglichkeit, unterhaltsame Inhalte zu erstellen und zu verbreiten.</description>
 	<properties>
-		<java.version>19</java.version>
-		<maven.compiler.source>19</maven.compiler.source>
-		<maven.compiler.target>19</maven.compiler.target>
+		<java.version>17</java.version>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
 		<vaadin.version>24.3.12</vaadin.version>
 	</properties>
 	<dependencies>
@@ -76,6 +76,9 @@
 	<profiles>
 		<profile>
 			<id>production</id>
+			<properties>
+				<vaadin.productionMode>true</vaadin.productionMode>
+			</properties>
 			<build>
 				<plugins>
 					<plugin>

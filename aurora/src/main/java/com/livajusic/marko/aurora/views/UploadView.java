@@ -61,8 +61,6 @@ public class UploadView extends VerticalLayout {
     @Value("${upload.directory}")
     private String basePath;
 
-    private final ValuesService valuesService;
-
     private final GIFService gifService;
 
     public UploadView(GifRepo gifRepo,
@@ -70,21 +68,20 @@ public class UploadView extends VerticalLayout {
                       GifCategoryRepo gifCategoryRepo,
                       BelongsToRepo belongsToRepo,
                       UserService userService,
-                      ValuesService valuesService,
                       FileService fileService,
                       ProfilePictureService profilePictureService,
                       LanguagesController languagesController,
-                      GIFService gifService) {
+                      GIFService gifService,
+                      SettingsService settingsService) {
         this.gifRepo = gifRepo;
         this.userRepo = userRepo;
         this.gifCategoryRepo = gifCategoryRepo;
         this.belongsToRepo = belongsToRepo;
         this.userService = userService;
-        this.valuesService = valuesService;
         this.fileService = fileService;
         this.gifService = gifService;
 
-        NavigationBar navbar = new NavigationBar(valuesService, userService, profilePictureService, languagesController);
+        NavigationBar navbar = new NavigationBar(userService, profilePictureService, languagesController, settingsService);
         add(navbar);
 
         Span fileLabel = new Span("Choose a file:");

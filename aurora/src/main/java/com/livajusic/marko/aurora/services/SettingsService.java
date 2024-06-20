@@ -19,6 +19,9 @@ public class SettingsService {
     @Autowired
     private EntityManager entityManager;
 
+    @Autowired
+    private UserService userService;
+
     public SettingsService() {
 
     }
@@ -55,18 +58,41 @@ public class SettingsService {
         entityManager.flush();
     }
 
-    public boolean isUsersProfilePrivate(Long userId) {
-        Query query = entityManager.createQuery("SELECT privateProfile FROM Settings WHERE user.userId = :userId");
+    public boolean canOthersSeeFollowers(Long userId) {
+        Query query = entityManager.createQuery("SELECT othersCanSeeMyFollowers " +
+                "FROM Settings " +
+                "WHERE user.userId = :userId");
         query.setParameter("userId", userId);
 
-        return (Integer) query.getSingleResult() == 1 ? true : false;
+        return (int)query.getSingleResult() == 1;
     }
 
     @Transactional
-    public void updateProfilePrivacy(Long userId, Integer privateProfile) {
-        Query query = entityManager.createQuery("UPDATE Settings s SET s.privateProfile = :privateProfile WHERE s.user.userId = :userId");
-        query.setParameter("privateProfile", privateProfile);
+    public void updateCanOthersSeeFollowers(Long userId, boolean yes) {
+        int value = yes ? 1 : 0;
+        Query query = entityManager.createQuery("UPDATE Settings s SET s.othersCanSeeMyFollowers = :value WHERE s.user.userId = :userId");
         query.setParameter("userId", userId);
+        query.setParameter("value", value);
+
+        query.executeUpdate();
+        entityManager.flush();
+    }
+
+    public boolean canOthersSeeFollowing(Long userId) {
+        Query query = entityManager.createQuery("SELECT othersCanSeeWhoIAmFollowing " +
+                "FROM Settings " +
+                "WHERE user.userId = :userId");
+        query.setParameter("userId", userId);
+
+        return (int)query.getSingleResult() == 1;
+    }
+
+    @Transactional
+    public void updateCanOthersSeeFollowing(Long userId, boolean yes) {
+        int value = yes ? 1 : 0;
+        Query query = entityManager.createQuery("UPDATE Settings s SET s.othersCanSeeWhoIAmFollowing = :value WHERE s.user.userId = :userId");
+        query.setParameter("userId", userId);
+        query.setParameter("value", value);
 
         query.executeUpdate();
         entityManager.flush();

@@ -55,6 +55,17 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    public String getEmail(Long userId) {
+        try {
+            Query query = entityManager.createQuery("SELECT u.email FROM AuroraUser u WHERE u.id = :userId");
+            query.setParameter("userId", userId);
+            return (String) query.getSingleResult();
+        } catch (NoResultException e) {
+            e.printStackTrace();
+            return "";
+        }
+    }
+
     public String getEmail(String username) {
         try {
             Query query = entityManager.createQuery("SELECT u.email FROM AuroraUser u WHERE u.username = :username");
@@ -97,10 +108,15 @@ public class UserService {
         return query.executeUpdate();
     }
 
-
     public String getCurrentUsername() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         return auth.getName();
+    }
+
+    public String getUsernameById(Long userId) {
+        Query query = entityManager.createQuery("SELECT u.username FROM AuroraUser u WHERE u.userId = :userId");
+        query.setParameter("userId", userId);
+        return (String)query.getSingleResult();
     }
 
     public Long getCurrentUserId() {
@@ -109,10 +125,6 @@ public class UserService {
 
     public boolean isLoggedIn() {
         return !getCurrentUsername().equals("anonymousUser");
-    }
-
-    public String getUserInfo(String username) {
-        return getEmail(username) + " ";
     }
 
     public void searchForUser(String username) {
@@ -144,8 +156,8 @@ public class UserService {
     public List<String> getRoles(Long userId) {
         Query query = entityManager.createQuery("SELECT r.role " +
                 "FROM Role r " +
-                "WHERE r.userId = 1552");
-        // query.setParameter("userId", userId);
+                "WHERE r.userId = :userId");
+        query.setParameter("userId", userId);
 
         final var list = (List<String>)query.getResultList();;
         for (Object l : list) {
@@ -156,8 +168,7 @@ public class UserService {
     }
 
     public boolean isUserMod(Long userId) {
-        if (getRoles(userId).contains("mod")) return true;
-        return false;
+        return getRoles(userId).contains("mod");
     }
 
 }

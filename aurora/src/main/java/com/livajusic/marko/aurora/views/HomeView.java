@@ -1,28 +1,17 @@
 package com.livajusic.marko.aurora.views;
 
 import com.livajusic.marko.aurora.LanguagesController;
-import com.livajusic.marko.aurora.db_repos.CommentRepo;
 import com.livajusic.marko.aurora.db_repos.GifCategoryRepo;
 import com.livajusic.marko.aurora.db_repos.GifRepo;
 import com.livajusic.marko.aurora.services.*;
 import com.livajusic.marko.aurora.tables.AuroraGIF;
 import com.livajusic.marko.aurora.tables.GifCategory;
-import com.livajusic.marko.aurora.views.dialogs.CommentsDialog;
-import com.vaadin.flow.component.UI;
-import com.vaadin.flow.component.applayout.AppLayout;
-import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
-import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Image;
-import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.dom.Element;
+import com.vaadin.flow.component.virtuallist.VirtualList;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
@@ -38,20 +27,15 @@ import java.util.*;
 public class HomeView extends VerticalLayout {
 
     private final GifRepo gifRepo;
-
     private final GifCategoryRepo gifCategoryRepo;
-
-    private final ValuesService valuesService;
-
     private final LikeService likeService;
-
     private final GIFDisplayService gifDisplayService;
+    private final FollowService followService;
 
     @Autowired
     UserService userService;
 
     private TextField searchField;
-
     private ArrayList<Div> displayedGifs;
     private final LanguagesController languagesController;
 
@@ -61,25 +45,24 @@ public class HomeView extends VerticalLayout {
 
     public HomeView(GifRepo gifRepo,
                     GifCategoryRepo gifCategoryRepo,
-                    CommentRepo commentRepo,
-                    CommentService commentService,
-                    ValuesService valuesService,
                     LikeService likeService,
                     UserService userService,
                     GIFDisplayService gifDisplayService,
                     ProfilePictureService profilePictureService,
-                    LanguagesController languagesController) {
+                    LanguagesController languagesController,
+                    SettingsService settingsService,
+                    FollowService followService) {
         this.gifRepo = gifRepo;
         this.gifCategoryRepo = gifCategoryRepo;
-        this.valuesService = valuesService;
         this.likeService = likeService;
         this.userService = userService;
         this.gifDisplayService = gifDisplayService;
         this.languagesController = languagesController;
+        this.followService = followService;
 
         displayedGifs = new ArrayList<>();
 
-        NavigationBar navbar = new NavigationBar(valuesService, userService, profilePictureService, languagesController);
+        NavigationBar navbar = new NavigationBar(userService, profilePictureService, languagesController, settingsService);
         add(navbar);
 
         System.out.println(userService.getCurrentUsername());
@@ -93,8 +76,15 @@ public class HomeView extends VerticalLayout {
         });
         // add(searchField);
 
+        // Display GIFS of following users.
+        if (userService.isLoggedIn()) {
+            System.out.println("displaying gifs from users one is following.");
+            final var gifs = followService.getGifsFromFollowingUsers(userService.getCurrentUserId());
+            displayGifsFromArray(gifs);
+        }
+
         if (!Filtered.filtered) {
-            displayAllGifs();
+            displayGifsFromArray(gifRepo.findAll());
         }
         setAlignItems(Alignment.CENTER);
         setJustifyContentMode(JustifyContentMode.CENTER);
@@ -141,15 +131,13 @@ public class HomeView extends VerticalLayout {
         }
     }
 
-    private void displayAllGifs() {
-        // Get all GIFs
-        List<AuroraGIF> allGifs = gifRepo.findAll();
-        for (AuroraGIF gif : allGifs) {
-            final var basePath = valuesService.getUploadDirectory();
-            final var user = gif.getUser();
-            final var username = user.getUsername();
+    private void displayGifsFromArray(List<AuroraGIF> gifs) {
+        final var list = gifDisplayService.createDivFromGifArray(gifs);
+        VirtualList<Div> vl = new VirtualList<>();
+        vl.setItems(list);
 
-            Div gifDiv = gifDisplayService.displaySingleGif(username, gif);
+
+        for (Div gifDiv : list) {
             add(gifDiv);
             displayedGifs.add(gifDiv);
         }
@@ -157,7 +145,7 @@ public class HomeView extends VerticalLayout {
     }
 
     private ComboBox<String> createFilterCriteria() {
-        ComboBox<String> selectCriteria = new ComboBox<>(languagesController.get("selectsriteria"));
+        ComboBox<String> selectCriteria = new ComboBox<>(languagesController.get("selectcriteria"));
         // selectCriteria.getStyle()
                         // .set("color", "white");
         selectCriteria.setItems(languagesController.get("toplikes"), languagesController.get("recent"));
@@ -172,9 +160,8 @@ public class HomeView extends VerticalLayout {
                 for (Object o : mostLikedGIFs) {
                     Object[] row = (Object[])o;
                     final var amountLikes = (Long)row[0];
-                    final var userId = row[2];
-                    final var username = (String)row[3];
-                    final var gif = (AuroraGIF) row[4];
+                    final var username = (String)row[1];
+                    final var gif = (AuroraGIF) row[2];
 
                     System.out.println("amount likes: " + amountLikes + "; path: " + " a: " + row[2] + " b: " + row[3]);
                     add(gifDisplayService.displaySingleGif(username, gif));
@@ -183,8 +170,8 @@ public class HomeView extends VerticalLayout {
                 final var mostRecentGIFs = likeService.getMostRecentGIFs();
                 for (Object o : mostRecentGIFs) {
                     Object[] row = (Object[]) o;
-                    final var username = (String) row[1];
-                    final var gif = (AuroraGIF) row[2];
+                    final var username = (String) row[0];
+                    final var gif = (AuroraGIF) row[1];
                     add(gifDisplayService.displaySingleGif(username, gif));
                 }
             }
@@ -192,10 +179,6 @@ public class HomeView extends VerticalLayout {
 
         // add(selectCriteria);
         return selectCriteria;
-    }
-
-    public void clearDisplayedGIF(Div d) {
-        remove(d);
     }
 
     private void clearCurrentlyDisplayedGIFs() {

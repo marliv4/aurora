@@ -1,5 +1,6 @@
 package com.livajusic.marko.aurora.services;
 
+import com.livajusic.marko.aurora.tables.AuroraGIF;
 import com.livajusic.marko.aurora.tables.composite_keys.FollowId;
 import com.livajusic.marko.aurora.db_repos.FollowRepo;
 import com.livajusic.marko.aurora.db_repos.UserRepo;
@@ -86,33 +87,44 @@ public class FollowService {
         return (Long)query.getSingleResult();
     }
 
-    public List<String> getUsersFollowers(Long userId) {
-        Query query = entityManager.createQuery("SELECT au.username FROM AuroraUser au" +
-                " JOIN Follows f ON au.userId = f.user.userId" +
-                " WHERE f.followsUser.userId = :userId");
+    public List<Object[]> getUsersFollowers(Long userId) {
+        Query query = entityManager.createQuery(
+                "SELECT au.username, pfp.imageData " +
+                        "FROM AuroraUser au " +
+                        "JOIN Follows f ON au.userId = f.user.userId " +
+                        "JOIN ProfilePicture pfp ON au.userId = pfp.user.userId " +
+                        "WHERE f.followsUser.userId = :userId"
+        );
+
         query.setParameter("userId", userId);
-
-        final var list = (List<String>)query.getResultList();;
-        for (Object l : list) {
-            System.out.println(l);
-        }
-
-        return list;
+        return query.getResultList();
     }
 
-    public List<String> getFollowingUsers(Long userId) {
+    public List<Object[]> getFollowingUsers(Long userId) {
         Query query = entityManager.createQuery(
-                "SELECT au.username FROM AuroraUser au" +
+                "SELECT au.username, pfp.imageData FROM AuroraUser au" +
+                        " JOIN Follows f ON au.userId = f.followsUser.userId" +
+                        " JOIN ProfilePicture pfp on au.userId = pfp.user.userId" +
+                        " WHERE f.user.userId = :userId"
+        );
+        query.setParameter("userId", userId);
+        return query.getResultList();
+    }
+
+    public List<AuroraGIF> getGifsFromFollowingUsers(Long userId) {
+        Query query = entityManager.createQuery(
+                "SELECT ag FROM AuroraGIF ag" +
+                        " JOIN ag.user au" +
                         " JOIN Follows f ON au.userId = f.followsUser.userId" +
                         " WHERE f.user.userId = :userId"
         );
         query.setParameter("userId", userId);
 
-        final var list = (List<String>)query.getResultList();;
-        for (Object l : list) {
-            System.out.println(l);
+        List<AuroraGIF> gifs = query.getResultList();
+        for (AuroraGIF gif : gifs) {
+            System.out.println(gif);
         }
 
-        return list;
+        return gifs;
     }
 }

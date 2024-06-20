@@ -6,8 +6,8 @@ import com.livajusic.marko.aurora.db_repos.ProfilePictureRepo;
 import com.livajusic.marko.aurora.db_repos.RoleRepo;
 import com.livajusic.marko.aurora.db_repos.UserRepo;
 import com.livajusic.marko.aurora.services.ProfilePictureService;
+import com.livajusic.marko.aurora.services.SettingsService;
 import com.livajusic.marko.aurora.services.UserService;
-import com.livajusic.marko.aurora.services.ValuesService;
 import com.livajusic.marko.aurora.tables.AuroraUser;
 import com.livajusic.marko.aurora.tables.Settings;
 import com.livajusic.marko.aurora.tables.ProfilePicture;
@@ -32,7 +32,9 @@ import org.hibernate.sql.ast.tree.insert.Values;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -47,8 +49,6 @@ public class RegisterView extends VerticalLayout {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    private final ValuesService valuesService;
-
     private final RoleRepo roleRepo;
 
     final String patternStr = "^[a-zA-Z0-9_.-]*$";
@@ -58,19 +58,18 @@ public class RegisterView extends VerticalLayout {
     private final ProfilePictureService profilePictureService;
     public RegisterView(UserRepo userRepo,
                         SettingsRepo settingsRepo,
-                        ValuesService valuesService,
                         RoleRepo roleRepo,
                         UserService userService,
                         LanguagesController languagesController,
-                        ProfilePictureService profilePictureService) {
+                        ProfilePictureService profilePictureService,
+                        SettingsService settingsService) {
         this.userRepo = userRepo;
         this.settingsRepo = settingsRepo;
-        this.valuesService = valuesService;
         this.roleRepo = roleRepo;
         this.userService = userService;
         this.profilePictureService = profilePictureService;
 
-        NavigationBar navbar = new NavigationBar(valuesService, userService, profilePictureService, languagesController);
+        NavigationBar navbar = new NavigationBar(userService, profilePictureService, languagesController, settingsService);
         add(navbar);
 
         TextField username = new TextField("Username");
@@ -156,18 +155,18 @@ public class RegisterView extends VerticalLayout {
         );
         userRepo.save(newUser);
 
-        Settings settings = new Settings(newUser, 1, "English", "Dark");
+        Settings settings = new Settings(newUser, 1, 1, "English", "Dark");
         settingsRepo.save(settings);
         Role standardRole = new Role(newUser.getId(), "user");
         roleRepo.save(standardRole);
 
-        /*
-        final var pfpBytes = profilePictureService.getDefaultPfpBytes();
-        final var pfpInputStream = profilePictureService.getDefaultPfpAsInputStream();
-        ProfilePicture pfp = new ProfilePicture(pfpBytes, newUser);
-        profilePictureService.basicSave(pfp);
-        */
-        Notification.show("Sucessfully registered!", 3000, Notification.Position.BOTTOM_END);
+        try {
+            profilePictureService.savePfp(profilePictureService.getDefaultPfpAsInputStream(), newUser);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        Notification.show("Sucessfully registered!", 3000, Notification.Position.BOTTOM_CENTER);
         RouteConfiguration.forSessionScope().setRoute("login", LoginView.class);
         UI.getCurrent().navigate("login");
     }

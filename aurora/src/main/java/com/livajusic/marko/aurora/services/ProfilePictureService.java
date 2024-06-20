@@ -5,12 +5,16 @@ import com.livajusic.marko.aurora.db_repos.UserRepo;
 import com.livajusic.marko.aurora.tables.AuroraUser;
 import com.livajusic.marko.aurora.tables.ProfilePicture;
 import com.vaadin.flow.component.html.Input;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.Optional;
 
 @Service
@@ -18,14 +22,17 @@ public class ProfilePictureService {
     private final ProfilePictureRepo profilePictureRepo;
     private final UserRepo userRepo;
     private final FileService fileService;
+    private final EntityManager entityManager;
 
     @Autowired
     public ProfilePictureService(ProfilePictureRepo profilePictureRepo,
                                  UserRepo userRepo,
-                                 FileService fileService) {
+                                 FileService fileService,
+                                 EntityManager entityManager) {
         this.profilePictureRepo = profilePictureRepo;
         this.userRepo = userRepo;
         this.fileService = fileService;
+        this.entityManager = entityManager;
     }
 
     public void savePfp(InputStream is, AuroraUser user) throws IOException {
@@ -41,23 +48,23 @@ public class ProfilePictureService {
         }
     }
 
-    public byte[] getDefaultPfpBytes() {
-        int width = 100;
-        int height = 100;
-        byte[] imageData = new byte[width * height * 3];
-
-        for (int i = 0; i < imageData.length; i += 3) {
-            imageData[i] = (byte)255;
-            imageData[i + 1] = (byte)255;
-            imageData[i + 2] = (byte)255;
-        }
-
-        return imageData;
-    }
-
     public InputStream getDefaultPfpAsInputStream() {
         byte[] imageData = getDefaultPfpBytes();
         return new ByteArrayInputStream(imageData);
+    }
+
+    public byte[] getDefaultPfpBytes() {
+        byte[] fileContent = null;
+        try (InputStream inputStream = getClass().getResourceAsStream("/static/default.png")) {
+            if (inputStream != null) {
+                fileContent = inputStream.readAllBytes();
+            } else {
+                throw new IOException("File not found: /static/default.png");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return fileContent;
     }
 
     public Optional<ProfilePicture> getPfpByUserId(Long userId) {

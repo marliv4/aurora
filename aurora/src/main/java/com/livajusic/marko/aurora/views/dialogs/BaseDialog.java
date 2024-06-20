@@ -1,17 +1,18 @@
 package com.livajusic.marko.aurora.views.dialogs;
 
-import com.livajusic.marko.aurora.services.FollowService;
 import com.vaadin.flow.component.dialog.Dialog;
-import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.vaadin.flow.component.html.H2;
 import org.springframework.stereotype.Component;
 
 @Component
 public class BaseDialog {
     protected Dialog dialog;
+    protected H2 title;
 
     public BaseDialog() {
         this.dialog = new Dialog();
+        this.title = new H2();
+        addComponentToDialog(title);
         dialog.setWidth("400px");
     }
     public void open() {

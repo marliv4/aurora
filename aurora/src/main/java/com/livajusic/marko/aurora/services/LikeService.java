@@ -76,11 +76,11 @@ public class LikeService {
 
     public List<Object> getMostLikedGIFs() {
         Query query = entityManager.createQuery(
-                "SELECT COUNT(l), g.path, u.id, u.username, g " +
+                "SELECT COUNT(l), u.username, g " +
                         "FROM Like l " +
                         "JOIN l.gif g " +
                         "JOIN g.user u " +
-                        "GROUP BY g.path, u.id, u.username, g " +
+                        "GROUP BY u.id, u.username, g " +
                         "ORDER BY COUNT(l) DESC"
         );
 
@@ -91,7 +91,7 @@ public class LikeService {
 
     public List<Object> getMostRecentGIFs() {
         Query query = entityManager.createQuery(
-                "SELECT g.path, u.username, g " +
+                "SELECT u.username, g " +
                         "FROM AuroraGIF g " +
                         "JOIN g.user u " +
                         "ORDER BY g.publishDate DESC"

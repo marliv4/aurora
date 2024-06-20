@@ -15,7 +15,10 @@ public class Settings {
     private AuroraUser user;
 
     @Column
-    private int privateProfile;
+    private int othersCanSeeMyFollowers;
+
+    @Column
+    private int othersCanSeeWhoIAmFollowing;
 
     @Column
     private String language;
@@ -42,14 +45,33 @@ public class Settings {
     }
 
     public Settings(AuroraUser user,
-                    int privateProfile,
+                    int othersCanSeeMyFollowers,
+                    int othersCanSeeWhoIAmFollowing,
                     String language,
                     String theme) {
         this.user = user;
-        this.privateProfile = privateProfile;
+        this.othersCanSeeMyFollowers = othersCanSeeMyFollowers;
+        this.othersCanSeeWhoIAmFollowing = othersCanSeeWhoIAmFollowing;
         this.language = language;
         this.theme = theme;
     }
+
+    public int getOthersCanSeeMyFollowers() {
+        return othersCanSeeMyFollowers;
+    }
+
+    public void setOthersCanSeeMyFollowers(int othersCanSeeMyFollowers) {
+        this.othersCanSeeMyFollowers = othersCanSeeMyFollowers;
+    }
+
+    public int getOthersCanSeeWhoIAmFollowing() {
+        return othersCanSeeWhoIAmFollowing;
+    }
+
+    public void setOthersCanSeeWhoIAmFollowing(int othersCanSeeWhoIAmFollowing) {
+        this.othersCanSeeWhoIAmFollowing = othersCanSeeWhoIAmFollowing;
+    }
+
 
     public Long getId() {
         return id;
@@ -61,14 +83,6 @@ public class Settings {
 
     public void setUser(AuroraUser user) {
         this.user = user;
-    }
-
-    public int isPrivateProfile() {
-        return privateProfile;
-    }
-
-    public void setPrivacyEnabled(int privateProfile) {
-        this.privateProfile = privateProfile;
     }
 }
 

@@ -28,4 +28,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface BelongsToRepo extends JpaRepository<BelongsTo, Integer> {
     boolean existsByGifAndCategory(AuroraGIF gif, GifCategory category);
+    boolean deleteByGifId(Long gifId);
 }

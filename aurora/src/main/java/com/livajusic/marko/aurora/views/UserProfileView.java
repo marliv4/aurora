@@ -4,10 +4,7 @@ import com.livajusic.marko.aurora.LanguagesController;
 import com.livajusic.marko.aurora.UserInfoDisplayUtils;
 import com.livajusic.marko.aurora.db_repos.GifRepo;
 import com.livajusic.marko.aurora.db_repos.UserRepo;
-import com.livajusic.marko.aurora.services.FollowService;
-import com.livajusic.marko.aurora.services.ProfilePictureService;
-import com.livajusic.marko.aurora.services.UserService;
-import com.livajusic.marko.aurora.services.ValuesService;
+import com.livajusic.marko.aurora.services.*;
 import com.livajusic.marko.aurora.tables.AuroraGIF;
 import com.livajusic.marko.aurora.tables.AuroraUser;
 import com.sun.jna.platform.win32.Netapi32Util;
@@ -35,38 +32,32 @@ public class UserProfileView extends Div implements HasUrlParameter<String> {
     private H3 usernameText;
     private String username;
 
-    private final ValuesService valuesService;
     private final UserService userService;
     private final FollowService followService;
 
-    private final UserRepo userRepo;
-
+    private final SettingsService settingsService;
     private final GifRepo gifRepo;
+    private final GIFDisplayService gifDisplayService;
 
     List<Component> componentsToDelete = new ArrayList<Component>();
-    public UserProfileView(ValuesService valuesService,
-                           UserService userService,
+
+    public UserProfileView(UserService userService,
                            FollowService followService,
-                           UserRepo userRepo,
-                           GifRepo gifRepo,
                            ProfilePictureService profilePictureService,
-                           LanguagesController languagesController) {
+                           LanguagesController languagesController,
+                           SettingsService settingsService,
+                           GifRepo gifRepo,
+                           GIFDisplayService gifDisplayService) {
         clearUserProfile();
-        this.valuesService = valuesService;
         this.userService = userService;
-        this.gifRepo = gifRepo;
-
-        NavigationBar navbar = new NavigationBar(valuesService, userService, profilePictureService, languagesController);
-        add(navbar);
+        this.settingsService = settingsService;
         this.followService = followService;
-        this.userRepo = userRepo;
-
+        this.gifRepo = gifRepo;
+        this.gifDisplayService = gifDisplayService;
         usernameText = new H3();
-        add(usernameText);
 
-        System.out.println("PROFILE OF USER." + username);
-        usernameText.setText("Profile of user: " + username);
-
+        NavigationBar navbar = new NavigationBar(userService, profilePictureService, languagesController, settingsService);
+        add(navbar);
         if (userService.isLoggedIn()) {
             Button button = new Button("Follow");
             button.addClickListener(e -> {
@@ -93,11 +84,14 @@ public class UserProfileView extends Div implements HasUrlParameter<String> {
     }
 
     private void loadUserProfile(String username) {
+        System.out.println("loadUserProfile");
         this.username = username;
+        add(usernameText);
+
         usernameText.setText("Profile of user: " + username);
 
         final var userId = userService.getUserIdByUsername(username);
-        UserInfoDisplayUtils userInfoDisplayUtils = new UserInfoDisplayUtils(gifRepo, userId, userService, followService);
+        UserInfoDisplayUtils userInfoDisplayUtils = new UserInfoDisplayUtils(gifRepo, userId, userService, followService, settingsService);
         add(userInfoDisplayUtils.getInfoLayout());
 
         componentsToDelete.add(userInfoDisplayUtils.getInfoLayout());
@@ -108,22 +102,25 @@ public class UserProfileView extends Div implements HasUrlParameter<String> {
         add(gifsLayout);
         componentsToDelete.add(gifsLayout);
 
-        // display users GIFS
-        Long id = userId;
-        List<AuroraGIF> gifs = gifRepo.findAllByUserId(id);
-        for (AuroraGIF gif : gifs) {
-            // String gifFilename = gif.getPath();
-            // String gifPath = gif.getPath();
-            // Div singleGifDiv = displaySingleGif(gifFilename, gifPath, gifUsername, gif);
-            // gifsLayout.add(singleGifDiv);
+        // display users GIFS if having public profile
+        /*
+        if (!settingsService.isUsersProfilePrivate(userId)) {
+            List<AuroraGIF> gifs = gifRepo.findAllByUserId(userId);
+            for (AuroraGIF gif : gifs) {
+                Div gifDiv = gifDisplayService.displaySingleGif(username, gif);
+                add(gifDiv);
+                componentsToDelete.add(gifDiv);
+            }
         }
+         */
     }
 
     private void clearUserProfile() {
         System.out.println("clearUserProfile");
-        componentsToDelete.forEach(this::remove);
-        componentsToDelete.clear();
-
+            for (Component d : componentsToDelete) {
+                remove(d);
+            }
+            componentsToDelete.clear();
         // UI.getCurrent().getPage().reload();
     }
 }
