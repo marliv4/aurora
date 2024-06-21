@@ -1,23 +1,3 @@
-/*
- * This file is part of Aurora.
- *
- * Aurora is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * Aurora is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with Aurora. If not, see <https://www.gnu.org/licenses/>.
- *
- * Author: Marko Livajusic
- * Email: marko.livajusic4 <at> gmail.com
- * Copyright: (C) 2024 Marko Livajusic
- */
 package com.livajusic.marko.aurora.views;
 
 import com.livajusic.marko.aurora.LanguagesController;
@@ -100,55 +80,6 @@ public class SettingsView extends VerticalLayout {
 
         add(tabs, content);
     }
-/*
-        H1 title = new H1(settings);
-        title.getStyle().set("text-align", "center");
-        add(title);
-
-        FormLayout formLayout = new FormLayout();
-        formLayout.setResponsiveSteps(
-                new FormLayout.ResponsiveStep("0", 1),
-                new FormLayout.ResponsiveStep("25em", 2)
-        );
-
-        ComboBox<String> languageSelect = new ComboBox<>(languagesController.get("language"));
-        languageSelect.setItems("English", "German");
-
-        final var userId = userService.getCurrentUserId();
-        languageSelect.setValue(settingsService.getUsersLanguage(userId));
-
-        languageSelect.addValueChangeListener(l -> {
-            String selectedLanguage = l.getValue();
-            languagesController.switchLanguage(selectedLanguage);
-            settingsService.updateUsersLanguage(userId, selectedLanguage);
-        });
-        formLayout.addFormItem(languageSelect, languagesController.get("select_language"));
-
-        ComboBox<String> themeSelect = getThemeSelector(userId);
-
-        formLayout.addFormItem(themeSelect, languagesController.get("select_theme"));
-        add(formLayout);
-
-        PasswordField newPasswordField = new PasswordField(languagesController.get("password"));
-        newPasswordField.setPlaceholder(languagesController.get("new_password"));
-
-        Button changePasswordButton = getNewPasswordButton(newPasswordField);
-
-        formLayout.add(newPasswordField, changePasswordButton);
-        formLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1));
-        formLayout.addClassName("register_form");
-
-        VerticalLayout formContainer = new VerticalLayout();
-        formContainer.setWidth("400px");
-        formContainer.getStyle().set("margin", "auto");
-        formContainer.add(formLayout);
-
-        add(formContainer);
-
-        RadioButtonGroup<String> privateProfileChooser = getStringRadioButtonGroup(userId);
-        formLayout.add(privateProfileChooser);
-
- */
 
     private VerticalLayout createAccountLayout() {
         VerticalLayout layout = new VerticalLayout();
@@ -198,7 +129,29 @@ public class SettingsView extends VerticalLayout {
     }
 
     private VerticalLayout createPreferencesLayout() {
-        return new VerticalLayout();
+        VerticalLayout layout = new VerticalLayout();
+
+        FormLayout formLayout = new FormLayout();
+        formLayout.setResponsiveSteps(
+                new FormLayout.ResponsiveStep("0", 1),
+                new FormLayout.ResponsiveStep("25em", 2)
+        );
+
+        ComboBox<String> languageSelect = new ComboBox<>(languagesController.get("language"));
+        languageSelect.setItems("English", "German");
+
+        final var userId = userService.getCurrentUserId();
+        languageSelect.setValue(settingsService.getUsersLanguage(userId));
+
+        languageSelect.addValueChangeListener(l -> {
+            String selectedLanguage = l.getValue();
+            languagesController.switchLanguage(selectedLanguage);
+            settingsService.updateUsersLanguage(userId, selectedLanguage);
+        });
+        formLayout.addFormItem(languageSelect, languagesController.get("select_language"));
+
+        layout.add(formLayout);
+        return layout;
     }
 
     private ComboBox<String> getThemeSelector(Long userId) {
