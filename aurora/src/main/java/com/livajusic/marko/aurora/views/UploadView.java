@@ -38,6 +38,7 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Nav;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
@@ -68,14 +69,10 @@ import java.util.Optional;
 @RolesAllowed("user")
 public class UploadView extends VerticalLayout {
     private final GifRepo gifRepo;
-
     private final UserRepo userRepo;
     private final GifCategoryRepo gifCategoryRepo;
-
     private final BelongsToRepo belongsToRepo;
-
     private final UserService userService;
-
     private final FileService fileService;
 
     @Value("${upload.directory}")
@@ -120,19 +117,30 @@ public class UploadView extends VerticalLayout {
                 "CC BY-NC-ND (Attribution-NonCommercial-NoDerivatives)", "Public Domain", "All Rights Reserved");
         licenseSelect.setReadOnly(false);
 
-        Span categoryLabel = new Span("Enter a category:");
-        categoryInput.setRequired(true);
-
         Button submitButton = new Button("Submit");
         submitButton.addClickListener(e -> {
+            if (licenseSelect.getValue() == null) {
+                final var n = Notification.show("You didn't select a license!", 1500, Notification.Position.MIDDLE);
+                n.addThemeVariants(NotificationVariant.LUMO_ERROR);
+                return;
+            }
+
+            if (gifService.hasUserUploadedGIFInLastNMinutes(userService.getCurrentUserId(), 10)) {
+                final var n = Notification.show("You uploaded a GIF in previous 10 minutes!", 1500, Notification.Position.MIDDLE);
+                n.addThemeVariants(NotificationVariant.LUMO_ERROR);
+                return;
+            }
+
             InputStream inputStream = buffer.getInputStream();
             saveFile(basePath, inputStream, licenseSelect.getValue(), categoryInput.getValue());
+            final var n = Notification.show("GIF succesfully uploaded!", 1500, Notification.Position.MIDDLE);
+            n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
         });
 
         FormLayout formLayout = createFormLayout(licenseSelect, categoryInput);
 
         VerticalLayout formContainer = new VerticalLayout();
-        formContainer.setWidth("400px"); // Set a fixed width for the form container
+        formContainer.setWidth("400px");
         formContainer.getStyle().set("margin", "auto");
         formContainer.add(formLayout, submitButton);
 
@@ -212,7 +220,7 @@ public class UploadView extends VerticalLayout {
         }
     }
 
-    private static class AuroraDateManager {
+    public static class AuroraDateManager {
         public static java.util.Date getUtilDate() {
             return new java.util.Date();
         }
