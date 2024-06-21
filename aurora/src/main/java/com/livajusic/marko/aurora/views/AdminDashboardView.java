@@ -24,6 +24,7 @@ import com.livajusic.marko.aurora.LanguagesController;
 import com.livajusic.marko.aurora.db_repos.GifRepo;
 import com.livajusic.marko.aurora.db_repos.RoleRepo;
 import com.livajusic.marko.aurora.db_repos.UserRepo;
+import com.livajusic.marko.aurora.services.NotificationService;
 import com.livajusic.marko.aurora.services.ProfilePictureService;
 import com.livajusic.marko.aurora.services.SettingsService;
 import com.livajusic.marko.aurora.services.UserService;
@@ -57,13 +58,14 @@ public class AdminDashboardView extends VerticalLayout {
                               UserService userService,
                               ProfilePictureService profilePictureService,
                               LanguagesController languagesController,
-                              SettingsService settingsService) {
+                              SettingsService settingsService,
+                              NotificationService notificationService) {
         this.userRepo = userRepo;
         this.gifRepo = gifRepo;
         this.roleRepo = roleRepo;
         this.userService = userService;
 
-        NavigationBar navbar = new NavigationBar(userService, profilePictureService, languagesController, settingsService);
+        NavigationBar navbar = new NavigationBar(userService, profilePictureService, languagesController, settingsService, notificationService);
         add(navbar);
         add(new H1("Admin Dashboard"));
 

@@ -23,6 +23,7 @@ package com.livajusic.marko.aurora.services;
 import com.livajusic.marko.aurora.AuroraUserDetailService;
 import com.livajusic.marko.aurora.db_repos.RoleRepo;
 import com.livajusic.marko.aurora.db_repos.UserRepo;
+import com.livajusic.marko.aurora.tables.AuroraUser;
 import com.livajusic.marko.aurora.views.MyProfileView;
 import com.livajusic.marko.aurora.views.UserProfileView;
 import com.vaadin.flow.component.UI;
@@ -185,6 +186,13 @@ public class UserService {
         }
 
         return list;
+    }
+
+    public AuroraUser getUserById(Long userId) {
+        Query query = entityManager.createQuery("SELECT au FROM AuroraUser au where au.userId = :userId");
+        query.setParameter("userId", userId);
+
+        return (AuroraUser)query.getSingleResult();
     }
 
     public boolean isUserMod(Long userId) {

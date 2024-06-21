@@ -73,19 +73,12 @@ public class CommentsDialog extends BaseDialog {
             commentText.setValue(comment.getCommentText());
             commentText.setReadOnly(true);
             commentText.setWidth("100%");
-            /*
-            commentText.getStyle().set("border", "1px solid #ccc")
-                    .set("padding", "10px")
-                    .set("border-radius", "10px")
-                    .set("margin-bottom", "10px");
-
-             */
 
             Span userDetails = new Span();
             userDetails.setText("@" + comment.getUser().getUsername() +
                     " • " + comment.getCreatedAt().format(DateTimeFormatter.ofPattern("dd.MM.yy HH:mm")) + ":");
 
-            commentsLayout.add(commentText, userDetails);
+            commentsLayout.add(userDetails, commentText);
         }
 
         addComponentToDialog(commentsLayout);
@@ -115,8 +108,6 @@ public class CommentsDialog extends BaseDialog {
                                Long gifId) {
         if (!txt.isEmpty()) {
             final Long userId = userService.getCurrentUserId();
-
-            System.out.println("ADDING COMMENT. PLEASE WAIT.");
             commentService.addComment(userId, gifId, txt);
             commentField.clear();
             showComments(gifId);

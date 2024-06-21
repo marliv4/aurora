@@ -64,11 +64,12 @@ public class SettingsView extends VerticalLayout {
     public SettingsView(SettingsService settingsService,
                         UserService userService,
                         ProfilePictureService profilePictureService,
-                        LanguagesController languagesController) {
+                        LanguagesController languagesController,
+                        NotificationService notificationService) {
         this.settingsService = settingsService;
         this.userService = userService;
         this.languagesController = languagesController;
-        NavigationBar navbar = new NavigationBar(userService, profilePictureService, languagesController, settingsService);
+        NavigationBar navbar = new NavigationBar(userService, profilePictureService, languagesController, settingsService, notificationService);
         add(navbar);
 
         final Long userId = userService.getCurrentUserId();

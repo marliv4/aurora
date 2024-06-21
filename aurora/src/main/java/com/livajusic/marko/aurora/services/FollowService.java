@@ -109,7 +109,7 @@ public class FollowService {
 
     public List<Object[]> getUsersFollowers(Long userId) {
         Query query = entityManager.createQuery(
-                "SELECT au.username, pfp.imageData " +
+                "SELECT au, pfp.imageData " +
                         "FROM AuroraUser au " +
                         "JOIN Follows f ON au.userId = f.user.userId " +
                         "JOIN ProfilePicture pfp ON au.userId = pfp.user.userId " +
@@ -122,7 +122,7 @@ public class FollowService {
 
     public List<Object[]> getFollowingUsers(Long userId) {
         Query query = entityManager.createQuery(
-                "SELECT au.username, pfp.imageData FROM AuroraUser au" +
+                "SELECT au, pfp.imageData FROM AuroraUser au" +
                         " JOIN Follows f ON au.userId = f.followsUser.userId" +
                         " JOIN ProfilePicture pfp on au.userId = pfp.user.userId" +
                         " WHERE f.user.userId = :userId"

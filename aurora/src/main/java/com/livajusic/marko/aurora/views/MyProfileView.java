@@ -26,6 +26,7 @@ import com.livajusic.marko.aurora.db_repos.GifRepo;
 import com.livajusic.marko.aurora.db_repos.UserRepo;
 import com.livajusic.marko.aurora.services.*;
 import com.livajusic.marko.aurora.tables.*;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
@@ -43,6 +44,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Optional;
 
 @PageTitle("My Profile")
@@ -56,13 +58,11 @@ public class MyProfileView extends VerticalLayout {
     private PasswordEncoder passwordEncoder;
 
     private final UserRepo userRepo;
-
     private final FileService fileService;
-
     private final FollowService followService;
-
     private final GifRepo gifRepo;
     private final ProfilePictureService profilePictureService;
+    private final GIFDisplayService gifDisplayService;
 
     public MyProfileView(
             UserService userService,
@@ -72,15 +72,18 @@ public class MyProfileView extends VerticalLayout {
             GifRepo gifRepo,
             LanguagesController languagesController,
             ProfilePictureService profilePictureService,
-            SettingsService settingsService) {
+            SettingsService settingsService,
+            GIFDisplayService gifDisplayService,
+            NotificationService notificationService) {
         this.userService = userService;
         this.userRepo = userRepo;
         this.fileService = fileService;
         this.followService = followService;
         this.gifRepo = gifRepo;
         this.profilePictureService = profilePictureService;
+        this.gifDisplayService = gifDisplayService;
 
-        NavigationBar navbar = new NavigationBar(userService, profilePictureService, languagesController, settingsService);
+        NavigationBar navbar = new NavigationBar(userService, profilePictureService, languagesController, settingsService, notificationService);
         add(navbar);
 
         setAlignItems(Alignment.CENTER);
@@ -92,7 +95,7 @@ public class MyProfileView extends VerticalLayout {
         UserInfoDisplayUtils userInfoDisplayUtils = new UserInfoDisplayUtils(gifRepo, userId, userService, followService, settingsService);
         add(userInfoDisplayUtils.getInfoLayout());
 
-        Span header = new Span(languagesController.get("my_profile"));
+        Span header = new Span(languagesController.get("my_profile") + ": " + username);
         header.getStyle().set("font-size", "24px").set("font-weight", "bold");
         add(header);
 
@@ -120,6 +123,13 @@ public class MyProfileView extends VerticalLayout {
             savePfp(inputStream);
         });
         add(upload);
+
+        List<AuroraGIF> gifs = gifRepo.findAllByUserId(userId);
+        for (AuroraGIF gif : gifs) {
+            Div gifDiv = gifDisplayService.displaySingleGif(username, gif);
+            add(gifDiv);
+            // componentsToDelete.add(gifDiv);
+        }
     }
 
     public void savePfp(InputStream is) {

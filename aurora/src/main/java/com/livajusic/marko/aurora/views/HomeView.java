@@ -71,7 +71,8 @@ public class HomeView extends VerticalLayout {
                     ProfilePictureService profilePictureService,
                     LanguagesController languagesController,
                     SettingsService settingsService,
-                    FollowService followService) {
+                    FollowService followService,
+                    NotificationService notificationService) {
         this.gifRepo = gifRepo;
         this.gifCategoryRepo = gifCategoryRepo;
         this.likeService = likeService;
@@ -82,7 +83,7 @@ public class HomeView extends VerticalLayout {
 
         displayedGifs = new ArrayList<>();
 
-        NavigationBar navbar = new NavigationBar(userService, profilePictureService, languagesController, settingsService);
+        NavigationBar navbar = new NavigationBar(userService, profilePictureService, languagesController, settingsService, notificationService);
         add(navbar);
 
         System.out.println(userService.getCurrentUsername());
@@ -166,8 +167,6 @@ public class HomeView extends VerticalLayout {
 
     private ComboBox<String> createFilterCriteria() {
         ComboBox<String> selectCriteria = new ComboBox<>(languagesController.get("selectcriteria"));
-        // selectCriteria.getStyle()
-                        // .set("color", "white");
         selectCriteria.setItems(languagesController.get("toplikes"), languagesController.get("recent"));
 
         selectCriteria.addValueChangeListener(event -> {

@@ -22,19 +22,15 @@ package com.livajusic.marko.aurora.views.dialogs;
 
 
 import com.livajusic.marko.aurora.services.FollowService;
-import com.livajusic.marko.aurora.services.ProfilePictureService;
 import com.livajusic.marko.aurora.services.UserService;
 import com.livajusic.marko.aurora.tables.AuroraUser;
-import com.livajusic.marko.aurora.tables.ProfilePicture;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.server.StreamResource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayInputStream;
@@ -72,9 +68,10 @@ public class FollowersDialog extends BaseDialog {
             title.setText(String.format("Who %s is following", userService.getUsernameById(userId)));
         }
 
-        for (Object[] e : entries) {
-            String name = (String)e[0];
-            HorizontalLayout userCard = createUserCard(name, (byte[])e[1]);
+        for (Object[] userInfo : entries) {
+            AuroraUser user = (AuroraUser) userInfo[0];
+            byte[] imageData = (byte[])userInfo[1];
+            HorizontalLayout userCard = createUserCard(user.getUsername(), imageData);
             dialogLayout.add(userCard);
         }
         Button closeButton = new Button("Close");

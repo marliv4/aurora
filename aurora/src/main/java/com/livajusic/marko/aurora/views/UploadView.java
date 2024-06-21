@@ -26,42 +26,29 @@ import com.livajusic.marko.aurora.db_repos.GifCategoryRepo;
 import com.livajusic.marko.aurora.db_repos.GifRepo;
 import com.livajusic.marko.aurora.db_repos.UserRepo;
 import com.livajusic.marko.aurora.services.*;
-import com.livajusic.marko.aurora.tables.AuroraGIF;
-import com.livajusic.marko.aurora.tables.AuroraUser;
-import com.livajusic.marko.aurora.tables.BelongsTo;
-import com.livajusic.marko.aurora.tables.GifCategory;
-import com.vaadin.flow.component.Key;
-import com.vaadin.flow.component.Text;
+import com.livajusic.marko.aurora.tables.*;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
-import com.vaadin.flow.component.html.Nav;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.FileBuffer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.server.auth.AnonymousAllowed;
 import jakarta.annotation.security.RolesAllowed;
-import jakarta.persistence.Query;
-import org.hibernate.QueryException;
-import org.hibernate.sql.ast.tree.insert.Values;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.sql.PreparedStatement;
+import java.sql.Date;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 @PageTitle("Upload")
@@ -74,6 +61,7 @@ public class UploadView extends VerticalLayout {
     private final BelongsToRepo belongsToRepo;
     private final UserService userService;
     private final FileService fileService;
+    private final FollowService followService;
 
     @Value("${upload.directory}")
     private String basePath;
@@ -89,7 +77,9 @@ public class UploadView extends VerticalLayout {
                       ProfilePictureService profilePictureService,
                       LanguagesController languagesController,
                       GIFService gifService,
-                      SettingsService settingsService) {
+                      SettingsService settingsService,
+                      NotificationService notificationService,
+                      FollowService followService) {
         this.gifRepo = gifRepo;
         this.userRepo = userRepo;
         this.gifCategoryRepo = gifCategoryRepo;
@@ -97,8 +87,9 @@ public class UploadView extends VerticalLayout {
         this.userService = userService;
         this.fileService = fileService;
         this.gifService = gifService;
+        this.followService = followService;
 
-        NavigationBar navbar = new NavigationBar(userService, profilePictureService, languagesController, settingsService);
+        NavigationBar navbar = new NavigationBar(userService, profilePictureService, languagesController, settingsService, notificationService);
         add(navbar);
 
         Span fileLabel = new Span("Choose a file:");
@@ -125,15 +116,29 @@ public class UploadView extends VerticalLayout {
                 return;
             }
 
+            /*
             if (gifService.hasUserUploadedGIFInLastNMinutes(userService.getCurrentUserId(), 10)) {
                 final var n = Notification.show("You uploaded a GIF in previous 10 minutes!", 1500, Notification.Position.MIDDLE);
                 n.addThemeVariants(NotificationVariant.LUMO_ERROR);
                 return;
             }
+             */
+
+            // Send all users who follow me a notification that I uploaded a GIF!
+            // For that:
+            // 1. Get users who follow me.
+            final var userId = userService.getCurrentUserId();
+            final List<Object[]> usersWhoFollowMe = followService.getUsersFollowers(userId);
+            // For each user, insert a notification in the DB.
+            for (Object[] entry : usersWhoFollowMe) {
+                AuroraUser uploader = userService.getUserById(userId);
+                AuroraUser intendedUser = (AuroraUser)entry[0];
+                notificationService.save(uploader, intendedUser);
+            }
 
             InputStream inputStream = buffer.getInputStream();
             saveFile(basePath, inputStream, licenseSelect.getValue(), categoryInput.getValue());
-            final var n = Notification.show("GIF succesfully uploaded!", 1500, Notification.Position.MIDDLE);
+            final var n = Notification.show("GIF successfully uploaded!", 1500, Notification.Position.MIDDLE);
             n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
         });
 
@@ -227,6 +232,12 @@ public class UploadView extends VerticalLayout {
 
         public static java.sql.Date getSqlDate(java.util.Date utilDate) {
             return new java.sql.Date(utilDate.getTime());
+        }
+
+        public static String getFormattedDate(Date date) {
+            LocalDate localDate = date.toLocalDate();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+            return localDate.format(formatter);
         }
     };
 }

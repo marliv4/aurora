@@ -67,7 +67,8 @@ public class UserProfileView extends Div implements HasUrlParameter<String> {
                            LanguagesController languagesController,
                            SettingsService settingsService,
                            GifRepo gifRepo,
-                           GIFDisplayService gifDisplayService) {
+                           GIFDisplayService gifDisplayService,
+                           NotificationService notificationService) {
         clearUserProfile();
         this.userService = userService;
         this.settingsService = settingsService;
@@ -76,7 +77,7 @@ public class UserProfileView extends Div implements HasUrlParameter<String> {
         this.gifDisplayService = gifDisplayService;
         usernameText = new H3();
 
-        NavigationBar navbar = new NavigationBar(userService, profilePictureService, languagesController, settingsService);
+        NavigationBar navbar = new NavigationBar(userService, profilePictureService, languagesController, settingsService, notificationService);
         add(navbar);
         if (userService.isLoggedIn()) {
             Button button = new Button("Follow");
@@ -122,25 +123,20 @@ public class UserProfileView extends Div implements HasUrlParameter<String> {
         add(gifsLayout);
         componentsToDelete.add(gifsLayout);
 
-        // display users GIFS if having public profile
-        /*
-        if (!settingsService.isUsersProfilePrivate(userId)) {
-            List<AuroraGIF> gifs = gifRepo.findAllByUserId(userId);
-            for (AuroraGIF gif : gifs) {
-                Div gifDiv = gifDisplayService.displaySingleGif(username, gif);
-                add(gifDiv);
-                componentsToDelete.add(gifDiv);
-            }
+        List<AuroraGIF> gifs = gifRepo.findAllByUserId(userId);
+        for (AuroraGIF gif : gifs) {
+            Div gifDiv = gifDisplayService.displaySingleGif(username, gif);
+            add(gifDiv);
+            componentsToDelete.add(gifDiv);
         }
-         */
     }
 
     private void clearUserProfile() {
         System.out.println("clearUserProfile");
-            for (Component d : componentsToDelete) {
-                remove(d);
-            }
-            componentsToDelete.clear();
+        for (Component d : componentsToDelete) {
+            remove(d);
+        }
+        componentsToDelete.clear();
         // UI.getCurrent().getPage().reload();
     }
 }
