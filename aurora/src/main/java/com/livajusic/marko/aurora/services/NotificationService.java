@@ -65,4 +65,10 @@ public class NotificationService {
         query.executeUpdate();
     }
 
+    public Long countNotificationIntendedForUser(Long intendedUserId) {
+        Query query = entityManager.createQuery("SELECT count(*) FROM NotificationModel n WHERE n.intendedUser.id = :intendedUserId");
+        query.setParameter("intendedUserId", intendedUserId);
+        return (Long)query.getSingleResult();
+    }
+
 }

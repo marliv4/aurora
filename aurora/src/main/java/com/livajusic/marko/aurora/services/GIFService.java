@@ -53,11 +53,33 @@ public class GIFService {
     }
 
     @Transactional
+    public void deleteFromBelongsToRepo(Long gifId) {
+        Query query = entityManager.createQuery("DELETE FROM BelongsTo WHERE gif.id = :gifId");
+        query.setParameter("gifId", gifId);
+        query.executeUpdate();
+    }
+
+    @Transactional
+    public void deleteFromLikesRepo(Long gifId) {
+        Query query = entityManager.createQuery("DELETE FROM Like WHERE gif.id = :gifId");
+        query.setParameter("gifId", gifId);
+        query.executeUpdate();
+    }
+
+    @Transactional
+    public void deleteFromCommentsRepo(Long gifId) {
+        Query query = entityManager.createQuery("DELETE FROM Comment WHERE gif.id = :gifId");
+        query.setParameter("gifId", gifId);
+        query.executeUpdate();
+    }
+
+    @Transactional
     public boolean delete(Long gifId) {
         try {
-            belongsToRepo.deleteByGifId(gifId);
+            deleteFromBelongsToRepo(gifId);
+            deleteFromLikesRepo(gifId);
+            deleteFromCommentsRepo(gifId);
             gifRepo.deleteById(gifId);
-            // delete likes, comments
         } catch (Exception e) {
             e.printStackTrace();
             return false;

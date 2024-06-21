@@ -34,6 +34,8 @@ public class BaseDialog {
         this.title = new H2();
         addComponentToDialog(title);
         dialog.setWidth("400px");
+        dialog.setCloseOnEsc(true);
+        dialog.setCloseOnOutsideClick(true);
     }
     public void open() {
         dialog.open();

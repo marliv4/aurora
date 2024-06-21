@@ -96,7 +96,7 @@ public class GIFDisplayService {
 
         final var gifId = gif.getId();
         Span amountLikes = new Span(languagesController.get("liked_by") + " " + likeService.getAmountOfLikes(gifId)
-                + " " +languagesController.get("people"));
+                + " " + languagesController.get("people"));
         updateLikeUnlikeBtnState(likeUnlikeButton, gifId);
         final var loggedIn = userService.isLoggedIn();
         likeUnlikeButton.addClickListener(buttonClickEvent -> {
@@ -144,12 +144,11 @@ public class GIFDisplayService {
 
         if (loggedIn) {
             final var userId = userService.getCurrentUserId();
-            if (userService.isUserMod(userId)) {
+            if (userService.isUserMod(userId) || gif.getUser().getId().equals(userService.getCurrentUserId())) {
                 Button removePostButton = new Button("Remove Post");
                 removePostButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
                 removePostButton.addClickListener(buttonClickEvent -> {
                     if (gifService.delete(gif.getId())) {
-                        // gifDiv.getParent().ifPresent(parent -> parent.remove(gifDiv));
                         Notification.show("Post removed successfully!", 3000, Notification.Position.BOTTOM_CENTER)
                                 .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                     }

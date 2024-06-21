@@ -33,6 +33,7 @@ import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.dependency.StyleSheet;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Span;
@@ -135,29 +136,33 @@ public class NavigationBar extends HorizontalLayout {
         } else {
             NotificationsDialog notificationsDialog = new NotificationsDialog();
             for (NotificationModel notification : notifications) {
+                Div notificationDiv = new Div();
+                notificationDiv.getStyle()
+                        .set("border", "1px solid #ccc")
+                        .set("border-radius", "5px")
+                        .set("padding", "10px")
+                        .set("margin-bottom", "10px")
+                        .set("box-shadow", "0 2px 4px rgba(0, 0, 0, 0.1)");
+                        // .set("background-color", "#f9f9f9");
                 System.out.println(notification.getMessage());
                 Span notificationItem = new Span(notification.getMessage());
-                notificationsDialog.addComponentToDialog(notificationItem);
 
                 Button markAsReadButton = new Button("Mark as Read");
                 markAsReadButton.addClickListener(event -> {
                     notification.setRead(true);
-                    // TODO: Delete notification from DB once read.
                     notificationService.delete(notification.getId());
-                    notificationsDialog.close();
+                    // Close if no remaining notifications.
+                    if (notificationService.countNotificationIntendedForUser(userService.getCurrentUserId()) == 0) {
+                        notificationsDialog.close();
+                    }
+                    // Redraw.
                 });
 
-                notificationsDialog.addComponentToDialog(notificationItem);
-                notificationsDialog.addComponentToDialog(markAsReadButton);
+                notificationDiv.add(notificationItem, markAsReadButton);
+                notificationsDialog.addComponentToDialog(notificationDiv);
                 notificationsDialog.open();
             }
         }
-
-        /*
-        notificationLayout.setVisible(false);
-        add(notificationLayout);
-        return notificationLayout;
-        */
     }
 
 
