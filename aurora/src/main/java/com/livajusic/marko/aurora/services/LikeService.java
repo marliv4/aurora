@@ -103,20 +103,18 @@ public class LikeService {
                         "GROUP BY u.id, u.username, g " +
                         "ORDER BY COUNT(l) DESC"
         );
-
-
         final var list = query.getResultList();;
         return list;
     }
 
     public List<Object> getMostRecentGIFs() {
         Query query = entityManager.createQuery(
-                "SELECT u.username, g " +
+                "SELECT COUNT(*), u.username, g " +
                         "FROM AuroraGIF g " +
                         "JOIN g.user u " +
+                        "GROUP BY u.username, g " +
                         "ORDER BY g.publishDate DESC"
         );
-
         final var list = query.getResultList();
         return list;
     }

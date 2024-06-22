@@ -20,7 +20,6 @@
  */
 package com.livajusic.marko.aurora.views.dialogs;
 
-import com.livajusic.marko.aurora.services.FollowService;
 import com.livajusic.marko.aurora.services.UserService;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.H3;
@@ -29,7 +28,6 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.PasswordField;
 
 public class ChangePasswordDialog extends BaseDialog {
-
     PasswordField currentPasswordField;
     PasswordField newPasswordField1;
     PasswordField newPasswordField2;
@@ -42,6 +40,7 @@ public class ChangePasswordDialog extends BaseDialog {
         dialog.setCloseOnOutsideClick(true);
 
         this.userService = userService;
+
         currentPasswordField = new PasswordField();
         newPasswordField1 = new PasswordField();
         newPasswordField2 = new PasswordField();
@@ -80,9 +79,18 @@ public class ChangePasswordDialog extends BaseDialog {
         String newPassword1 = newPasswordField1.getValue();
         String newPassword2 = newPasswordField2.getValue();
 
-        // Basic validation
         if (currentPassword.isEmpty() || newPassword1.isEmpty() || newPassword2.isEmpty()) {
             Notification.show("Please fill in all fields.");
+            return;
+        }
+
+        /*
+        final var currentPw = passwordService.getPasswordEncoder().encode(currentPasswordField.getValue());
+        final var actualPw = userService.getPassword(userService.getCurrentUsername());
+
+        // Check that current password user entered is correct.
+        if (!currentPw.equals(actualPw)) {
+            Notification.show("Current password is wrong...");
             return;
         }
 
@@ -91,20 +99,10 @@ public class ChangePasswordDialog extends BaseDialog {
             return;
         }
 
-        final var oldPwEntry = currentPasswordField.getValue();
-        final var actualPw = userService.getPassword(userService.getCurrentUsername());
-        System.out.println("oldpw: " + oldPwEntry);
-        System.out.println("actualPw: " + actualPw);
-
-        // Check that old password user entered is correct.
-        /*if (!userService.getPassword(userService.getCurrentUsername()).equals(oldPw)) {
-            Notification.show("Current password is wrong..");
-            return;
-        }*/
-
         if (userService.updatePassword(userService.getCurrentUserId(), newPasswordField1.getValue()) == 1) {
             dialog.close();
             Notification.show("Password changed successfully.");
         }
+         */
     }
 }

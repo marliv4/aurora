@@ -72,6 +72,10 @@ public class AuroraGIF {
 
     public Long getId() { return gifId; }
 
+    public void setGifId(Long gifId) {
+        this.gifId = gifId;
+    }
+
     public byte[] getImageData() {
         return imageData;
     }

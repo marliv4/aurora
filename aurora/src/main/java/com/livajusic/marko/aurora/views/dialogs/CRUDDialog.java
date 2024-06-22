@@ -61,9 +61,8 @@ public class CRUDDialog extends BaseDialog {
         });
         emailField.addKeyPressListener(Key.ESCAPE, l -> close());
 
-        // Add components  the dialog layout
         VerticalLayout layout = new VerticalLayout();
-        layout.add(usernameField, emailField);
+        layout.add(usernameField, emailField, passwordField);
 
         dialog.add(layout);
     }

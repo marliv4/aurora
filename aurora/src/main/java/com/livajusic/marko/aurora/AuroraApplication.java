@@ -30,12 +30,16 @@ import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfi
 import org.springframework.boot.autoconfigure.web.servlet.error.ErrorMvcAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.support.ResourceBundleMessageSource;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import java.util.Locale;
 
 @SpringBootApplication(exclude = ErrorMvcAutoConfiguration.class)
 // @Theme(value = "aurora_theme", variant = Lumo)
 @Theme(variant = Lumo.DARK)
+@EnableJpaRepositories
+@EnableTransactionManagement
 public class AuroraApplication implements AppShellConfigurator {
 
 	public static void main(String[] args) {

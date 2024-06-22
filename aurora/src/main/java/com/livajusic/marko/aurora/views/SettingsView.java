@@ -46,6 +46,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
 import jakarta.annotation.security.RolesAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -56,11 +57,11 @@ import java.util.Map;
 @RolesAllowed({"user"})
 public class SettingsView extends VerticalLayout {
     private final SettingsService settingsService;
-
     private final LanguagesController languagesController;
 
     @Autowired
     private final UserService userService;
+
     public SettingsView(SettingsService settingsService,
                         UserService userService,
                         ProfilePictureService profilePictureService,
@@ -110,7 +111,7 @@ public class SettingsView extends VerticalLayout {
         layout.add(new H3("Email address: "), new Text(email));
         Button changePwBtn = new Button("Change Password");
         changePwBtn.addClickListener(e -> {
-            System.out.println("changePwBtn");
+            System.out.println("openChangePwDialogBtn");
             ChangePasswordDialog changePasswordDialog = new ChangePasswordDialog(userService);
             changePasswordDialog.open();
         });
@@ -181,7 +182,7 @@ public class SettingsView extends VerticalLayout {
         themeSelect.setValue(settingsService.getUsersTheme(userId));
         themeSelect.addValueChangeListener(l -> {
             String selectedTheme = l.getValue();
-            settingsService.updateUsersTheme(userId, selectedTheme);
+            settingsService.updateUsersTheme(userId, selectedTheme.toLowerCase().charAt(0));
         });
 
         return themeSelect;

@@ -54,4 +54,11 @@ public class BelongsTo {
         this.category = category;
     }
 
+    public AuroraGIF getGif() {
+        return gif;
+    }
+
+    public void setGif(AuroraGIF gif) {
+        this.gif = gif;
+    }
 }

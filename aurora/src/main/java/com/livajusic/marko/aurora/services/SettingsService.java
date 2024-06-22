@@ -65,11 +65,11 @@ public class SettingsService {
     public String getUsersTheme(Long userId) {
         Query query = entityManager.createQuery("SELECT theme FROM Settings WHERE user.userId = :userId");
         query.setParameter("userId", userId);
-        return (String)query.getSingleResult();
+        return (char)query.getSingleResult() == 'd' ? "Dark" : "Light";
     }
 
     @Transactional
-    public void updateUsersTheme(Long userId, String theme) {
+    public void updateUsersTheme(Long userId, char theme) {
         Query query = entityManager.createQuery("UPDATE Settings s SET s.theme = :theme WHERE s.user.userId = :userId");
         query.setParameter("userId", userId);
         query.setParameter("theme", theme);
@@ -84,7 +84,7 @@ public class SettingsService {
                 "WHERE user.userId = :userId");
         query.setParameter("userId", userId);
 
-        return (int)query.getSingleResult() == 1;
+        return (boolean)query.getSingleResult();
     }
 
     @Transactional
@@ -104,7 +104,7 @@ public class SettingsService {
                 "WHERE user.userId = :userId");
         query.setParameter("userId", userId);
 
-        return (int)query.getSingleResult() == 1;
+        return (boolean)query.getSingleResult();
     }
 
     @Transactional

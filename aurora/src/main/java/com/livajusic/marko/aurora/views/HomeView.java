@@ -36,9 +36,11 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.livajusic.marko.aurora.tables.BelongsTo;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @PageTitle("Main")
 @Route(value = "/")
@@ -51,16 +53,19 @@ public class HomeView extends VerticalLayout {
     private final LikeService likeService;
     private final GIFDisplayService gifDisplayService;
     private final FollowService followService;
+    private final GIFService gifService;
 
     @Autowired
     UserService userService;
 
     private TextField searchField;
-    private ArrayList<Div> displayedGifs;
+    private final ArrayList<Div> displayedGifs;
     private final LanguagesController languagesController;
+    private ComboBox<String> selectCriteria;
 
     private static class Filtered {
-        public static boolean filtered = false;
+        public static boolean filteredByCriteria = false;
+        public static boolean filteredByCaterogy = false;
     }
 
     public HomeView(GifRepo gifRepo,
@@ -72,7 +77,8 @@ public class HomeView extends VerticalLayout {
                     LanguagesController languagesController,
                     SettingsService settingsService,
                     FollowService followService,
-                    NotificationService notificationService) {
+                    NotificationService notificationService,
+                    GIFService gifService) {
         this.gifRepo = gifRepo;
         this.gifCategoryRepo = gifCategoryRepo;
         this.likeService = likeService;
@@ -80,6 +86,7 @@ public class HomeView extends VerticalLayout {
         this.gifDisplayService = gifDisplayService;
         this.languagesController = languagesController;
         this.followService = followService;
+        this.gifService = gifService;
 
         displayedGifs = new ArrayList<>();
 
@@ -92,10 +99,40 @@ public class HomeView extends VerticalLayout {
 
         searchField.setPlaceholder(languagesController.get("filter_by_categories"));
         searchField.addValueChangeListener(event -> {
-            filterGifs(event.getValue());
-            Filtered.filtered = true;
+            if (!event.getValue().isEmpty()) {
+                // Check if any criteria is selected.
+                if (Filtered.filteredByCriteria) {
+                    // Criteria: true, category: true
+                    System.out.println("filtered by criteria already.");
+                    // Get GIFS filtered through criteria.
+                    final List<Object> list = getFiltered();
+                    List<Long> gifIds = list.stream()
+                            .map(obj -> ((AuroraGIF) ((Object[]) obj)[2]).getId())
+                            .collect(Collectors.toList());
+
+                    final var latest = gifService.filterGivenGifsByCategory(gifIds, Arrays.asList(searchField.getValue().split(",")));
+                    if (latest != null && !latest.isEmpty()) {
+                        clearCurrentlyDisplayedGIFs();
+                        displayGifsFromArray(latest);
+                        Filtered.filteredByCaterogy = true;
+                        Filtered.filteredByCriteria = true;
+                    }
+                } else {
+                    // Criteria: false, category: true
+                    final var newGifs = gifService.filterGifsByCategory(event.getValue());
+                    if (newGifs != null) {
+                        clearCurrentlyDisplayedGIFs();
+                        displayGifsFromArray(newGifs);
+                        Filtered.filteredByCaterogy = true;
+                        Filtered.filteredByCriteria = false;
+                    }
+                }
+            } else {
+                clearCurrentlyDisplayedGIFs();
+                // Criteria: false, category: false
+                displayGifsFromArray(gifRepo.findAll());
+            }
         });
-        // add(searchField);
 
         // Display GIFS of following users.
         if (userService.isLoggedIn()) {
@@ -104,13 +141,11 @@ public class HomeView extends VerticalLayout {
             displayGifsFromArray(gifs);
         }
 
-        if (!Filtered.filtered) {
+        if (!Filtered.filteredByCriteria && !Filtered.filteredByCaterogy) {
             displayGifsFromArray(gifRepo.findAll());
         }
         setAlignItems(Alignment.CENTER);
         setJustifyContentMode(JustifyContentMode.CENTER);
-
-        // getElement().getStyle().set("background-color", "#0D1219");
     }
 
     private HorizontalLayout createHorizontalLayout() {
@@ -119,37 +154,12 @@ public class HomeView extends VerticalLayout {
         horizontalLayout.setAlignItems(Alignment.BASELINE);
         horizontalLayout.setJustifyContentMode(JustifyContentMode.CENTER);
 
-        final var sort = createFilterCriteria();
+        createFilterCriteria();
         searchField = new TextField();
-        horizontalLayout.add(sort, searchField);
+        horizontalLayout.add(selectCriteria, searchField);
         add(horizontalLayout);
 
         return horizontalLayout;
-    }
-
-    private void filterGifs(String category) {
-        System.out.println(category);
-
-        ArrayList<String> categoriesList = new ArrayList<>();
-        categoriesList.add(category);
-        if (category.contains(",")) {
-            categoriesList.addAll(Arrays.asList(category.split(",")));
-        }
-
-        for (String c : categoriesList) {
-            final Optional<GifCategory> categoryOptional = gifCategoryRepo.findByCategory(c);
-            final var empty = categoryOptional.isEmpty();
-            if (empty) {
-                return;
-            }
-
-            final var gifCategory = categoryOptional.get();
-            final Set<BelongsTo> gifSet = gifCategory.getGifs();
-
-            for (BelongsTo b : gifSet) {
-                System.out.println("FILTERED GIF FILENAME: " + b.toString());
-            }
-        }
     }
 
     private void displayGifsFromArray(List<AuroraGIF> gifs) {
@@ -157,47 +167,22 @@ public class HomeView extends VerticalLayout {
         VirtualList<Div> vl = new VirtualList<>();
         vl.setItems(list);
 
-
         for (Div gifDiv : list) {
             add(gifDiv);
             displayedGifs.add(gifDiv);
         }
-
     }
 
-    private ComboBox<String> createFilterCriteria() {
-        ComboBox<String> selectCriteria = new ComboBox<>(languagesController.get("selectcriteria"));
-        selectCriteria.setItems(languagesController.get("toplikes"), languagesController.get("recent"));
+    private void createFilterCriteria() {
+        selectCriteria = new ComboBox<>(languagesController.get("selectcriteria"));
+        selectCriteria.setItems(languagesController.get("toplikes"), languagesController.get("recent"), "-");
+        selectCriteria.setValue("-");
 
         selectCriteria.addValueChangeListener(event -> {
             String selectedCriteria = event.getValue();
             clearCurrentlyDisplayedGIFs();
-            Filtered.filtered = true;
-            if ("Top Likes".equals(selectedCriteria)) {
-                // Clear all currently displayed GIFs
-                final var mostLikedGIFs = likeService.getMostLikedGIFs();
-                for (Object o : mostLikedGIFs) {
-                    Object[] row = (Object[])o;
-                    final var amountLikes = (Long)row[0];
-                    final var username = (String)row[1];
-                    final var gif = (AuroraGIF) row[2];
-
-                    System.out.println("amount likes: " + amountLikes + "; path: " + " a: " + row[2] + " b: " + row[3]);
-                    add(gifDisplayService.displaySingleGif(username, gif));
-                }
-            } else if ("Recent".equals(selectedCriteria)) {
-                final var mostRecentGIFs = likeService.getMostRecentGIFs();
-                for (Object o : mostRecentGIFs) {
-                    Object[] row = (Object[]) o;
-                    final var username = (String) row[0];
-                    final var gif = (AuroraGIF) row[1];
-                    add(gifDisplayService.displaySingleGif(username, gif));
-                }
-            }
+            displayBasedOnCriteria();
         });
-
-        // add(selectCriteria);
-        return selectCriteria;
     }
 
     private void clearCurrentlyDisplayedGIFs() {
@@ -205,5 +190,35 @@ public class HomeView extends VerticalLayout {
             remove(d);
         }
         displayedGifs.clear();
+    }
+
+    private List<Object> getFiltered() {
+        List<Object> list = new ArrayList<Object>();
+        if ("Top Likes".equals(selectCriteria.getValue())) {
+            list = likeService.getMostLikedGIFs();
+        } else if ("Recent".equals(selectCriteria.getValue())) {
+            list = likeService.getMostRecentGIFs();
+        } else {
+            displayGifsFromArray(gifRepo.findAll());
+            Filtered.filteredByCriteria = false;
+        }
+
+        return list;
+    }
+
+    private void displayBasedOnCriteria() {
+        Filtered.filteredByCriteria = true;
+        List<Object> list = getFiltered();
+
+        if (!list.isEmpty()) {
+            for (Object o : list) {
+                Object[] row = (Object[]) o;
+                final var username = (String) row[1];
+                final var gif = (AuroraGIF) row[2];
+                Div div = gifDisplayService.displaySingleGif(username, gif);
+                add(div);
+                displayedGifs.add(div);
+            }
+        }
     }
 }

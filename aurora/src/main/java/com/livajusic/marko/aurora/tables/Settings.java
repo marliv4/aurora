@@ -35,16 +35,16 @@ public class Settings {
     private AuroraUser user;
 
     @Column
-    private int othersCanSeeMyFollowers;
+    private boolean othersCanSeeMyFollowers;
 
     @Column
-    private int othersCanSeeWhoIAmFollowing;
+    private boolean othersCanSeeWhoIAmFollowing;
 
     @Column
     private String language;
 
     @Column
-    private String theme;
+    private char theme;
 
     public Settings() {}
 
@@ -56,19 +56,19 @@ public class Settings {
         this.language = language;
     }
 
-    public String getTheme() {
+    public char getTheme() {
         return theme;
     }
 
-    public void setTheme(String theme) {
+    public void setTheme(char theme) {
         this.theme = theme;
     }
 
     public Settings(AuroraUser user,
-                    int othersCanSeeMyFollowers,
-                    int othersCanSeeWhoIAmFollowing,
+                    boolean othersCanSeeMyFollowers,
+                    boolean othersCanSeeWhoIAmFollowing,
                     String language,
-                    String theme) {
+                    char theme) {
         this.user = user;
         this.othersCanSeeMyFollowers = othersCanSeeMyFollowers;
         this.othersCanSeeWhoIAmFollowing = othersCanSeeWhoIAmFollowing;
@@ -76,19 +76,19 @@ public class Settings {
         this.theme = theme;
     }
 
-    public int getOthersCanSeeMyFollowers() {
+    public boolean getOthersCanSeeMyFollowers() {
         return othersCanSeeMyFollowers;
     }
 
-    public void setOthersCanSeeMyFollowers(int othersCanSeeMyFollowers) {
+    public void setOthersCanSeeMyFollowers(boolean othersCanSeeMyFollowers) {
         this.othersCanSeeMyFollowers = othersCanSeeMyFollowers;
     }
 
-    public int getOthersCanSeeWhoIAmFollowing() {
+    public boolean getOthersCanSeeWhoIAmFollowing() {
         return othersCanSeeWhoIAmFollowing;
     }
 
-    public void setOthersCanSeeWhoIAmFollowing(int othersCanSeeWhoIAmFollowing) {
+    public void setOthersCanSeeWhoIAmFollowing(boolean othersCanSeeWhoIAmFollowing) {
         this.othersCanSeeWhoIAmFollowing = othersCanSeeWhoIAmFollowing;
     }
 

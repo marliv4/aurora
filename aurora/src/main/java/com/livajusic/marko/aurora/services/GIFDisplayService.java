@@ -23,6 +23,7 @@ package com.livajusic.marko.aurora.services;
 import com.livajusic.marko.aurora.LanguagesController;
 import com.livajusic.marko.aurora.tables.AuroraGIF;
 import com.livajusic.marko.aurora.views.dialogs.CommentsDialog;
+import com.livajusic.marko.aurora.views.dialogs.FurtherInformationDialog;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Div;
@@ -92,7 +93,7 @@ public class GIFDisplayService {
         Button likeUnlikeButton = new Button("Like", VaadinIcon.HEART.create());
         likeUnlikeButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-        boolean likedAlready = false;
+        Button furtherInformationButton = getFurtherInformationButton(gif);
 
         final var gifId = gif.getId();
         Span amountLikes = new Span(languagesController.get("liked_by") + " " + likeService.getAmountOfLikes(gifId)
@@ -107,16 +108,16 @@ public class GIFDisplayService {
                 if (likeService.hasUserAlreadyLikedGIF(currentUserId, gifId)) {
                     likeService.unlikeGif(currentUserId, gifId);
                     likeUnlikeButton.setText(languagesController.get("like"));
-                    final var n = Notification.show("Unliked!", 500, Notification.Position.BOTTOM_CENTER);
+                    final var n = Notification.show("Unliked!", 1500, Notification.Position.BOTTOM_CENTER);
                     n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                 } else {
                     likeService.likeGif(currentUserId, gifId);
                     likeUnlikeButton.setText(languagesController.get("unlike"));
-                    final var n = Notification.show("Liked!", 500, Notification.Position.BOTTOM_CENTER);
+                    final var n = Notification.show("Liked!", 1500, Notification.Position.BOTTOM_CENTER);
                     n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                 }
             } else {
-                final var n = Notification.show("Please log in to like posts.", 500, Notification.Position.BOTTOM_CENTER);
+                final var n = Notification.show("Please log in to like posts.", 1500, Notification.Position.BOTTOM_CENTER);
                 n.addThemeVariants(NotificationVariant.LUMO_ERROR);
             }
             updateAmountLikesSpan(likeService, gifId, amountLikes);
@@ -130,7 +131,7 @@ public class GIFDisplayService {
             commentsDialog.open(gifId);
         });
 
-        HorizontalLayout buttonsLayout = new HorizontalLayout(likeUnlikeButton, openCommentsBtn);
+        HorizontalLayout buttonsLayout = new HorizontalLayout(likeUnlikeButton, openCommentsBtn, furtherInformationButton);
         buttonsLayout.setSpacing(true);
 
         VerticalLayout gifLayout = new VerticalLayout(usernameLabel, image, buttonsLayout, amountLikes);
@@ -159,6 +160,36 @@ public class GIFDisplayService {
         }
 
         return gifDiv;
+    }
+
+    private Button getFurtherInformationButton(AuroraGIF gif) {
+        Button button = new Button("", VaadinIcon.INFO.create());
+        button.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+
+        button.addClickListener(l -> {
+            FurtherInformationDialog furtherInformationDialog = new FurtherInformationDialog();
+            VerticalLayout contentLayout = new VerticalLayout();
+            contentLayout.setSpacing(true);
+
+            Span license = new Span(String.format("License: %s", gif.getLicense()));
+            license.getStyle().set("margin-top", "10px");
+            contentLayout.add(license);
+
+            final List<String> categoriesList = gifService.getGifsCategories(gif.getId());
+            for (String category : categoriesList) {
+                Span s = new Span(String.format("#%s ", category));
+                s.addClickListener(e -> {
+
+                });
+                s.getStyle().set("padding", "2px 0");
+                contentLayout.add(s);
+            }
+
+            furtherInformationDialog.addComponentToDialog(contentLayout);
+            furtherInformationDialog.open();
+        });
+
+        return button;
     }
 
     private void updateLikeUnlikeBtnState(Button likeUnlikeButton, Long gifId) {

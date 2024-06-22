@@ -25,13 +25,9 @@ import com.livajusic.marko.aurora.db_repos.SettingsRepo;
 import com.livajusic.marko.aurora.db_repos.ProfilePictureRepo;
 import com.livajusic.marko.aurora.db_repos.RoleRepo;
 import com.livajusic.marko.aurora.db_repos.UserRepo;
-import com.livajusic.marko.aurora.services.NotificationService;
-import com.livajusic.marko.aurora.services.ProfilePictureService;
-import com.livajusic.marko.aurora.services.SettingsService;
-import com.livajusic.marko.aurora.services.UserService;
+import com.livajusic.marko.aurora.services.*;
 import com.livajusic.marko.aurora.tables.AuroraUser;
 import com.livajusic.marko.aurora.tables.Settings;
-import com.livajusic.marko.aurora.tables.ProfilePicture;
 import com.livajusic.marko.aurora.tables.Role;
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.Text;
@@ -39,7 +35,6 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.PasswordField;
@@ -49,13 +44,10 @@ import com.vaadin.flow.router.Route;
 
 import com.vaadin.flow.router.RouteConfiguration;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
-import org.hibernate.sql.ast.tree.insert.Values;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -64,19 +56,17 @@ import java.util.regex.Pattern;
 @AnonymousAllowed
 public class RegisterView extends VerticalLayout {
     private final UserRepo userRepo;
-
     private final SettingsRepo settingsRepo;
+    private final UserService userService;
+    private final ProfilePictureService profilePictureService;
+    private final RoleRepo roleRepo;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    private final RoleRepo roleRepo;
-
     final String patternStr = "^[a-zA-Z0-9_.-]*$";
     final Pattern pattern = Pattern.compile(patternStr);
 
-    private final UserService userService;
-    private final ProfilePictureService profilePictureService;
     public RegisterView(UserRepo userRepo,
                         SettingsRepo settingsRepo,
                         RoleRepo roleRepo,
@@ -177,7 +167,7 @@ public class RegisterView extends VerticalLayout {
         );
         userRepo.save(newUser);
 
-        Settings settings = new Settings(newUser, 1, 1, "English", "Dark");
+        Settings settings = new Settings(newUser, true, true, "English", 'd');
         settingsRepo.save(settings);
         Role standardRole = new Role(newUser.getId(), "user");
         roleRepo.save(standardRole);

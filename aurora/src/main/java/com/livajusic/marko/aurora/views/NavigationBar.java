@@ -28,8 +28,8 @@ import com.livajusic.marko.aurora.services.UserService;
 import com.livajusic.marko.aurora.tables.NotificationModel;
 import com.livajusic.marko.aurora.tables.ProfilePicture;
 import com.livajusic.marko.aurora.views.dialogs.NotificationsDialog;
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Key;
-import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.dependency.StyleSheet;
@@ -43,11 +43,12 @@ import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.component.UI;
+import com.vaadin.flow.theme.lumo.Lumo;
+import org.aspectj.weaver.ast.Not;
 
 import java.io.ByteArrayInputStream;
 import java.util.List;
@@ -58,6 +59,9 @@ import java.util.Optional;
 public class NavigationBar extends HorizontalLayout {
     private final UserService userService;
     private final NotificationService notificationService;
+    private final SettingsService settingsService;
+
+    private boolean dark = true;
 
     public NavigationBar(UserService userService,
                          ProfilePictureService profilePictureService,
@@ -66,6 +70,7 @@ public class NavigationBar extends HorizontalLayout {
                          NotificationService notificationService) {
         this.userService = userService;
         this.notificationService = notificationService;
+        this.settingsService = settingsService;
 
         setAlignItems(HorizontalLayout.Alignment.CENTER);
         setJustifyContentMode(JustifyContentMode.CENTER);
@@ -95,10 +100,13 @@ public class NavigationBar extends HorizontalLayout {
                 getUI().get().getPage().reload();
             });
             addRegisterAndLoginLink = false;
+
+            dark = settingsService.getUsersTheme(userId).equals("Dark");
+            changeTheme();
         }
         add(profileMenu);
 
-        Button notificationButton = getNotificationButton();
+        Optional<Button> notificationButton = getNotificationButton();
 
         Button themeToggleButton = getThemeTogglingButton();
         add(themeToggleButton);
@@ -108,74 +116,90 @@ public class NavigationBar extends HorizontalLayout {
         if (addRegisterAndLoginLink) {
             add(/* logo, */ homeLink, registerLink, loginLink, publishLink, /* searchField, */ profileMenu, userSearch);
         } else {
-            add(/* logo, */ homeLink, publishLink, /* searchField, */ profileMenu, notificationButton, userSearch);
+            add(/* logo, */ homeLink, publishLink, /* searchField, */ profileMenu, notificationButton.get(), userSearch);
         }
 
         setSpacing(true);
     }
 
-    private Button getNotificationButton() {
+    private Optional<Button> getNotificationButton() {
+        if (!userService.isLoggedIn()) {
+            return Optional.empty();
+        }
+
         Icon bellIcon = VaadinIcon.BELL.create();
         Button notificationButton = new Button(bellIcon);
         notificationButton.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_TERTIARY);
 
-        notificationButton.addClickListener(e -> {
-            createNotificationLayout();
-        });
-
-        return notificationButton;
-    }
-
-    private void createNotificationLayout() {
         final var userId = userService.getCurrentUserId();
         final List<NotificationModel> notifications = notificationService.getNotificationsForUser(userId);
-
-        if (notifications.isEmpty()) {
-            final var n = Notification.show("No notifications!", 1500, Notification.Position.MIDDLE);
-            n.addThemeVariants(NotificationVariant.LUMO_PRIMARY);
+        if (!notifications.isEmpty()) {
+            bellIcon.setColor("red");
+            notificationButton.addClickListener(e -> createNotificationLayout(notifications));
         } else {
-            NotificationsDialog notificationsDialog = new NotificationsDialog();
-            for (NotificationModel notification : notifications) {
-                Div notificationDiv = new Div();
-                notificationDiv.getStyle()
-                        .set("border", "1px solid #ccc")
-                        .set("border-radius", "5px")
-                        .set("padding", "10px")
-                        .set("margin-bottom", "10px")
-                        .set("box-shadow", "0 2px 4px rgba(0, 0, 0, 0.1)");
-                        // .set("background-color", "#f9f9f9");
-                System.out.println(notification.getMessage());
-                Span notificationItem = new Span(notification.getMessage());
+            bellIcon.setColor("null");
+        }
 
-                Button markAsReadButton = new Button("Mark as Read");
-                markAsReadButton.addClickListener(event -> {
-                    notification.setRead(true);
-                    notificationService.delete(notification.getId());
-                    // Close if no remaining notifications.
-                    if (notificationService.countNotificationIntendedForUser(userService.getCurrentUserId()) == 0) {
-                        notificationsDialog.close();
-                    }
-                    // Redraw.
-                });
+        return Optional.of(notificationButton);
+    }
 
-                notificationDiv.add(notificationItem, markAsReadButton);
-                notificationsDialog.addComponentToDialog(notificationDiv);
-                notificationsDialog.open();
-            }
+    private void createNotificationLayout(List<NotificationModel> notificationModels) {
+        NotificationsDialog notificationsDialog = new NotificationsDialog();
+        for (NotificationModel notification : notificationModels) {
+            Div notificationDiv = new Div();
+            notificationDiv.getStyle()
+                    .set("border", "1px solid #ccc")
+                    .set("border-radius", "5px")
+                    .set("padding", "10px")
+                    .set("margin-bottom", "10px")
+                    .set("box-shadow", "0 2px 4px rgba(0, 0, 0, 0.1)");
+            System.out.println(notification.getMessage());
+            Span notificationItem = new Span(notification.getMessage());
+
+            Button markAsReadButton = getMarkAsReadButton(notification, notificationsDialog, notificationDiv);
+
+            notificationDiv.add(notificationItem, markAsReadButton);
+            notificationsDialog.addComponentToDialog(notificationDiv);
+            notificationsDialog.open();
         }
     }
 
+    private Button getMarkAsReadButton(NotificationModel notification,
+                                       NotificationsDialog notificationsDialog,
+                                       Component component) {
+        Button markAsReadButton = new Button("Mark as Read");
+        markAsReadButton.addClickListener(event -> {
+            notification.setRead(true);
+            notificationsDialog.removeComponentFromDialog(component);
+            notificationService.delete(notification.getId());
+            // Close if no remaining notifications.
+            if (notificationService.countNotificationIntendedForUser(userService.getCurrentUserId()) == 0) {
+                notificationsDialog.close();
+            }
+        });
+        return markAsReadButton;
+    }
 
-    private static Button getThemeTogglingButton() {
+
+    private Button getThemeTogglingButton() {
         Button themeToggleButton = new Button(new Icon(VaadinIcon.MOON));
         themeToggleButton.addClickListener(event -> {
             Icon currentIcon = (Icon) themeToggleButton.getIcon();
+            char theme = ' ';
             if (currentIcon.getElement().getAttribute("icon").equals(VaadinIcon.MOON.create().getElement().getAttribute("icon"))) {
-                // TODO: update DB entry
+                theme = 'l';
+                dark = false;
                 themeToggleButton.setIcon(new Icon(VaadinIcon.SUN_DOWN));
             } else {
+                theme = 'd';
+                dark = true;
                 themeToggleButton.setIcon(new Icon(VaadinIcon.MOON));
             }
+
+            if (userService.isLoggedIn()) {
+                settingsService.updateUsersTheme(userService.getCurrentUserId(), theme);
+            }
+            changeTheme();
         });
         return themeToggleButton;
     }
@@ -214,5 +238,10 @@ public class NavigationBar extends HorizontalLayout {
     private void navigateToCreate() {
         // RouteConfiguration.forSessionScope().setRoute("create", SettingsView.class);
         UI.getCurrent().navigate("create");
+    }
+
+    private void changeTheme() {
+        var js = "document.documentElement.setAttribute('theme', $0)";
+        getElement().executeJs(js, dark ? Lumo.DARK : Lumo.LIGHT);
     }
 }

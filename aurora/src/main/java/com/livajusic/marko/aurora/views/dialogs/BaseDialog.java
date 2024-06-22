@@ -49,6 +49,10 @@ public class BaseDialog {
         dialog.add(component);
     }
 
+    public void removeComponentFromDialog(com.vaadin.flow.component.Component component) {
+        dialog.remove(component);
+    }
+
     public void open(Long gifId) {
         dialog.open();
     }

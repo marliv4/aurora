@@ -18,14 +18,10 @@
  * Email: marko.livajusic4 <at> gmail.com
  * Copyright: (C) 2024 Marko Livajusic
  */
+package com.livajusic.marko.aurora.views.dialogs;
 
-package com.livajusic.marko.aurora.db_repos;
-
-import com.livajusic.marko.aurora.tables.AuroraGIF;
-import com.livajusic.marko.aurora.tables.BelongsTo;
-import com.livajusic.marko.aurora.tables.GifCategory;
-import org.springframework.data.jpa.repository.JpaRepository;
-
-public interface BelongsToRepo extends JpaRepository<BelongsTo, Integer> {
-    boolean existsByGifAndCategory(AuroraGIF gif, GifCategory category);
+public class FurtherInformationDialog extends BaseDialog {
+    public FurtherInformationDialog() {
+        super();
+    }
 }

@@ -21,35 +21,40 @@
 package com.livajusic.marko.aurora.services;
 
 import com.livajusic.marko.aurora.db_repos.BelongsToRepo;
+import com.livajusic.marko.aurora.db_repos.GifCategoryRepo;
 import com.livajusic.marko.aurora.db_repos.GifRepo;
 import com.livajusic.marko.aurora.tables.AuroraGIF;
+import com.livajusic.marko.aurora.tables.BelongsTo;
+import com.livajusic.marko.aurora.tables.GifCategory;
 import com.livajusic.marko.aurora.views.UploadView;
+import com.vaadin.flow.component.UI;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.sql.Date;
-import java.sql.PreparedStatement;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class GIFService {
     private final GifRepo gifRepo;
     private final EntityManager entityManager;
     private final BelongsToRepo belongsToRepo;
+    private final GifCategoryRepo gifCategoryRepo;
 
     public GIFService(GifRepo gifRepo,
                       EntityManager entityManager,
-                      BelongsToRepo belongsToRepo) {
+                      BelongsToRepo belongsToRepo,
+                      GifCategoryRepo gifCategoryRepo) {
         this.gifRepo = gifRepo;
         this.entityManager = entityManager;
         this.belongsToRepo = belongsToRepo;
+        this.gifCategoryRepo = gifCategoryRepo;
     }
 
     @Transactional
@@ -80,6 +85,7 @@ public class GIFService {
             deleteFromLikesRepo(gifId);
             deleteFromCommentsRepo(gifId);
             gifRepo.deleteById(gifId);
+            UI.getCurrent().getPage().reload();
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -100,7 +106,7 @@ public class GIFService {
         if (list.isEmpty()) {
             return "";
         }
-        Timestamp queryRes = (Timestamp)list.get(0);
+        Timestamp queryRes = (Timestamp) list.get(0);
         return DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(queryRes.toLocalDateTime());
     }
 
@@ -116,5 +122,52 @@ public class GIFService {
         long minutesBetween = ChronoUnit.MINUTES.between(recentPublishDate, currentTime);
 
         return minutesBetween <= nMinutes;
+    }
+
+    public List<String> getGifsCategories(Long gifId) {
+        Query query = entityManager.createQuery(
+                "SELECT gc.category " +
+                        "FROM BelongsTo bt " +
+                        "JOIN bt.category gc " +
+                        "WHERE bt.gif.id = :gifId"
+        );
+        query.setParameter("gifId", gifId);
+        return (List<String>) query.getResultList();
+    }
+
+    @Transactional
+    public List<AuroraGIF> filterGifsByCategory(String categoryCsv) {
+        List<AuroraGIF> filteredGifs = new ArrayList<>();
+        List<String> categoriesList = Arrays.asList(categoryCsv.split(","));
+
+        Query query = entityManager.createQuery("SELECT ag, bt.category.id FROM AuroraGIF ag " +
+                "JOIN BelongsTo bt " +
+                "ON ag.gifId = bt.gif.gifId " +
+                "JOIN GifCategory gc " +
+                "ON bt.category.categoryId = gc.categoryId " +
+                "WHERE gc.category IN :categories");
+
+        query.setParameter("categories", categoriesList);
+        List<Object[]> results = (List<Object[]>) query.getResultList();
+        for (Object[] result : results) {
+            AuroraGIF gif = (AuroraGIF) result[0];
+            filteredGifs.add(gif);
+        }
+        return filteredGifs;
+    }
+
+    public List<AuroraGIF> filterGivenGifsByCategory(List<Long> gifIds, List<String> categories) {
+        Query query = entityManager.createQuery("SELECT DISTINCT ag " +
+                "FROM AuroraGIF ag " +
+                "JOIN BelongsTo bt ON ag.gifId = bt.gif.gifId " +
+                "JOIN GifCategory gc ON bt.category.categoryId = gc.categoryId " +
+                "WHERE gc.category IN (:categories) " +
+                "AND ag.gifId IN (:gifIds)");
+
+        query.setParameter("categories", categories);
+        query.setParameter("gifIds", gifIds);
+
+        List<AuroraGIF> filteredGifs = query.getResultList();
+        return filteredGifs;
     }
 }
