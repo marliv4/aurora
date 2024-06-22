@@ -43,6 +43,7 @@ import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.textfield.Autocomplete;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.server.StreamResource;
@@ -221,6 +222,7 @@ public class NavigationBar extends HorizontalLayout {
     private TextField createUserSearchField() {
         TextField searchField = new TextField();
         searchField.setPlaceholder("Search users");
+        searchField.setAutocomplete(Autocomplete.OFF);
         searchField.addKeyPressListener(Key.ENTER, e -> userService.searchForUser(searchField.getValue()));
 
         return searchField;
