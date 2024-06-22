@@ -1,1 +1,1 @@
-heroku ps:scale web=1
+web: java -jar aurora/target/myapp-1.0.0.jar

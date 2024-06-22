@@ -1,0 +1,17 @@
+{
+  "frontendFolder": "C:/Dev/vaurora/./frontend",
+  "themeFolder": "themes",
+  "themeResourceFolder": "C:/Dev/vaurora/./frontend/generated/jar-resources",
+  "staticOutput": "C:/Dev/vaurora/target/classes/META-INF/VAADIN/webapp/VAADIN/static",
+  "generatedFolder": "generated",
+  "statsOutput": "C:\\Dev\\vaurora\\target\\classes\\META-INF\\VAADIN\\config",
+  "frontendBundleOutput": "C:\\Dev\\vaurora\\target\\classes\\META-INF\\VAADIN\\webapp",
+  "devBundleOutput": "C:/Dev/vaurora/target/dev-bundle/webapp",
+  "devBundleStatsOutput": "C:/Dev/vaurora/target/dev-bundle/config",
+  "jarResourcesFolder": "C:/Dev/vaurora/./frontend/generated/jar-resources",
+  "themeName": "",
+  "clientServiceWorkerSource": "C:\\Dev\\vaurora\\target\\sw.ts",
+  "pwaEnabled": false,
+  "offlineEnabled": false,
+  "offlinePath": "'offline.html'"
+}
