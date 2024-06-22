@@ -69,7 +69,9 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
-				<mainClass>com.livajusic.marko.aurora.AuroraApplication</mainClass>
+				<configuration>
+					<mainClass>com.livajusic.marko.aurora.AuroraApplication</mainClass>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
