@@ -1,3 +1,3 @@
 # Aurora
 
-* Documentation: ![DOCS][docs/DOCS.md]
+* Dokumentation: ![DOCS][docs.pdf]

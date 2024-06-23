@@ -54,7 +54,7 @@ public class NotificationService {
         final var date = UploadView.AuroraDateManager.getSqlDate(UploadView.AuroraDateManager.getUtilDate());
         final var dateStr = UploadView.AuroraDateManager.getFormattedDate(date);
         String msg = String.format("%s has uploaded a new GIF on %s", uploader.getUsername(), dateStr);
-        NotificationModel notificationModel = new NotificationModel(intendedUser, msg, date, false);
+        NotificationModel notificationModel = new NotificationModel(intendedUser, msg, date);
         notificationRepo.save(notificationModel);
     }
 

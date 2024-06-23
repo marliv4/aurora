@@ -31,7 +31,7 @@ public class NotificationModel {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long notificationId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -43,20 +43,16 @@ public class NotificationModel {
     @Column(name = "created_at", nullable = false)
     private Date createdAt;
 
-    @Column(name = "is_read", nullable = false)
-    private boolean isRead;
-
     public NotificationModel() {
     }
 
-    public NotificationModel(AuroraUser intendedUser, String message, Date createdAt, boolean isRead) {
+    public NotificationModel(AuroraUser intendedUser, String message, Date createdAt) {
         this.intendedUser = intendedUser;
         this.message = message;
         this.createdAt = createdAt;
-        this.isRead = isRead;
     }
 
-    public Long getId() { return id; }
+    public Long getId() { return notificationId; }
 
     public AuroraUser getIntendedUser() {
         return intendedUser;
@@ -80,13 +76,5 @@ public class NotificationModel {
 
     public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
-    }
-
-    public boolean isRead() {
-        return isRead;
-    }
-
-    public void setRead(boolean isRead) {
-        this.isRead = isRead;
     }
 }

@@ -28,7 +28,7 @@ public class Like {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long likeId;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
@@ -46,11 +46,11 @@ public class Like {
     }
 
     public Long getId() {
-        return id;
+        return likeId;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setId(Long likeId) {
+        this.likeId = likeId;
     }
 
     public AuroraUser getUser() {

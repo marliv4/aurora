@@ -64,7 +64,6 @@ public class LikeService {
         AuroraUser user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         AuroraGIF gif = gifRepository.findById(gifId).orElseThrow(() -> new RuntimeException("GIF not found"));
 
-        // System.out.println(user.getUsername() + " " + gif.getPath());
         Like like = new Like(user, gif);
         likeRepository.save(like);
     }

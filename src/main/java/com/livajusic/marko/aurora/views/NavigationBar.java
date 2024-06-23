@@ -170,7 +170,6 @@ public class NavigationBar extends HorizontalLayout {
                                        Component component) {
         Button markAsReadButton = new Button("Mark as Read");
         markAsReadButton.addClickListener(event -> {
-            notification.setRead(true);
             notificationsDialog.removeComponentFromDialog(component);
             notificationService.delete(notification.getId());
             // Close if no remaining notifications.

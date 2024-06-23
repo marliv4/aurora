@@ -28,7 +28,7 @@ public class Settings {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long settingId;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
@@ -92,11 +92,9 @@ public class Settings {
         this.othersCanSeeWhoIAmFollowing = othersCanSeeWhoIAmFollowing;
     }
 
-
     public Long getId() {
-        return id;
+        return settingId;
     }
-
     public AuroraUser getUser() {
         return user;
     }
