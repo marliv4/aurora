@@ -100,6 +100,7 @@
 						</executions>
 						<configuration>
 							<frontendDirectory>${project.basedir}/frontend</frontendDirectory>
+							<generatedTsFolder>${project.basedir}/frontend/generated</generatedTsFolder>
 						</configuration>
 					</plugin>
 				</plugins>
