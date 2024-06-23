@@ -1,24 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
 	<modelVersion>4.0.0</modelVersion>
+
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>3.2.5</version>
 		<relativePath/>
 	</parent>
+
 	<groupId>com.livajusic.marko</groupId>
 	<artifactId>aurora</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>aurora</name>
 	<description>Mithilfe von Aurora lassen sich GIFs in 2D und 3D erstellen. Diese GIFs können für Memes verwendet und anschließend gespeichert werden. Die erstellten GIFs sind herunterladbar und teilbar. Aurora bietet eine Plattform, um die Kreationen mit der Welt zu teilen. Es ist eine einfache und kreative Möglichkeit, unterhaltsame Inhalte zu erstellen und zu verbreiten.</description>
+
 	<properties>
 		<java.version>17</java.version>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<vaadin.version>24.3.12</vaadin.version>
 	</properties>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -52,6 +58,7 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
@@ -73,6 +80,27 @@
 					<mainClass>com.livajusic.marko.aurora.AuroraApplication</mainClass>
 				</configuration>
 			</plugin>
+			<!-- Add vaadin-maven-plugin configuration for production -->
+			<plugin>
+				<groupId>com.vaadin</groupId>
+				<artifactId>vaadin-maven-plugin</artifactId>
+				<version>${vaadin.version}</version>
+				<executions>
+					<execution>
+						<id>frontend</id>
+						<phase>compile</phase>
+						<goals>
+							<goal>prepare-frontend</goal>
+							<goal>build-frontend</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<productionMode>true</productionMode>
+					<frontendDirectory>generated/</frontendDirectory>
+					<generatedTsFolder>generated/</generatedTsFolder>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 
@@ -82,29 +110,6 @@
 			<properties>
 				<vaadin.productionMode>true</vaadin.productionMode>
 			</properties>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>com.vaadin</groupId>
-						<artifactId>vaadin-maven-plugin</artifactId>
-						<version>${vaadin.version}</version>
-						<executions>
-							<execution>
-								<id>frontend</id>
-								<phase>compile</phase>
-								<goals>
-									<goal>prepare-frontend</goal>
-									<goal>build-frontend</goal>
-								</goals>
-							</execution>
-						</executions>
-						<configuration>
-							<frontendDirectory>${project.basedir}/frontend</frontendDirectory>
-							<generatedTsFolder>${project.basedir}/frontend/generated</generatedTsFolder>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
 		</profile>
 	</profiles>
 
