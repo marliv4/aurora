@@ -98,6 +98,9 @@
 								</goals>
 							</execution>
 						</executions>
+						<configuration>
+							<frontendDirectory>${project.basedir}/frontend</frontendDirectory>
+						</configuration>
 					</plugin>
 				</plugins>
 			</build>
