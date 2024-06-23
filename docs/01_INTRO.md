@@ -1,14 +1,15 @@
-## Tech stack
-I used the Java programming language to implement the project, the Spring Boot Framework for the app itself and Vaadin for the user interface and graphical representation. For the database management system, I used PostgreSQL and the entire project can be compiled using Maven.
+## Tech-Stack
+Für die Umsetzung des Projekts habe ich die Programmiersprache Java verwendet, das Spring Boot Framework für die App selbst und Vaadin für die Benutzeroberfläche und die grafische Darstellung. Für das Datenbankmanagementsystem habe ich PostgreSQL verwendet und das gesamte Projekt kann mit Maven kompiliert werden.
 
-## Project structure
-Aurora is made up of the following folders (`/aurora/src/main/java/com/livajusic/marko`):
-* `/configuration`: This folder modifies Spring Security to allow requests and regulate the content uploaded by users as it should be served by the server.
-* `/db_repos`: Interfaces from this folder extend JpaRepository and thus enable access to the respective repositories.
-* `/services`: Classes from this folder interact with the repositories from (`/db_repos`) and update the values in the database tables.
-* `/tables`: Classes from this folder use JPA to model the tables created by Spring.
-* `/views`: Classes from this folder use Vaadin to display the app on the web.
+## Projektstruktur
+Aurora setzt sich aus den folgenden Ordnern zusammen (`/src/main/java/com/livajusic/marko`):
+* `/configuration`: In diesem Ordner wird Spring Security modifiziert, um Anfragen zuzulassen und die von den Benutzern hochgeladenen Inhalte so zu regulieren, wie sie vom Server bereitgestellt werden sollen.
+* `/db_repos`: Interfaces aus diesem Ordner erweitern JpaRepository und ermöglichen so den Zugriff auf die jeweiligen Repositories.
+* `/services`: Klassen aus diesem Ordner interagieren mit den Repositories aus (`/db_repos`) und aktualisieren die Werte in den Datenbanktabellen.
+* `/tables`: Klassen aus diesem Ordner verwenden JPA, um die von Spring erstellten Tabellen zu modellieren.
+* `/views`: Klassen aus diesem Ordner verwenden Vaadin, um die App im Web anzuzeigen.
 
-## Difficulties / design decisions
+## Schwierigkeiten / Design-Entscheidungen
+Bisher bereitete mir die Anzeige jeglicher Bilder (sei es die Anzeige von GIFs, die von Nutzern hochgeladen wurden, oder von Profilbildern) Probleme, da ich sie zunächst als statische Dateien im Spring-Ordner /resource/ speicherte und nur ihre Pfade in der Datenbank hinterlegte. Trotz verschiedener Konfigurationen, die versuchten, die Erzeugung statischer Inhalte zu regeln, wurden nur die "alt"-Elemente von HTML angezeigt, da die Bilder nicht verfügbar waren. Erst nach einem Neustart der App konnten alle Bilder korrekt angezeigt werden. Da ich dies aber nicht wollte, habe ich die Datenbank so geändert, dass die Bilder als BLOBS gespeichert werden, was zwar zu einem Leistungsverlust führt, aber für den Benutzer viel angenehmer ist.
 
-Until now, displaying any images (be it displaying GIFs uploaded by users or profile pictures) caused me problems, as I initially saved them as static files in the Spring's /resource/ folder and only stored their paths in the database. Despite various configurations that tried to regulate the generation of static content, only HTML's "alt" elements were displayed, as the images were not available. Only after restarting the app could all images be displayed correctly. However, since I did not want this, I changed the database so that the images are saved as BLOBS, which may lead to a performance loss, but is much more pleasant in the user experience.
+Weiter geht es mit dem Design der ![Datenbank][02_DATABASE.md]
