@@ -136,30 +136,34 @@ public class GIFService {
     }
 
     @Transactional
-    public List<AuroraGIF> filterGifsByCategory(String categoryCsv) {
-        List<AuroraGIF> filteredGifs = new ArrayList<>();
+    public List<Object[]> filterGifsByCategory(String categoryCsv) {
+        // List<AuroraGIF> filteredGifs = new ArrayList<>();
         List<String> categoriesList = Arrays.asList(categoryCsv.split(","));
 
-        Query query = entityManager.createQuery("SELECT ag, bt.category.id FROM AuroraGIF ag " +
+        Query query = entityManager.createQuery("SELECT ag, bt.category.id, pfp.imageData " +
+                "FROM AuroraGIF ag " +
                 "JOIN BelongsTo bt " +
                 "ON ag.gifId = bt.gif.gifId " +
+                "JOIN ProfilePicture pfp " +
+                "ON ag.user.userId = pfp.user.userId " +
                 "JOIN GifCategory gc " +
                 "ON bt.category.categoryId = gc.categoryId " +
                 "WHERE gc.category IN :categories");
 
         query.setParameter("categories", categoriesList);
         List<Object[]> results = (List<Object[]>) query.getResultList();
-        for (Object[] result : results) {
+        /*for (Object[] result : results) {
             AuroraGIF gif = (AuroraGIF) result[0];
             filteredGifs.add(gif);
-        }
-        return filteredGifs;
+        }*/
+        return results;
     }
 
-    public List<AuroraGIF> filterGivenGifsByCategory(List<Long> gifIds, List<String> categories) {
-        Query query = entityManager.createQuery("SELECT DISTINCT ag " +
+    public List<Object[]> filterGivenGifsByCategory(List<Long> gifIds, List<String> categories) {
+        Query query = entityManager.createQuery("SELECT DISTINCT ag, pfp.imageData " +
                 "FROM AuroraGIF ag " +
                 "JOIN BelongsTo bt ON ag.gifId = bt.gif.gifId " +
+                "JOIN ProfilePicture pfp ON pfp.user.userId = ag.user.userId " +
                 "JOIN GifCategory gc ON bt.category.categoryId = gc.categoryId " +
                 "WHERE gc.category IN (:categories) " +
                 "AND ag.gifId IN (:gifIds)");

@@ -22,31 +22,36 @@ package com.livajusic.marko.aurora;
 
 import com.livajusic.marko.aurora.db_repos.GifRepo;
 import com.livajusic.marko.aurora.services.FollowService;
+import com.livajusic.marko.aurora.services.GIFDisplayService;
 import com.livajusic.marko.aurora.services.SettingsService;
 import com.livajusic.marko.aurora.services.UserService;
-import com.livajusic.marko.aurora.tables.Settings;
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.livajusic.marko.aurora.views.dialogs.FollowersDialog;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 
 public class UserInfoDisplayUtils {
     private Span followersSpan;
-
     private HorizontalLayout infoLayout;
-
     private final GifRepo gifRepo;
-
     private final UserService userService;
     private final SettingsService settingsService;
+    private final GIFDisplayService gifDisplayService;
 
     public UserInfoDisplayUtils(GifRepo gifRepo,
                                 Long userId,
                                 UserService userService,
                                 FollowService followService,
-                                SettingsService settingsService) {
+                                SettingsService settingsService,
+                                GIFDisplayService gifDisplayService) {
         this.gifRepo = gifRepo;
         this.userService = userService;
         this.settingsService = settingsService;
+        this.gifDisplayService = gifDisplayService;
         createUserInfoLayout(userId, followService);
     }
 
@@ -59,7 +64,7 @@ public class UserInfoDisplayUtils {
         followersSpan.addClickListener(l -> {
             if (userService.getCurrentUserId().equals(userId) || settingsService.canOthersSeeFollowers(userId)) {
                 System.out.println("who are his followers?");
-                FollowersDialog fd = new FollowersDialog(followService, userService);
+                FollowersDialog fd = new FollowersDialog(followService, userService, gifDisplayService);
                 fd.openDialog(userId, FollowersDialog.DialogType.DIALOG_SHOW_USERS_FOLLOWERS);
             }
         });
@@ -68,7 +73,7 @@ public class UserInfoDisplayUtils {
         followingSpan.addClickListener(l -> {
             if (settingsService.canOthersSeeFollowing(userId)) {
                 System.out.println("who is he following?");
-                FollowersDialog fd = new FollowersDialog(followService, userService);
+                FollowersDialog fd = new FollowersDialog(followService, userService, gifDisplayService);
                 fd.openDialog(userId, FollowersDialog.DialogType.DIALOG_SHOW_FOLLOWING_USERS);
             }
         });
@@ -83,5 +88,9 @@ public class UserInfoDisplayUtils {
 
     public HorizontalLayout getInfoLayout() {
         return infoLayout;
+    }
+
+    public void delete() {
+        infoLayout.remove();
     }
 }

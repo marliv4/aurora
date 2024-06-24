@@ -23,13 +23,11 @@ package com.livajusic.marko.aurora.services;
 import com.livajusic.marko.aurora.AuroraUserDetailService;
 import com.livajusic.marko.aurora.db_repos.RoleRepo;
 import com.livajusic.marko.aurora.db_repos.UserRepo;
-import com.livajusic.marko.aurora.tables.AuroraGIF;
 import com.livajusic.marko.aurora.tables.AuroraUser;
 import com.livajusic.marko.aurora.views.MyProfileView;
 import com.livajusic.marko.aurora.views.UserProfileView;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.page.WebStorage;
 import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.spring.security.AuthenticationContext;
 import jakarta.persistence.EntityManager;
@@ -40,10 +38,6 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -78,26 +72,57 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public String getEmail(Long userId) {
+    public String getBio(Long userId) {
+        Query query;
         try {
-            Query query = entityManager.createQuery("SELECT u.email FROM AuroraUser u WHERE u.id = :userId");
+            query = entityManager.createQuery("SELECT u.bio " +
+                    "FROM AuroraUser u " +
+                    "WHERE u.id = :userId");
             query.setParameter("userId", userId);
-            return (String) query.getSingleResult();
         } catch (NoResultException e) {
             e.printStackTrace();
-            return "";
+            return null;
         }
+
+        return (String) query.getSingleResult();
+    }
+
+    @Transactional
+    public int updateBio(Long userId, String newBio) {
+        Query query = entityManager.createQuery("UPDATE AuroraUser " +
+                "SET bio = :newBio " +
+                "WHERE userId = :userId");
+        query.setParameter("userId", userId);
+        query.setParameter("newBio", newBio);
+        return query.executeUpdate();
+    }
+
+    public String getEmail(Long userId) {
+        Query query;
+        try {
+            query = entityManager.createQuery("SELECT u.email " +
+                    "FROM AuroraUser u " +
+                    "WHERE u.id = :userId");
+            query.setParameter("userId", userId);
+        } catch (NoResultException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        return (String) query.getSingleResult();
     }
 
     public String getEmail(String username) {
+        Query query;
         try {
-            Query query = entityManager.createQuery("SELECT u.email FROM AuroraUser u WHERE u.username = :username");
+            query = entityManager.createQuery("SELECT u.email FROM AuroraUser u WHERE u.username = :username");
             query.setParameter("username", username);
-            return (String) query.getSingleResult();
         } catch (NoResultException e) {
             e.printStackTrace();
-            return "";
+            return null;
         }
+
+        return (String) query.getSingleResult();
     }
 
     public String getPassword(String username) {
@@ -139,7 +164,7 @@ public class UserService {
     public String getUsernameById(Long userId) {
         Query query = entityManager.createQuery("SELECT u.username FROM AuroraUser u WHERE u.userId = :userId");
         query.setParameter("userId", userId);
-        return (String)query.getSingleResult();
+        return (String) query.getSingleResult();
     }
 
     public Long getCurrentUserId() {
@@ -153,7 +178,7 @@ public class UserService {
     @Transactional
     public void searchForUser(String username) {
         // If user exists, go to his profile
-        if (!getEmail(username).isEmpty()) {
+        if (getEmail(username) != null) {
             System.out.println("Searching for: " + username);
             if (username.equals(getCurrentUsername())) {
                 UI.getCurrent().navigate(MyProfileView.class);
@@ -170,7 +195,7 @@ public class UserService {
         try {
             Query query = entityManager.createQuery("SELECT u.userId FROM AuroraUser u WHERE u.username = :username");
             query.setParameter("username", username);
-            return Optional.of((Long)query.getSingleResult());
+            return Optional.of((Long) query.getSingleResult());
         } catch (NoResultException e) {
             return Optional.empty();
         }
@@ -188,7 +213,8 @@ public class UserService {
                 "WHERE r.userId = :userId");
         query.setParameter("userId", userId);
 
-        final var list = (List<String>)query.getResultList();;
+        final var list = (List<String>) query.getResultList();
+        ;
         for (Object l : list) {
             System.out.println(l);
         }
@@ -200,18 +226,20 @@ public class UserService {
         Query query = entityManager.createQuery("SELECT au FROM AuroraUser au where au.userId = :userId");
         query.setParameter("userId", userId);
 
-        return (AuroraUser)query.getSingleResult();
+        return (AuroraUser) query.getSingleResult();
     }
 
     public boolean isUserMod(Long userId) {
         return getRoles(userId).contains("mod");
     }
 
-    public List<AuroraGIF> findAllByUserIdAndPfp(Long userId) {
-        Query query = entityManager.createQuery("SELECT ag " +
+    public List<Object[]> findAllByUserIdAndPfp(Long userId) {
+        Query query = entityManager.createQuery("SELECT ag, pfp.imageData " +
                 "FROM AuroraGIF ag " +
                 "JOIN AuroraUser au " +
                 "ON ag.user.userId = au.userId " +
+                "JOIN ProfilePicture pfp " +
+                "ON au.userId = pfp.user.userId " +
                 "WHERE au.userId = :userId");
         query.setParameter("userId", userId);
 

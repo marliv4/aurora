@@ -36,7 +36,8 @@ public class AuroraUser {
     private String username;
     @Column(unique = true)
     private String email;
-
+    @Column
+    private String bio;
     @Column
     private String password;
 
@@ -58,6 +59,8 @@ public class AuroraUser {
         this.username = username;
         this.email = email;
         this.password = password;
+        // Die Biografie soll später in den Einstellungen geändert werden.
+        this.bio = "";
     }
 
     public Long getId() {
@@ -83,6 +86,15 @@ public class AuroraUser {
     public void setEmail(String email) {
         this.email = email;
     }
+
+    public String getBio() {
+        return bio;
+    }
+
+    public void setBio(String bio) {
+        this.bio = bio;
+    }
+
 
     public String getPassword() {
         return password;

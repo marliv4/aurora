@@ -20,7 +20,6 @@
  */
 package com.livajusic.marko.aurora.services;
 
-import com.livajusic.marko.aurora.tables.AuroraGIF;
 import com.livajusic.marko.aurora.tables.composite_keys.FollowId;
 import com.livajusic.marko.aurora.db_repos.FollowRepo;
 import com.livajusic.marko.aurora.db_repos.UserRepo;
@@ -31,7 +30,6 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
-import org.aspectj.weaver.ast.Not;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -83,18 +81,23 @@ public class FollowService {
     @Transactional
     public void unfollowUser(Long userId, Long followsUserId) {
         FollowId followId = new FollowId(userId, followsUserId);
-        followRepo.deleteById(followId);
+        if (followRepo.existsById(followId)) {
+            followRepo.deleteById(followId);
+            final var n = Notification.show("Unfollowed user!", 1500, Notification.Position.MIDDLE);
+            n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+        }
     }
 
     public boolean isFollowing(Long userId, Long followsUserId) {
-        Query query = entityManager.createQuery("" +
-                "SELECT count(*) FROM Follows f WHERE f.user.userId = :userId and f.followsUser.userId = :followsUserId");
+        Query query = entityManager.createQuery("SELECT count(f) " +
+                "FROM Follows f " +
+                "WHERE f.user.userId = :userId " +
+                "AND f.followsUser.userId = :followsUserId", Long.class);
         query.setParameter("userId", userId);
         query.setParameter("followsUserId", followsUserId);
 
-        return query.getFirstResult() > 0;
-        // FollowId followId = new FollowId(userId, followsUserId);
-        //return followRepo.existsById(followId);
+        Long count = (Long) query.getSingleResult();
+        return count > 0;
     }
 
     public Long getFollowersCount(Long userId) {
@@ -137,20 +140,19 @@ public class FollowService {
         return query.getResultList();
     }
 
-    public List<AuroraGIF> getGifsFromFollowingUsers(Long userId) {
+    public List<Object[]> getGifsFromFollowingUsers(Long userId) {
         Query query = entityManager.createQuery(
-                "SELECT ag FROM AuroraGIF ag" +
+                "SELECT ag, pfp.imageData " +
+                        "FROM AuroraGIF ag" +
                         " JOIN ag.user au" +
                         " JOIN Follows f ON au.userId = f.followsUser.userId" +
+                        " JOIN ProfilePicture pfp " +
+                        " ON ag.user.userId = pfp.user.userId " +
                         " WHERE f.user.userId = :userId"
         );
         query.setParameter("userId", userId);
 
-        List<AuroraGIF> gifs = query.getResultList();
-        for (AuroraGIF gif : gifs) {
-            System.out.println(gif);
-        }
-
+        List<Object[]> gifs = (List<Object[]>)query.getResultList();
         return gifs;
     }
 }

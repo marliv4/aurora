@@ -92,7 +92,7 @@ public class MyProfileView extends VerticalLayout {
         final var username = userService.getCurrentUsername();
         final var userId = userService.getUserIdByUsername(username).get();
 
-        UserInfoDisplayUtils userInfoDisplayUtils = new UserInfoDisplayUtils(gifRepo, userId, userService, followService, settingsService);
+        UserInfoDisplayUtils userInfoDisplayUtils = new UserInfoDisplayUtils(gifRepo, userId, userService, followService, settingsService, gifDisplayService);
         add(userInfoDisplayUtils.getInfoLayout());
 
         Span header = new Span(languagesController.get("my_profile") + ": " + username);
@@ -124,9 +124,12 @@ public class MyProfileView extends VerticalLayout {
         });
         add(upload);
 
-        List<AuroraGIF> gifs = gifRepo.findAllByUserId(userId);
-        for (AuroraGIF gif : gifs) {
-            Div gifDiv = gifDisplayService.displaySingleGif(username, gif);
+        // List<AuroraGIF> gifs = gifRepo.findAllByUserId(userId);
+        List<Object[]> gifs = userService.findAllByUserIdAndPfp(userId);
+        for (Object[] o : gifs) {
+            final var gif = (AuroraGIF)o[0];
+            final byte[] pfp = (byte[])o[1];
+            Div gifDiv = gifDisplayService.displaySingleGif(username, gif, pfp);
             add(gifDiv);
             // componentsToDelete.add(gifDiv);
         }

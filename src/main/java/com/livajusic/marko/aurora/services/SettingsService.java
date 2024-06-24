@@ -42,9 +42,7 @@ public class SettingsService {
     @Autowired
     private UserService userService;
 
-    public SettingsService() {
-
-    }
+    public SettingsService() {}
 
     public String getUsersLanguage(Long userId) {
         Query query = entityManager.createQuery("SELECT language FROM Settings WHERE user.userId = :userId");

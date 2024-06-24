@@ -23,31 +23,23 @@ package com.livajusic.marko.aurora.views;
 import com.livajusic.marko.aurora.LanguagesController;
 import com.livajusic.marko.aurora.services.*;
 import com.livajusic.marko.aurora.views.dialogs.ChangePasswordDialog;
-import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
-import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H3;
-import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
-import com.vaadin.flow.component.textfield.PasswordField;
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.formlayout.FormLayout;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-
 import jakarta.annotation.security.RolesAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -74,14 +66,11 @@ public class SettingsView extends VerticalLayout {
         add(navbar);
 
         final Long userId = userService.getCurrentUserId();
-
         Tab accountTab = new Tab("Account");
         Tab profileTab = new Tab("Profile");
         Tab privacyTab = new Tab("Privacy");
         Tab preferencesTab = new Tab("Preferences");
-        Tab notificationsTab = new Tab("Notifications");
-        Tab emailTab = new Tab("Email");
-        Tabs tabs = new Tabs(accountTab, profileTab, privacyTab, preferencesTab, notificationsTab, emailTab);
+        Tabs tabs = new Tabs(accountTab, profileTab, privacyTab, preferencesTab);
         tabs.setWidthFull();
 
         Map<Tab, VerticalLayout> tabsToLayouts = new HashMap<>();
@@ -89,8 +78,6 @@ public class SettingsView extends VerticalLayout {
         tabsToLayouts.put(profileTab, createProfileLayout());
         tabsToLayouts.put(privacyTab, createPrivacyLayout(userId));
         tabsToLayouts.put(preferencesTab, createPreferencesLayout());
-        tabsToLayouts.put(notificationsTab, createNotificationsLayout());
-        tabsToLayouts.put(emailTab, createEmailLayout());
 
         VerticalLayout content = new VerticalLayout(tabsToLayouts.get(accountTab));
         content.setWidthFull();
@@ -121,7 +108,29 @@ public class SettingsView extends VerticalLayout {
     }
 
     private VerticalLayout createProfileLayout() {
-        return new VerticalLayout();
+        VerticalLayout layout = new VerticalLayout();
+
+        String currentBio = userService.getBio(userService.getCurrentUserId());
+
+        TextField bioField = new TextField();
+        bioField.setValue(currentBio);
+        layout.add(bioField);
+
+        Button updateBioBtn = new Button("Update Bio");
+        updateBioBtn.addClickListener(e -> {
+            String newBio = bioField.getValue();
+            if (!currentBio.equals(newBio)) {
+                userService.updateBio(userService.getCurrentUserId(), newBio);
+                Notification.show("Bio updated successfully", 1000, Notification.Position.TOP_CENTER);
+                bioField.setValue(newBio);
+            } else {
+                final var n = Notification.show("You didn't change your bio!", 1000, Notification.Position.TOP_CENTER);
+                n.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
+        });
+        layout.add(updateBioBtn);
+
+        return layout;
     }
 
     private VerticalLayout createPrivacyLayout(Long userId) {
@@ -140,14 +149,6 @@ public class SettingsView extends VerticalLayout {
         });
         layout.add(seeFollowersCheckbox, seeFollowingCheckbox);
         return layout;
-    }
-
-    private VerticalLayout createEmailLayout() {
-        return new VerticalLayout();
-    }
-
-    private VerticalLayout createNotificationsLayout() {
-        return new VerticalLayout();
     }
 
     private VerticalLayout createPreferencesLayout() {
@@ -174,34 +175,6 @@ public class SettingsView extends VerticalLayout {
 
         layout.add(formLayout);
         return layout;
-    }
-
-    private ComboBox<String> getThemeSelector(Long userId) {
-        ComboBox<String> themeSelect = new ComboBox<>(languagesController.get("theme"));
-        themeSelect.setItems("Light", "Dark");
-        themeSelect.setValue(settingsService.getUsersTheme(userId));
-        themeSelect.addValueChangeListener(l -> {
-            String selectedTheme = l.getValue();
-            settingsService.updateUsersTheme(userId, selectedTheme.toLowerCase().charAt(0));
-        });
-
-        return themeSelect;
-    }
-
-    private Button getNewPasswordButton(PasswordField passwordField) {
-        Button changePasswordButton = new Button(languagesController.get("change_password"));
-        changePasswordButton.addClickListener(e -> {
-            String newPassword = passwordField.getValue();
-            if (newPassword.isEmpty()) {
-                final var n = Notification.show(languagesController.get("enter_new_password"));
-                n.addThemeVariants(NotificationVariant.LUMO_ERROR);
-            } else {
-                if (userService.updatePassword(userService.getCurrentUserId(), newPassword) == 1) {
-                    GIFDisplayService.notify("Changed password successfully!");
-                }
-            }
-        });
-        return changePasswordButton;
     }
 }
 

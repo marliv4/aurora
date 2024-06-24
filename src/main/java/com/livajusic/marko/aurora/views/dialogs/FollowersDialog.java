@@ -22,6 +22,7 @@ package com.livajusic.marko.aurora.views.dialogs;
 
 
 import com.livajusic.marko.aurora.services.FollowService;
+import com.livajusic.marko.aurora.services.GIFDisplayService;
 import com.livajusic.marko.aurora.services.UserService;
 import com.livajusic.marko.aurora.tables.AuroraUser;
 import com.vaadin.flow.component.button.Button;
@@ -42,13 +43,16 @@ public class FollowersDialog extends BaseDialog {
 
     private final FollowService followService;
     private final UserService userService;
+    private final GIFDisplayService gifDisplayService;
 
     @Autowired
     public FollowersDialog(FollowService followService,
-                           UserService userService) {
+                           UserService userService,
+                           GIFDisplayService gifDisplayService) {
         super();
         this.followService = followService;
         this.userService = userService;
+        this.gifDisplayService = gifDisplayService;
     }
 
     public enum DialogType {
@@ -85,24 +89,24 @@ public class FollowersDialog extends BaseDialog {
     private HorizontalLayout createUserCard(String username, byte[] imageData) {
         HorizontalLayout userCard = new HorizontalLayout();
         userCard.setWidth("100%");
-        userCard.getStyle().set("border", "1px solid #ccc")
+        userCard.getStyle()
+                .set("border", "1px solid #ccc")
                 .set("border-radius", "10px")
                 .set("padding", "10px")
                 .set("box-shadow", "0 4px 8px rgba(0, 0, 0, 0.1)")
                 .set("margin", "10px 0");
 
-        StreamResource resource = new StreamResource("profile-picture", () -> new ByteArrayInputStream(imageData));
-        Image profilePicture = new Image(resource, "Profile Picture");
-        profilePicture.setWidth("50px");
-        profilePicture.setHeight("50px");
-        profilePicture.getStyle().set("border-radius", "50%");
+        Image pfp = gifDisplayService.getImage(imageData);
+        pfp.setWidth("50px");
+        pfp.setHeight("50px");
+        pfp.getStyle().set("border-radius", "50%");
 
         Span usernameSpan = new Span(username);
         usernameSpan.getStyle().set("font-weight", "bold")
                 .set("margin-left", "10px")
                 .set("align-self", "center");
 
-        userCard.add(profilePicture, usernameSpan);
+        userCard.add(pfp, usernameSpan);
 
         return userCard;
     }

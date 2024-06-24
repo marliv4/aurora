@@ -126,7 +126,7 @@ public class HomeView extends VerticalLayout {
             } else {
                 clearCurrentlyDisplayedGIFs();
                 // Criteria: false, category: false
-                displayGifsFromArray(gifRepo.findAll());
+                displayGifsFromArray(gifService.getAllGifsWithPfp());
             }
         });
 
@@ -138,7 +138,7 @@ public class HomeView extends VerticalLayout {
         }
 
         if (!Filtered.filteredByCriteria && !Filtered.filteredByCategory) {
-            displayGifsFromArray(gifRepo.findAll());
+            displayGifsFromArray(gifService.getAllGifsWithPfp());
         }
         setAlignItems(Alignment.CENTER);
         setJustifyContentMode(JustifyContentMode.CENTER);
@@ -158,8 +158,8 @@ public class HomeView extends VerticalLayout {
         return horizontalLayout;
     }
 
-    private void displayGifsFromArray(List<AuroraGIF> gifs) {
-        final var list = gifDisplayService.createDivFromGifArray(gifs);
+    private void displayGifsFromArray(List<Object[]> gifsAndPfps) {
+        final var list = gifDisplayService.createDivFromGifArray(gifsAndPfps);
         for (Div gifDiv : list) {
             add(gifDiv);
             displayedGifs.add(gifDiv);
@@ -192,7 +192,7 @@ public class HomeView extends VerticalLayout {
         } else if ("Recent".equals(selectCriteria.getValue())) {
             list = likeService.getMostRecentGIFs();
         } else {
-            displayGifsFromArray(gifRepo.findAll());
+            displayGifsFromArray(gifService.getAllGifsWithPfp());
             Filtered.filteredByCriteria = false;
         }
 
@@ -208,7 +208,8 @@ public class HomeView extends VerticalLayout {
                 Object[] row = (Object[]) o;
                 final var username = (String) row[1];
                 final var gif = (AuroraGIF) row[2];
-                Div div = gifDisplayService.displaySingleGif(username, gif);
+                final byte[] pfpBytes = (byte[])row[3];
+                Div div = gifDisplayService.displaySingleGif(username, gif, pfpBytes);
                 add(div);
                 displayedGifs.add(div);
             }

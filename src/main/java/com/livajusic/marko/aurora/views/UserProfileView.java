@@ -23,16 +23,12 @@ package com.livajusic.marko.aurora.views;
 import com.livajusic.marko.aurora.LanguagesController;
 import com.livajusic.marko.aurora.UserInfoDisplayUtils;
 import com.livajusic.marko.aurora.db_repos.GifRepo;
-import com.livajusic.marko.aurora.db_repos.UserRepo;
 import com.livajusic.marko.aurora.services.*;
 import com.livajusic.marko.aurora.tables.AuroraGIF;
-import com.livajusic.marko.aurora.tables.AuroraUser;
-import com.sun.jna.platform.win32.Netapi32Util;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.BeforeEvent;
@@ -40,27 +36,22 @@ import com.vaadin.flow.router.HasUrlParameter;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
-import org.hibernate.sql.ast.tree.insert.Values;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @PageTitle("Main")
 @Route(value = "/profile")
 @AnonymousAllowed
 public class UserProfileView extends Div implements HasUrlParameter<String> {
-    private H3 usernameText;
-    private String username;
-
+    private final H3 usernameText;
     private final UserService userService;
     private final FollowService followService;
-
     private final SettingsService settingsService;
     private final GifRepo gifRepo;
     private final GIFDisplayService gifDisplayService;
+    private UserInfoDisplayUtils userInfoDisplayUtils;
 
-    List<Component> componentsToDelete = new ArrayList<Component>();
+    List<Component> componentsToDelete = new ArrayList<>();
 
     public UserProfileView(UserService userService,
                            FollowService followService,
@@ -80,24 +71,10 @@ public class UserProfileView extends Div implements HasUrlParameter<String> {
 
         NavigationBar navbar = new NavigationBar(userService, profilePictureService, languagesController, settingsService, notificationService);
         add(navbar);
-        if (userService.isLoggedIn()) {
-            final Long userId = userService.getCurrentUserId();
-            final Optional<Long> eventuallyFollowsUserId = userService.getUserIdByUsername(username);
-            if (eventuallyFollowsUserId.isPresent()) {
-                final var targetUserId = eventuallyFollowsUserId.get();
-                System.out.println("START LOG");
-                System.out.println(userId);
-                System.out.println(eventuallyFollowsUserId);
-                boolean imFollowingHimAlready = followService.isFollowing(userId, targetUserId);
-                Button button = getFollowButton(followService, imFollowingHimAlready, userId, targetUserId);
-                add(button);
-            }
-        }
-
         componentsToDelete.add(usernameText);
     }
 
-    private Button getFollowButton(FollowService followService, boolean imFollowingHimAlready, Long currentUserId, Long targetUserId) {
+    private Button getFollowButton(boolean imFollowingHimAlready, Long currentUserId, Long targetUserId) {
         Button button = new Button(imFollowingHimAlready ? "Unfollow" : "Follow");
         final class FollowState {
             boolean isFollowing;
@@ -129,28 +106,31 @@ public class UserProfileView extends Div implements HasUrlParameter<String> {
     }
 
     private void loadUserProfile(String username) {
-        System.out.println("loadUserProfile");
-        this.username = username;
         add(usernameText);
-
         usernameText.setText("Profile of user: " + username);
 
-        final var userId = userService.getUserIdByUsername(username).get();
-        UserInfoDisplayUtils userInfoDisplayUtils = new UserInfoDisplayUtils(gifRepo, userId, userService, followService, settingsService);
+        final var targetUserId = userService.getUserIdByUsername(username).get();
+        userInfoDisplayUtils = new UserInfoDisplayUtils(gifRepo, targetUserId, userService, followService, settingsService, gifDisplayService);
         add(userInfoDisplayUtils.getInfoLayout());
-
         componentsToDelete.add(userInfoDisplayUtils.getInfoLayout());
-        componentsToDelete.add(userInfoDisplayUtils.getFollowersSpan());
 
-        // gifsLayout.addClassName("user-gifs-layout");
+        if (userService.isLoggedIn()) {
+            final Long userId = userService.getCurrentUserId();
+            boolean imFollowingHimAlready = followService.isFollowing(userId, targetUserId);
+            Button button = getFollowButton(imFollowingHimAlready, userId, targetUserId);
+            add(button);
+            componentsToDelete.add(button);
+        }
+
         VerticalLayout gifsLayout = new VerticalLayout();
         add(gifsLayout);
         componentsToDelete.add(gifsLayout);
 
-        // List<AuroraGIF> gifs = gifRepo.findAllByUserId(userId);
-        final var gifs = userService.findAllByUserIdAndPfp(userId);
-        for (AuroraGIF gif : gifs) {
-            Div gifDiv = gifDisplayService.displaySingleGif(username, gif);
+        final List<Object[]> gifsObjs = userService.findAllByUserIdAndPfp(targetUserId);
+        for (Object[] gifObj : gifsObjs) {
+            final AuroraGIF gif = (AuroraGIF) gifObj[0];
+            final byte[] pfpBytes = (byte[]) gifObj[1];
+            Div gifDiv = gifDisplayService.displaySingleGif(username, gif, pfpBytes);
             add(gifDiv);
             componentsToDelete.add(gifDiv);
         }
@@ -159,9 +139,10 @@ public class UserProfileView extends Div implements HasUrlParameter<String> {
     private void clearUserProfile() {
         System.out.println("clearUserProfile");
         for (Component d : componentsToDelete) {
+            System.out.println(d.getId().get());
             remove(d);
         }
         componentsToDelete.clear();
-        // UI.getCurrent().getPage().reload();
+        // userInfoDisplayUtils.delete();
     }
 }
