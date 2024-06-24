@@ -44,6 +44,7 @@ import org.hibernate.sql.ast.tree.insert.Values;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @PageTitle("Main")
 @Route(value = "/profile")
@@ -80,24 +81,47 @@ public class UserProfileView extends Div implements HasUrlParameter<String> {
         NavigationBar navbar = new NavigationBar(userService, profilePictureService, languagesController, settingsService, notificationService);
         add(navbar);
         if (userService.isLoggedIn()) {
-            Button button = new Button("Follow");
-            button.addClickListener(e -> {
-                followUser();
-            });
-            add(button);
+            final Long userId = userService.getCurrentUserId();
+            final Optional<Long> eventuallyFollowsUserId = userService.getUserIdByUsername(username);
+            if (eventuallyFollowsUserId.isPresent()) {
+                final var targetUserId = eventuallyFollowsUserId.get();
+                System.out.println("START LOG");
+                System.out.println(userId);
+                System.out.println(eventuallyFollowsUserId);
+                boolean imFollowingHimAlready = followService.isFollowing(userId, targetUserId);
+                Button button = getFollowButton(followService, imFollowingHimAlready, userId, targetUserId);
+                add(button);
+            }
         }
 
         componentsToDelete.add(usernameText);
     }
 
-    private void followUser() {
-        System.out.println("followUser");
-        System.out.println("username: " + username);
+    private Button getFollowButton(FollowService followService, boolean imFollowingHimAlready, Long currentUserId, Long targetUserId) {
+        Button button = new Button(imFollowingHimAlready ? "Unfollow" : "Follow");
+        final class FollowState {
+            boolean isFollowing;
 
-        final var followedUserId = userService.getUserIdByUsername(username);
-        long getCurrentSessionsUserId = userService.getUserIdByUsername(userService.getCurrentUsername());
-        followService.followUser(getCurrentSessionsUserId, followedUserId);
+            FollowState(boolean isFollowing) {
+                this.isFollowing = isFollowing;
+            }
+        }
+
+        FollowState followState = new FollowState(imFollowingHimAlready);
+        button.addClickListener(e -> {
+            if (followState.isFollowing) {
+                followService.unfollowUser(currentUserId, targetUserId);
+                button.setText("Follow");
+            } else {
+                followService.followUser(currentUserId, targetUserId);
+                button.setText("Unfollow");
+            }
+            followState.isFollowing = !followState.isFollowing;
+        });
+
+        return button;
     }
+
 
     @Override
     public void setParameter(BeforeEvent event, String parameter) {
@@ -111,7 +135,7 @@ public class UserProfileView extends Div implements HasUrlParameter<String> {
 
         usernameText.setText("Profile of user: " + username);
 
-        final var userId = userService.getUserIdByUsername(username);
+        final var userId = userService.getUserIdByUsername(username).get();
         UserInfoDisplayUtils userInfoDisplayUtils = new UserInfoDisplayUtils(gifRepo, userId, userService, followService, settingsService);
         add(userInfoDisplayUtils.getInfoLayout());
 
@@ -123,7 +147,8 @@ public class UserProfileView extends Div implements HasUrlParameter<String> {
         add(gifsLayout);
         componentsToDelete.add(gifsLayout);
 
-        List<AuroraGIF> gifs = gifRepo.findAllByUserId(userId);
+        // List<AuroraGIF> gifs = gifRepo.findAllByUserId(userId);
+        final var gifs = userService.findAllByUserIdAndPfp(userId);
         for (AuroraGIF gif : gifs) {
             Div gifDiv = gifDisplayService.displaySingleGif(username, gif);
             add(gifDiv);

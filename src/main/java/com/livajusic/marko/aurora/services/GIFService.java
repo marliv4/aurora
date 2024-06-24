@@ -167,7 +167,20 @@ public class GIFService {
         query.setParameter("categories", categories);
         query.setParameter("gifIds", gifIds);
 
-        List<AuroraGIF> filteredGifs = query.getResultList();
+        final var filteredGifs = query.getResultList();
+        if (filteredGifs.isEmpty()) return null;
+
         return filteredGifs;
+    }
+
+    public List<Object[]> getAllGifsWithPfp() {
+        Query query = entityManager.createQuery("SELECT ag, pfp.imageData " +
+                "FROM AuroraGIF ag " +
+                "JOIN ProfilePicture pfp " +
+                "ON ag.user.userId = pfp.user.userId");
+        final var list = query.getResultList();
+        if (list.isEmpty()) return null;
+
+        return list;
     }
 }

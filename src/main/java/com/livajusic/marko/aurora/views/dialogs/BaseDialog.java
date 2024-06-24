@@ -53,6 +53,10 @@ public class BaseDialog {
         dialog.remove(component);
     }
 
+    public void setTitle(String titleText) {
+        title.setText(titleText);
+    }
+
     public void open(Long gifId) {
         dialog.open();
     }

@@ -87,8 +87,14 @@ public class FollowService {
     }
 
     public boolean isFollowing(Long userId, Long followsUserId) {
-        FollowId followId = new FollowId(userId, followsUserId);
-        return followRepo.existsById(followId);
+        Query query = entityManager.createQuery("" +
+                "SELECT count(*) FROM Follows f WHERE f.user.userId = :userId and f.followsUser.userId = :followsUserId");
+        query.setParameter("userId", userId);
+        query.setParameter("followsUserId", followsUserId);
+
+        return query.getFirstResult() > 0;
+        // FollowId followId = new FollowId(userId, followsUserId);
+        //return followRepo.existsById(followId);
     }
 
     public Long getFollowersCount(Long userId) {

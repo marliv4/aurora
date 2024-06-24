@@ -36,6 +36,7 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.server.StreamResource;
+import jakarta.persistence.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -78,7 +79,8 @@ public class GIFDisplayService {
 
     public Div displaySingleGif(
             String username,
-            AuroraGIF gif) {
+            AuroraGIF gif/*,
+            byte[] postersPfpBytes */) {
         StreamResource resource = new StreamResource("ThisNameIsIrrelevant.",
                 () -> new ByteArrayInputStream(gif.getImageData()));
 
@@ -87,7 +89,15 @@ public class GIFDisplayService {
 
         Div gifDiv = new Div();
         gifDiv.addClassName("gif-container");
+        /*
+        StreamResource pfp = new StreamResource("profile-picture", () -> new ByteArrayInputStream(postersPfpBytes));
 
+        Image profilePicture = new Image(pfp, "profile-picture");
+        profilePicture.setWidth("40px");
+        profilePicture.setHeight("40px");
+        profilePicture.getStyle().set("border-radius", "50%").set("margin-right", "10px");
+        add(profilePicture);
+*/
         Span usernameLabel = new Span(languagesController.get("by") + ": " + username);
 
         Button likeUnlikeButton = new Button("Like", VaadinIcon.HEART.create());
@@ -96,14 +106,25 @@ public class GIFDisplayService {
         Button furtherInformationButton = getFurtherInformationButton(gif);
 
         final var gifId = gif.getId();
-        Span amountLikes = new Span(languagesController.get("liked_by") + " " + likeService.getAmountOfLikes(gifId)
-                + " " + languagesController.get("people"));
+        final var likers = likeService.getLikers(gifId);
+        Span amountLikes = new Span(languagesController.get("liked_by") + " " + likers.size() + " " + languagesController.get("people") + " " + languagesController.get("who"));
+        amountLikes.addClickListener(l -> {
+            FurtherInformationDialog fd = new FurtherInformationDialog();
+            fd.setTitle(languagesController.get("who_likes_this_post"));
+            for (Object[] liker : likers) {
+                final String likersUsername = (String)liker[0];
+                final byte[] pfpBytes = (byte[])liker[1];
+                Div likerCard = getLikerCard(likersUsername, pfpBytes);
+                fd.addComponentToDialog(likerCard);
+            }
+            fd.open();
+        });
         updateLikeUnlikeBtnState(likeUnlikeButton, gifId);
         final var loggedIn = userService.isLoggedIn();
         likeUnlikeButton.addClickListener(buttonClickEvent -> {
             if (loggedIn) {
                 final var currentUsername = userService.getCurrentUsername();
-                final var currentUserId = userService.getUserIdByUsername(currentUsername);
+                final var currentUserId = userService.getUserIdByUsername(currentUsername).get();
 
                 if (likeService.hasUserAlreadyLikedGIF(currentUserId, gifId)) {
                     likeService.unlikeGif(currentUserId, gifId);
@@ -162,6 +183,34 @@ public class GIFDisplayService {
         return gifDiv;
     }
 
+    private Div getLikerCard(String likersUsername, byte[] profilePictureBytes) {
+        StreamResource resourcePfpLiker = new StreamResource("ThisNameIsIrrelevant.",
+                () -> new ByteArrayInputStream(profilePictureBytes));
+        Image profileImage = new Image(resourcePfpLiker, "Profile Picture");
+
+        profileImage.getStyle()
+                .set("border-radius", "50%")
+                .setWidth("50px")
+                .setHeight("50px");
+
+        Div likerCard = new Div();
+        likerCard.addClassName("liker-card");
+        likerCard.getStyle()
+                .set("display", "flex")
+                .set("align-items", "center")
+                .set("padding", "10px")
+                .set("margin", "10px 0")
+                .set("border", "1px solid #ccc")
+                .set("border-radius", "8px")
+                .set("box-shadow", "0 2px 5px rgba(0, 0, 0, 0.1)");
+
+        Span likerNameSpan = new Span(likersUsername);
+        likerNameSpan.getStyle().set("margin-left", "10px");
+        likerCard.add(profileImage, likerNameSpan);
+
+        return likerCard;
+    }
+
     private Button getFurtherInformationButton(AuroraGIF gif) {
         Button button = new Button("", VaadinIcon.INFO.create());
         button.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
@@ -195,7 +244,7 @@ public class GIFDisplayService {
     private void updateLikeUnlikeBtnState(Button likeUnlikeButton, Long gifId) {
         if (userService.isLoggedIn()) {
             final var currentUsername = userService.getCurrentUsername();
-            final var currentUserId = userService.getUserIdByUsername(currentUsername);
+            final var currentUserId = userService.getUserIdByUsername(currentUsername).get();
 
             if (likeService.hasUserAlreadyLikedGIF(currentUserId, gifId)) {
                 likeUnlikeButton.setText(languagesController.get("unlike"));
@@ -211,7 +260,7 @@ public class GIFDisplayService {
                                        Long gifId,
                                        Span amountLikes) {
         Long currentAmountLikes = likeService.getAmountOfLikes(gifId);
-        amountLikes.setText(languagesController.get("liked_by") + " " + String.valueOf(currentAmountLikes) + " people");
+        amountLikes.setText(languagesController.get("liked_by") + " " + String.valueOf(currentAmountLikes) + " " + languagesController.get("people") + " " + languagesController.get("who"));
     }
 
     public static void notify(String text) {

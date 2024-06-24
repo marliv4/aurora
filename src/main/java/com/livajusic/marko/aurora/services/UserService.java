@@ -23,6 +23,7 @@ package com.livajusic.marko.aurora.services;
 import com.livajusic.marko.aurora.AuroraUserDetailService;
 import com.livajusic.marko.aurora.db_repos.RoleRepo;
 import com.livajusic.marko.aurora.db_repos.UserRepo;
+import com.livajusic.marko.aurora.tables.AuroraGIF;
 import com.livajusic.marko.aurora.tables.AuroraUser;
 import com.livajusic.marko.aurora.views.MyProfileView;
 import com.livajusic.marko.aurora.views.UserProfileView;
@@ -47,6 +48,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -141,13 +143,14 @@ public class UserService {
     }
 
     public Long getCurrentUserId() {
-        return getUserIdByUsername(getCurrentUsername());
+        return getUserIdByUsername(getCurrentUsername()).get();
     }
 
     public boolean isLoggedIn() {
         return !getCurrentUsername().equals("anonymousUser");
     }
 
+    @Transactional
     public void searchForUser(String username) {
         // If user exists, go to his profile
         if (!getEmail(username).isEmpty()) {
@@ -162,10 +165,15 @@ public class UserService {
         }
     }
 
-    public long getUserIdByUsername(String username) {
-        Query query = entityManager.createQuery("SELECT u.userId FROM AuroraUser u WHERE u.username = :username");
-        query.setParameter("username", username);
-        return (long)query.getSingleResult();
+    @Transactional
+    public Optional<Long> getUserIdByUsername(String username) {
+        try {
+            Query query = entityManager.createQuery("SELECT u.userId FROM AuroraUser u WHERE u.username = :username");
+            query.setParameter("username", username);
+            return Optional.of((Long)query.getSingleResult());
+        } catch (NoResultException e) {
+            return Optional.empty();
+        }
     }
 
     public void logout() {
@@ -197,6 +205,17 @@ public class UserService {
 
     public boolean isUserMod(Long userId) {
         return getRoles(userId).contains("mod");
+    }
+
+    public List<AuroraGIF> findAllByUserIdAndPfp(Long userId) {
+        Query query = entityManager.createQuery("SELECT ag " +
+                "FROM AuroraGIF ag " +
+                "JOIN AuroraUser au " +
+                "ON ag.user.userId = au.userId " +
+                "WHERE au.userId = :userId");
+        query.setParameter("userId", userId);
+
+        return query.getResultList();
     }
 
 }

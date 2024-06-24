@@ -45,19 +45,19 @@ public class CRUDDialog extends BaseDialog {
 
         usernameField.addKeyPressListener(Key.ENTER, l -> {
             final var userId = userService.getUserIdByUsername(selectedUsername);
-            handleEnterKeyPress(userId, l);
+            handleEnterKeyPress(userId.get(), l);
         });
         usernameField.addKeyPressListener(Key.ESCAPE, l -> close());
 
         passwordField.addKeyPressListener(Key.ENTER, l -> {
             final var userId = userService.getUserIdByUsername(selectedUsername);
-            handleEnterKeyPress(userId, l);
+            handleEnterKeyPress(userId.get(), l);
         });
         passwordField.addKeyPressListener(Key.ESCAPE, l -> close());
 
         emailField.addKeyPressListener(Key.ENTER, l -> {
             final var userId = userService.getUserIdByUsername(selectedUsername);
-            handleEnterKeyPress(userId, l);
+            handleEnterKeyPress(userId.get(), l);
         });
         emailField.addKeyPressListener(Key.ESCAPE, l -> close());
 

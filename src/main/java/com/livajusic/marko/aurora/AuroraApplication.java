@@ -23,20 +23,13 @@ package com.livajusic.marko.aurora;
 import com.vaadin.flow.component.page.AppShellConfigurator;
 import com.vaadin.flow.theme.Theme;
 import com.vaadin.flow.theme.lumo.Lumo;
-import com.vaadin.flow.theme.material.Material;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.servlet.error.ErrorMvcAutoConfiguration;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-import java.util.Locale;
-
 @SpringBootApplication(exclude = ErrorMvcAutoConfiguration.class)
-// @Theme(value = "aurora_theme", variant = Lumo)
 @Theme(variant = Lumo.DARK)
 @EnableJpaRepositories
 @EnableTransactionManagement

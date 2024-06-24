@@ -27,6 +27,8 @@ import com.livajusic.marko.aurora.tables.Comment;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
@@ -92,12 +94,14 @@ public class CommentsDialog extends BaseDialog {
         Button submitButton = new Button(languagesController.get("submit"));
         submitButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-        if (userService.isLoggedIn()) {
             submitButton.addClickListener(event -> {
-                System.out.println("submitButton.addClick");
-                submitComment(commentField.getValue(), gifId);
+                if (userService.isLoggedIn()) {
+                    submitComment(commentField.getValue(), gifId);
+                } else {
+                    final var n = Notification.show("Please log in to comment!", 1000, Notification.Position.MIDDLE);
+                    n.addThemeVariants(NotificationVariant.LUMO_ERROR);
+                }
             });
-        }
 
         commentInputLayout.add(commentField, submitButton);
         addComponentToDialog(commentsLayout);

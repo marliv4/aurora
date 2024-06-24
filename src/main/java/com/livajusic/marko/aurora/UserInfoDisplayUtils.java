@@ -47,18 +47,16 @@ public class UserInfoDisplayUtils {
         this.gifRepo = gifRepo;
         this.userService = userService;
         this.settingsService = settingsService;
-        createUserInfoLayout(userId, userService, followService);
+        createUserInfoLayout(userId, followService);
     }
 
     private void createUserInfoLayout(Long userId,
-                                      UserService userService,
                                       FollowService followService) {
         infoLayout = new HorizontalLayout();
         followersSpan = new Span("Followers: " + followService.getFollowersCount(userId));
         infoLayout.add(followersSpan);
 
         followersSpan.addClickListener(l -> {
-            // TODO
             if (userService.getCurrentUserId().equals(userId) || settingsService.canOthersSeeFollowers(userId)) {
                 System.out.println("who are his followers?");
                 FollowersDialog fd = new FollowersDialog(followService, userService);
@@ -75,7 +73,6 @@ public class UserInfoDisplayUtils {
             }
         });
         infoLayout.add(followingSpan);
-
         Span postsCountSpan = new Span("Posts: " + gifRepo.countByUserId(userId));
         infoLayout.add(postsCountSpan);
     }

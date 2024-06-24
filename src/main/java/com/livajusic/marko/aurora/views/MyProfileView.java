@@ -90,7 +90,7 @@ public class MyProfileView extends VerticalLayout {
         setJustifyContentMode(JustifyContentMode.CENTER);
 
         final var username = userService.getCurrentUsername();
-        final var userId = userService.getUserIdByUsername(username);
+        final var userId = userService.getUserIdByUsername(username).get();
 
         UserInfoDisplayUtils userInfoDisplayUtils = new UserInfoDisplayUtils(gifRepo, userId, userService, followService, settingsService);
         add(userInfoDisplayUtils.getInfoLayout());

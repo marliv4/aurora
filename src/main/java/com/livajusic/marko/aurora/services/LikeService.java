@@ -93,6 +93,18 @@ public class LikeService {
         return (Long)query.getSingleResult() > 0;
     }
 
+    public List<Object[]> getLikers(Long gifId) {
+        final Query query = entityManager.createQuery("SELECT au.username, pfp.imageData " +
+                "FROM Like l " +
+                "JOIN AuroraUser au on l.user.userId = au.userId " +
+                "JOIN ProfilePicture pfp ON l.user.userId = pfp.user.userId " +
+                "WHERE l.gif.gifId = :gifId");
+        query.setParameter("gifId", gifId);
+
+        final List<Object[]> list = query.getResultList();
+        return list;
+    }
+
     public List<Object> getMostLikedGIFs() {
         Query query = entityManager.createQuery(
                 "SELECT COUNT(l), u.username, g " +
