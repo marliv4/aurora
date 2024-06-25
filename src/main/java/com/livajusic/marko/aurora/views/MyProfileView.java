@@ -92,7 +92,7 @@ public class MyProfileView extends VerticalLayout {
         final var username = userService.getCurrentUsername();
         final var userId = userService.getUserIdByUsername(username).get();
 
-        UserInfoDisplayUtils userInfoDisplayUtils = new UserInfoDisplayUtils(gifRepo, userId, userService, followService, settingsService, gifDisplayService);
+        UserInfoDisplayUtils userInfoDisplayUtils = new UserInfoDisplayUtils(gifRepo, userId, userService, followService, settingsService, gifDisplayService, languagesController);
         add(userInfoDisplayUtils.getInfoLayout());
 
         Span header = new Span(languagesController.get("my_profile") + ": " + username);

@@ -161,6 +161,18 @@ public class UserService {
         return auth.getName();
     }
 
+    @Transactional
+    public Optional<AuroraUser> getCurrentUser() {
+        String username = getCurrentUsername();
+        try {
+            Query query = entityManager.createQuery("SELECT u FROM AuroraUser u WHERE u.username = :username");
+            query.setParameter("username", username);
+            return Optional.of((AuroraUser) query.getSingleResult());
+        } catch (NoResultException e) {
+            return Optional.empty();
+        }
+    }
+
     public String getUsernameById(Long userId) {
         Query query = entityManager.createQuery("SELECT u.username FROM AuroraUser u WHERE u.userId = :userId");
         query.setParameter("userId", userId);
@@ -200,6 +212,34 @@ public class UserService {
             return Optional.empty();
         }
     }
+
+    @Transactional
+    public Optional<AuroraUser> getUserByUsername(String username) {
+        try {
+            Query query = entityManager.createQuery("SELECT u FROM AuroraUser u WHERE u.username = :username");
+            query.setParameter("username", username);
+            return Optional.of((AuroraUser) query.getSingleResult());
+        } catch (NoResultException e) {
+            return Optional.empty();
+        }
+    }
+
+    public List<String> getSimilarUsernames(String baseUsername) {
+        Query query = entityManager.createQuery("SELECT u.username " +
+                "FROM AuroraUser u " +
+                "WHERE u.username LIKE :baseUsername ");
+                /* "LIMIT 10"); */
+        query.setParameter("baseUsername", baseUsername + "%");
+        query.setMaxResults(10);
+
+        final var list = query.getResultList();
+        return list.isEmpty() ? null : (List<String>)list;
+    }
+
+    public String getSimilarUsername(String baseUsername) {
+        return getSimilarUsernames(baseUsername).get(0);
+    }
+
 
     public void logout() {
         authenticationContext.logout();

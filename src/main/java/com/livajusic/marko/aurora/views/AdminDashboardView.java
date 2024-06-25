@@ -113,7 +113,7 @@ public class AdminDashboardView extends VerticalLayout {
             grid.addColumn(item -> ((AuroraUser) item).getPassword()).setHeader("password");
         } else if (className == AuroraGIF.class) {
             grid.addColumn(item -> ((AuroraGIF) item).getId()).setHeader("gif_id");
-            grid.addColumn(item -> ((AuroraGIF) item).getLicense()).setHeader("license");
+            grid.addColumn(item -> ((AuroraGIF) item).getDescription()).setHeader("description");
             grid.addColumn(item -> ((AuroraGIF) item).getPublishDate()).setHeader("publish_date");
             grid.addColumn(item -> ((AuroraGIF) item).getUser().getId()).setHeader("user_id");
         }  else if (className == Role.class) {

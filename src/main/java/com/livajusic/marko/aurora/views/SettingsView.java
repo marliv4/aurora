@@ -66,10 +66,10 @@ public class SettingsView extends VerticalLayout {
         add(navbar);
 
         final Long userId = userService.getCurrentUserId();
-        Tab accountTab = new Tab("Account");
-        Tab profileTab = new Tab("Profile");
-        Tab privacyTab = new Tab("Privacy");
-        Tab preferencesTab = new Tab("Preferences");
+        Tab accountTab = new Tab(languagesController.get("account"));
+        Tab profileTab = new Tab(languagesController.get("profile"));
+        Tab privacyTab = new Tab(languagesController.get("privacy"));
+        Tab preferencesTab = new Tab(languagesController.get("preferences"));
         Tabs tabs = new Tabs(accountTab, profileTab, privacyTab, preferencesTab);
         tabs.setWidthFull();
 
@@ -92,18 +92,18 @@ public class SettingsView extends VerticalLayout {
 
     private VerticalLayout createAccountLayout() {
         VerticalLayout layout = new VerticalLayout();
-        layout.add(new H3("General"));
+        layout.add(new H3(languagesController.get("general")));
         final String email = userService.getEmail(userService.getCurrentUserId());
 
-        layout.add(new H3("Email address: "), new Text(email));
-        Button changePwBtn = new Button("Change Password");
+        layout.add(new H3(languagesController.get("email")), new Text(email));
+        Button changePwBtn = new Button(languagesController.get("change_password"));
         changePwBtn.addClickListener(e -> {
             System.out.println("openChangePwDialogBtn");
             ChangePasswordDialog changePasswordDialog = new ChangePasswordDialog(userService);
             changePasswordDialog.open();
         });
 
-        layout.add(new H3("Password"), changePwBtn);
+        layout.add(new H3(languagesController.get("password")), changePwBtn);
         return layout;
     }
 
@@ -116,12 +116,12 @@ public class SettingsView extends VerticalLayout {
         bioField.setValue(currentBio);
         layout.add(bioField);
 
-        Button updateBioBtn = new Button("Update Bio");
+        Button updateBioBtn = new Button(languagesController.get("update_bio"));
         updateBioBtn.addClickListener(e -> {
             String newBio = bioField.getValue();
             if (!currentBio.equals(newBio)) {
                 userService.updateBio(userService.getCurrentUserId(), newBio);
-                Notification.show("Bio updated successfully", 1000, Notification.Position.TOP_CENTER);
+                Notification.show(languagesController.get("bio_updated_successfully"), 1000, Notification.Position.TOP_CENTER);
                 bioField.setValue(newBio);
             } else {
                 final var n = Notification.show("You didn't change your bio!", 1000, Notification.Position.TOP_CENTER);

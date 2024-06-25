@@ -46,7 +46,7 @@ public class AuroraGIF {
     private Date publishDate;
 
     @Column
-    private String license;
+    private String description;
 
     @OneToMany(mappedBy = "gif")
     private Set<BelongsTo> categories;
@@ -63,11 +63,11 @@ public class AuroraGIF {
     }
 
     public AuroraGIF() {}
-    public AuroraGIF(byte[] imageData, AuroraUser user, Date publishDate, String license) {
+    public AuroraGIF(byte[] imageData, AuroraUser user, Date publishDate, String description) {
         this.imageData = imageData;
         this.user = user;
         this.publishDate = publishDate;
-        this.license = license;
+        this.description = description;
     }
 
     public Long getId() { return gifId; }
@@ -103,11 +103,11 @@ public class AuroraGIF {
         this.publishDate = publishDate;
     }
 
-    public String getLicense() {
-        return license;
+    public String getDescription() {
+        return description;
     }
 
-    public void setLicense(String license) {
-        this.license = license;
+    public void setDescription(String description) {
+        this.description = description;
     }
 }

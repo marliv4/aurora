@@ -107,26 +107,31 @@ public class LikeService {
 
     public List<Object> getMostLikedGIFs() {
         Query query = entityManager.createQuery(
-                "SELECT COUNT(l), u.username, g " +
+                "SELECT COUNT(l), u.username, g, pfp.imageData " +
                         "FROM Like l " +
                         "JOIN l.gif g " +
                         "JOIN g.user u " +
-                        "GROUP BY u.id, u.username, g " +
+                        "JOIN ProfilePicture pfp " +
+                        "ON pfp.user.userId = u.userId " +
+                        "GROUP BY u.username, g, pfp.imageData " +
                         "ORDER BY COUNT(l) DESC"
         );
         final var list = query.getResultList();;
+        if (list.isEmpty()) return null;
         return list;
     }
 
     public List<Object> getMostRecentGIFs() {
         Query query = entityManager.createQuery(
-                "SELECT COUNT(*), u.username, g " +
+                "SELECT COUNT(*), u.username, g, pfp.imageData " +
                         "FROM AuroraGIF g " +
                         "JOIN g.user u " +
-                        "GROUP BY u.username, g " +
+                        "JOIN ProfilePicture pfp ON pfp.user.userId = u.userId " +
+                        "GROUP BY u.username, g.gifId, g.imageData, g.description, g.publishDate, g.user.userId, pfp.imageData " +
                         "ORDER BY g.publishDate DESC"
         );
         final var list = query.getResultList();
+        if (list.isEmpty()) return null;
         return list;
     }
 }

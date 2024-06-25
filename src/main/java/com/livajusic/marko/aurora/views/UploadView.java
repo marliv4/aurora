@@ -97,25 +97,13 @@ public class UploadView extends VerticalLayout {
         Upload upload = new Upload(buffer);
         upload.setAcceptedFileTypes("image/gif");
 
-        ComboBox<String> licenseSelect = new ComboBox<>();
         TextField categoryInput = new TextField();
-
+        TextField description = new TextField();
+        description.setValue("");
         add(fileLabel, upload);
-
-        Span licenseLabel = new Span("Choose a license:");
-        licenseSelect.setItems("CC BY (Attribution)", "CC BY-SA (Attribution-ShareAlike)", "CC BY-ND (Attribution-NoDerivatives)",
-                "CC BY-NC (Attribution-NonCommercial)", "CC BY-NC-SA (Attribution-NonCommercial-ShareAlike)",
-                "CC BY-NC-ND (Attribution-NonCommercial-NoDerivatives)", "Public Domain", "All Rights Reserved");
-        licenseSelect.setReadOnly(false);
 
         Button submitButton = new Button("Submit");
         submitButton.addClickListener(e -> {
-            if (licenseSelect.getValue() == null) {
-                final var n = Notification.show("You didn't select a license!", 1500, Notification.Position.MIDDLE);
-                n.addThemeVariants(NotificationVariant.LUMO_ERROR);
-                return;
-            }
-
             /*
             if (gifService.hasUserUploadedGIFInLastNMinutes(userService.getCurrentUserId(), 10)) {
                 final var n = Notification.show("You uploaded a GIF in previous 10 minutes!", 1500, Notification.Position.MIDDLE);
@@ -133,16 +121,19 @@ public class UploadView extends VerticalLayout {
             for (Object[] entry : usersWhoFollowMe) {
                 AuroraUser uploader = userService.getUserById(userId);
                 AuroraUser intendedUser = (AuroraUser)entry[0];
-                notificationService.save(uploader, intendedUser);
+                final var date = UploadView.AuroraDateManager.getSqlDate(UploadView.AuroraDateManager.getUtilDate());
+                final var dateStr = UploadView.AuroraDateManager.getFormattedDate(date);
+                String msg = String.format("%s has uploaded a new GIF on %s", uploader.getUsername(), dateStr);
+                notificationService.save(/* uploader,*/ intendedUser, msg);
             }
 
             InputStream inputStream = buffer.getInputStream();
-            saveFile(basePath, inputStream, licenseSelect.getValue(), categoryInput.getValue());
+            saveFile(basePath, inputStream, description.getValue(), categoryInput.getValue());
             final var n = Notification.show("GIF successfully uploaded!", 1500, Notification.Position.MIDDLE);
             n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
         });
 
-        FormLayout formLayout = createFormLayout(licenseSelect, categoryInput);
+        FormLayout formLayout = createFormLayout(categoryInput, description);
 
         VerticalLayout formContainer = new VerticalLayout();
         formContainer.setWidth("400px");
@@ -155,25 +146,21 @@ public class UploadView extends VerticalLayout {
         setJustifyContentMode(JustifyContentMode.CENTER);
     }
 
-    private FormLayout createFormLayout(ComboBox<String> licenseSelect, TextField categoryInput) {
+    private FormLayout createFormLayout(TextField categoryInput, TextField descriptionInput) {
         FormLayout formLayout = new FormLayout();
-        // formLayout.addFormItem(upload, "File");
-        formLayout.addFormItem(licenseSelect, "License");
         formLayout.addFormItem(categoryInput, "Categories (CSV)");
-
+        formLayout.addFormItem(descriptionInput, "Description");
         formLayout.addClassName("register_form");
-
         return formLayout;
     }
 
-    public void saveFile(String path, InputStream is, String license, String category) {
+    public void saveFile(String path, InputStream is, String description, String category) {
         String uname = userService.getCurrentUsername();
 
         Optional<AuroraUser> currentUser = userRepo.findByUsername(uname);
         final var userEmpty = currentUser.isEmpty();
 
-        if (userEmpty || license == null) {
-            // Handle error
+        if (userEmpty) {
             return;
         }
 
@@ -188,16 +175,13 @@ public class UploadView extends VerticalLayout {
         System.out.println(date);
 
         var f = date + "_" + time + "_" + user.getId() + ".gif";
-        final var filename = f.replace(":", "_");
-        System.out.println("FILENAME: " + filename);
-
         final byte[] imageData = fileService.getDataBytes(is);
 
         AuroraGIF gif = new AuroraGIF(
                 imageData,
                 user,
                 date,
-                license
+                description
         );
         gifRepo.save(gif);
 
@@ -208,13 +192,12 @@ public class UploadView extends VerticalLayout {
 
         for (String c : categories) {
             System.out.println(c);
-            final var t = gifCategoryRepo.findByCategory(c.trim().toLowerCase());
             GifCategory gifCategory;
-            if (t.isEmpty()) {
+            if (!fileService.categoryAlreadyExists(c)) {
                 gifCategory = new GifCategory(c);
                 gifCategoryRepo.save(gifCategory);
             } else {
-                gifCategory = t.get();
+                gifCategory = fileService.getCategory(c);
             }
 
             boolean exists = belongsToRepo.existsByGifAndCategory(gif, gifCategory);

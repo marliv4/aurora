@@ -20,6 +20,10 @@
  */
 package com.livajusic.marko.aurora.services;
 
+import com.livajusic.marko.aurora.tables.GifCategory;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Query;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
@@ -30,6 +34,11 @@ import java.io.InputStream;
 
 @Service
 public class FileService {
+    private final EntityManager entityManager;
+
+    public FileService(EntityManager entityManager) {
+        this.entityManager = entityManager;
+    }
 
     public File createDirIfNeeded(String path) {
         File dir = new File(path);
@@ -65,5 +74,25 @@ public class FileService {
             e.printStackTrace();
         }
         return imageData;
+    }
+
+    public boolean categoryAlreadyExists(String category) {
+        Query query = entityManager.createQuery("SELECT count(c) " +
+                "FROM GifCategory c " +
+                "WHERE c.category = :category", Long.class);
+
+        query.setParameter("category", category);
+        Long count = (Long) query.getSingleResult();
+        System.out.println("Count: " + count);
+
+        return count > 0;
+    }
+
+    public GifCategory getCategory(String category) {
+        Query query = entityManager.createQuery("SELECT gc " +
+                "FROM GifCategory gc " +
+                "WHERE gc.category = :category");
+        query.setParameter("category", category);
+        return (GifCategory)query.getSingleResult();
     }
 }

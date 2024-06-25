@@ -46,7 +46,9 @@ public class NotificationModel {
     public NotificationModel() {
     }
 
-    public NotificationModel(AuroraUser intendedUser, String message, Date createdAt) {
+    public NotificationModel(AuroraUser intendedUser,
+                             String message,
+                             Date createdAt) {
         this.intendedUser = intendedUser;
         this.message = message;
         this.createdAt = createdAt;

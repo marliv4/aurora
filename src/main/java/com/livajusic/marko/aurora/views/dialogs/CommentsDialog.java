@@ -98,7 +98,7 @@ public class CommentsDialog extends BaseDialog {
                 if (userService.isLoggedIn()) {
                     submitComment(commentField.getValue(), gifId);
                 } else {
-                    final var n = Notification.show("Please log in to comment!", 1000, Notification.Position.MIDDLE);
+                    final var n = Notification.show(languagesController.get("please_log_in_to_comment"), 1000, Notification.Position.MIDDLE);
                     n.addThemeVariants(NotificationVariant.LUMO_ERROR);
                 }
             });

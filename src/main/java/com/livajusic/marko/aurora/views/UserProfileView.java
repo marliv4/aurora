@@ -25,11 +25,19 @@ import com.livajusic.marko.aurora.UserInfoDisplayUtils;
 import com.livajusic.marko.aurora.db_repos.GifRepo;
 import com.livajusic.marko.aurora.services.*;
 import com.livajusic.marko.aurora.tables.AuroraGIF;
+import com.livajusic.marko.aurora.tables.NotificationModel;
+import com.livajusic.marko.aurora.tables.ProfilePicture;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.html.Image;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.BeforeEvent;
 import com.vaadin.flow.router.HasUrlParameter;
@@ -38,18 +46,25 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @PageTitle("Main")
 @Route(value = "/profile")
 @AnonymousAllowed
 public class UserProfileView extends Div implements HasUrlParameter<String> {
     private final H3 usernameText;
+    private String username;
     private final UserService userService;
     private final FollowService followService;
     private final SettingsService settingsService;
     private final GifRepo gifRepo;
     private final GIFDisplayService gifDisplayService;
     private UserInfoDisplayUtils userInfoDisplayUtils;
+    private final LanguagesController languagesController;
+    private final ProfilePictureService profilePictureService;
+    private final NotificationService notificationService;
+
+    private com.vaadin.flow.component.textfield.TextField msgInput;
 
     List<Component> componentsToDelete = new ArrayList<>();
 
@@ -67,6 +82,9 @@ public class UserProfileView extends Div implements HasUrlParameter<String> {
         this.followService = followService;
         this.gifRepo = gifRepo;
         this.gifDisplayService = gifDisplayService;
+        this.languagesController = languagesController;
+        this.profilePictureService = profilePictureService;
+        this.notificationService = notificationService;
         usernameText = new H3();
 
         NavigationBar navbar = new NavigationBar(userService, profilePictureService, languagesController, settingsService, notificationService);
@@ -99,6 +117,10 @@ public class UserProfileView extends Div implements HasUrlParameter<String> {
         return button;
     }
 
+    private Text createBio(Long userId) {
+        return new Text(userService.getBio(userId));
+    }
+
 
     @Override
     public void setParameter(BeforeEvent event, String parameter) {
@@ -106,24 +128,53 @@ public class UserProfileView extends Div implements HasUrlParameter<String> {
     }
 
     private void loadUserProfile(String username) {
-        add(usernameText);
-        usernameText.setText("Profile of user: " + username);
+        this.username = username;
+
+        VerticalLayout mainLayout = new VerticalLayout();
+        mainLayout.setDefaultHorizontalComponentAlignment(FlexComponent.Alignment.CENTER);
+        mainLayout.setWidthFull();
+        mainLayout.getStyle().set("margin", "0 auto");
+
+        usernameText.setText(languagesController.get("profile_of_user") + ": " + username);
+        mainLayout.add(usernameText);
 
         final var targetUserId = userService.getUserIdByUsername(username).get();
-        userInfoDisplayUtils = new UserInfoDisplayUtils(gifRepo, targetUserId, userService, followService, settingsService, gifDisplayService);
-        add(userInfoDisplayUtils.getInfoLayout());
+        Text bio = createBio(targetUserId);
+        mainLayout.add(bio);
+
+        Optional<ProfilePicture> targetUserPfpOptional = profilePictureService.getPfpByUserId(targetUserId);
+        if (targetUserPfpOptional.isEmpty()) {
+            Notification.show("Error!", 1000, Notification.Position.TOP_CENTER);
+            // return;
+        } else {
+            Image pfp = gifDisplayService.getImage(targetUserPfpOptional.get().getImageData());
+            pfp.setWidth("100px");
+            pfp.setHeight("100px");
+            pfp.getStyle().set("border-radius", "50%");
+            mainLayout.add(pfp);
+        }
+
+        userInfoDisplayUtils = new UserInfoDisplayUtils(gifRepo, targetUserId, userService, followService, settingsService, gifDisplayService, languagesController);
+        mainLayout.add(userInfoDisplayUtils.getInfoLayout());
         componentsToDelete.add(userInfoDisplayUtils.getInfoLayout());
 
         if (userService.isLoggedIn()) {
             final Long userId = userService.getCurrentUserId();
             boolean imFollowingHimAlready = followService.isFollowing(userId, targetUserId);
             Button button = getFollowButton(imFollowingHimAlready, userId, targetUserId);
-            add(button);
+
+            msgInput = new com.vaadin.flow.component.textfield.TextField(languagesController.get("message"));
+            Button msgUserBtn = getMessageBtn();
+            HorizontalLayout messageLayout = new HorizontalLayout();
+            messageLayout.setAlignItems(FlexComponent.Alignment.BASELINE);
+            messageLayout.add(msgInput, msgUserBtn);
+
+            mainLayout.add(button, messageLayout);
             componentsToDelete.add(button);
         }
 
         VerticalLayout gifsLayout = new VerticalLayout();
-        add(gifsLayout);
+        mainLayout.add(gifsLayout);
         componentsToDelete.add(gifsLayout);
 
         final List<Object[]> gifsObjs = userService.findAllByUserIdAndPfp(targetUserId);
@@ -131,9 +182,31 @@ public class UserProfileView extends Div implements HasUrlParameter<String> {
             final AuroraGIF gif = (AuroraGIF) gifObj[0];
             final byte[] pfpBytes = (byte[]) gifObj[1];
             Div gifDiv = gifDisplayService.displaySingleGif(username, gif, pfpBytes);
-            add(gifDiv);
+            mainLayout.add(gifDiv);
             componentsToDelete.add(gifDiv);
         }
+        add(mainLayout);
+    }
+
+    private Button getMessageBtn() {
+        Button btn = new Button(languagesController.get("message"));
+        btn.addClickListener(l -> {
+            final var oCurrentUser = userService.getCurrentUser();
+            final var oIntendedUser = userService.getUserByUsername(username);
+
+            if (oCurrentUser.isEmpty() || oIntendedUser.isEmpty()) {
+                final var n = Notification.show("Couldn't find user!", 1000, Notification.Position.TOP_CENTER);
+                n.addThemeVariants(NotificationVariant.LUMO_ERROR);
+                return;
+            }
+
+            final var currentUser = oCurrentUser.get();
+            final var intendedUser = oIntendedUser.get();
+
+            String msg = String.format("%s says: %s", currentUser.getUsername(), msgInput.getValue());
+            notificationService.save(intendedUser, msg);
+        });
+        return btn;
     }
 
     private void clearUserProfile() {

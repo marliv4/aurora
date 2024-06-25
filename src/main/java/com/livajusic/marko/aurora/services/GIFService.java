@@ -20,13 +20,7 @@
  */
 package com.livajusic.marko.aurora.services;
 
-import com.livajusic.marko.aurora.db_repos.BelongsToRepo;
-import com.livajusic.marko.aurora.db_repos.GifCategoryRepo;
 import com.livajusic.marko.aurora.db_repos.GifRepo;
-import com.livajusic.marko.aurora.tables.AuroraGIF;
-import com.livajusic.marko.aurora.tables.BelongsTo;
-import com.livajusic.marko.aurora.tables.GifCategory;
-import com.livajusic.marko.aurora.views.UploadView;
 import com.vaadin.flow.component.UI;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
@@ -38,23 +32,16 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class GIFService {
     private final GifRepo gifRepo;
     private final EntityManager entityManager;
-    private final BelongsToRepo belongsToRepo;
-    private final GifCategoryRepo gifCategoryRepo;
 
     public GIFService(GifRepo gifRepo,
-                      EntityManager entityManager,
-                      BelongsToRepo belongsToRepo,
-                      GifCategoryRepo gifCategoryRepo) {
+                      EntityManager entityManager) {
         this.gifRepo = gifRepo;
         this.entityManager = entityManager;
-        this.belongsToRepo = belongsToRepo;
-        this.gifCategoryRepo = gifCategoryRepo;
     }
 
     @Transactional
@@ -137,10 +124,9 @@ public class GIFService {
 
     @Transactional
     public List<Object[]> filterGifsByCategory(String categoryCsv) {
-        // List<AuroraGIF> filteredGifs = new ArrayList<>();
         List<String> categoriesList = Arrays.asList(categoryCsv.split(","));
 
-        Query query = entityManager.createQuery("SELECT ag, bt.category.id, pfp.imageData " +
+        Query query = entityManager.createQuery("SELECT ag, pfp.imageData, bt.category.id " +
                 "FROM AuroraGIF ag " +
                 "JOIN BelongsTo bt " +
                 "ON ag.gifId = bt.gif.gifId " +
@@ -152,10 +138,8 @@ public class GIFService {
 
         query.setParameter("categories", categoriesList);
         List<Object[]> results = (List<Object[]>) query.getResultList();
-        /*for (Object[] result : results) {
-            AuroraGIF gif = (AuroraGIF) result[0];
-            filteredGifs.add(gif);
-        }*/
+        if (results.isEmpty()) return null;
+
         return results;
     }
 

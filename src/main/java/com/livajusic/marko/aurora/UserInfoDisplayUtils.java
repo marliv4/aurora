@@ -41,35 +41,38 @@ public class UserInfoDisplayUtils {
     private final UserService userService;
     private final SettingsService settingsService;
     private final GIFDisplayService gifDisplayService;
+    private final LanguagesController languagesController;
 
     public UserInfoDisplayUtils(GifRepo gifRepo,
                                 Long userId,
                                 UserService userService,
                                 FollowService followService,
                                 SettingsService settingsService,
-                                GIFDisplayService gifDisplayService) {
+                                GIFDisplayService gifDisplayService,
+                                LanguagesController languagesController) {
         this.gifRepo = gifRepo;
         this.userService = userService;
         this.settingsService = settingsService;
         this.gifDisplayService = gifDisplayService;
+        this.languagesController = languagesController;
         createUserInfoLayout(userId, followService);
     }
 
     private void createUserInfoLayout(Long userId,
                                       FollowService followService) {
         infoLayout = new HorizontalLayout();
-        followersSpan = new Span("Followers: " + followService.getFollowersCount(userId));
+        followersSpan = new Span(languagesController.get("followers") + ": " + followService.getFollowersCount(userId));
         infoLayout.add(followersSpan);
 
         followersSpan.addClickListener(l -> {
-            if (userService.getCurrentUserId().equals(userId) || settingsService.canOthersSeeFollowers(userId)) {
+            if (/* userService.getCurrentUserId().equals(userId) || */ settingsService.canOthersSeeFollowers(userId)) {
                 System.out.println("who are his followers?");
                 FollowersDialog fd = new FollowersDialog(followService, userService, gifDisplayService);
                 fd.openDialog(userId, FollowersDialog.DialogType.DIALOG_SHOW_USERS_FOLLOWERS);
             }
         });
 
-        Span followingSpan = new Span("Following: " + followService.getFollowingCount(userId));
+        Span followingSpan = new Span(languagesController.get("following") + ": " + followService.getFollowingCount(userId));
         followingSpan.addClickListener(l -> {
             if (settingsService.canOthersSeeFollowing(userId)) {
                 System.out.println("who is he following?");
@@ -78,7 +81,7 @@ public class UserInfoDisplayUtils {
             }
         });
         infoLayout.add(followingSpan);
-        Span postsCountSpan = new Span("Posts: " + gifRepo.countByUserId(userId));
+        Span postsCountSpan = new Span(languagesController.get("posts") + ": " + gifRepo.countByUserId(userId));
         infoLayout.add(postsCountSpan);
     }
 

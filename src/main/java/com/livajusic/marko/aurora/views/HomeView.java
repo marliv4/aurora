@@ -27,8 +27,11 @@ import com.livajusic.marko.aurora.services.*;
 import com.livajusic.marko.aurora.tables.AuroraGIF;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.sidenav.SideNav;
+import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -144,6 +147,14 @@ public class HomeView extends VerticalLayout {
         setJustifyContentMode(JustifyContentMode.CENTER);
     }
 
+    private void setLang(SettingsService settingsService) {
+        final var userId = userService.getCurrentUserId();
+        System.out.println("tester" + userId);
+        String lang = settingsService.getUsersLanguage(userId);
+        System.out.println(String.format("%s logged in, settings his language to %s", userId, lang));
+        languagesController.switchLanguage(lang);
+    }
+
     private HorizontalLayout createHorizontalLayout() {
         HorizontalLayout horizontalLayout = new HorizontalLayout();
         horizontalLayout.setWidthFull();
@@ -167,9 +178,9 @@ public class HomeView extends VerticalLayout {
     }
 
     private void createFilterCriteria() {
-        selectCriteria = new ComboBox<>(languagesController.get("selectcriteria"));
-        selectCriteria.setItems(languagesController.get("toplikes"), languagesController.get("recent"), "Oldest");
-        selectCriteria.setValue("Oldest");
+        selectCriteria = new ComboBox<>(languagesController.get("select_criteria"));
+        selectCriteria.setItems(languagesController.get("top_likes"), languagesController.get("recent"), languagesController.get("oldest"));
+        selectCriteria.setValue(languagesController.get("oldest"));
 
         selectCriteria.addValueChangeListener(event -> {
             String selectedCriteria = event.getValue();
@@ -187,13 +198,16 @@ public class HomeView extends VerticalLayout {
 
     private List<Object> getFiltered() {
         List<Object> list = new ArrayList<>();
-        if ("Top Likes".equals(selectCriteria.getValue())) {
+        if (languagesController.get("top_likes").equals(selectCriteria.getValue())) {
             list = likeService.getMostLikedGIFs();
         } else if ("Recent".equals(selectCriteria.getValue())) {
             list = likeService.getMostRecentGIFs();
         } else {
-            displayGifsFromArray(gifService.getAllGifsWithPfp());
-            Filtered.filteredByCriteria = false;
+            final var displayList = gifService.getAllGifsWithPfp();
+            if (displayList != null) {
+                displayGifsFromArray(gifService.getAllGifsWithPfp());
+                Filtered.filteredByCriteria = false;
+            }
         }
 
         return list;
@@ -208,7 +222,7 @@ public class HomeView extends VerticalLayout {
                 Object[] row = (Object[]) o;
                 final var username = (String) row[1];
                 final var gif = (AuroraGIF) row[2];
-                final byte[] pfpBytes = (byte[])row[3];
+                final byte[] pfpBytes = (byte[]) row[3];
                 Div div = gifDisplayService.displaySingleGif(username, gif, pfpBytes);
                 add(div);
                 displayedGifs.add(div);

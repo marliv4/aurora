@@ -31,6 +31,7 @@ import com.livajusic.marko.aurora.views.dialogs.NotificationsDialog;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.dependency.StyleSheet;
 import com.vaadin.flow.component.html.Div;
@@ -45,15 +46,17 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.Autocomplete;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.theme.lumo.Lumo;
-import org.aspectj.weaver.ast.Not;
 
 import java.io.ByteArrayInputStream;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @StyleSheet("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap")
 // @CssImport("styles.css")
@@ -61,8 +64,10 @@ public class NavigationBar extends HorizontalLayout {
     private final UserService userService;
     private final NotificationService notificationService;
     private final SettingsService settingsService;
-
+    private final LanguagesController languagesController;
     private boolean dark = true;
+
+    private ComboBox<String> searchComboBox;
 
     public NavigationBar(UserService userService,
                          ProfilePictureService profilePictureService,
@@ -72,6 +77,7 @@ public class NavigationBar extends HorizontalLayout {
         this.userService = userService;
         this.notificationService = notificationService;
         this.settingsService = settingsService;
+        this.languagesController = languagesController;
 
         setAlignItems(HorizontalLayout.Alignment.CENTER);
         setJustifyContentMode(JustifyContentMode.CENTER);
@@ -93,7 +99,7 @@ public class NavigationBar extends HorizontalLayout {
             profileImage.getStyle().set("border-radius", "50%");
 
             MenuItem profileMenuItem = profileMenu.addItem(profileImage);
-            profileMenuItem.getSubMenu().addItem(languagesController.get("myprofile"), e -> navigateToProfile());
+            profileMenuItem.getSubMenu().addItem(languagesController.get("my_profile"), e -> navigateToProfile());
             profileMenuItem.getSubMenu().addItem(languagesController.get("settings"), e -> navigateToSettings());
             profileMenuItem.getSubMenu().addItem(languagesController.get("create"), e -> navigateToCreate());
             profileMenuItem.getSubMenu().addItem(languagesController.get("logout"), e -> {
@@ -108,18 +114,16 @@ public class NavigationBar extends HorizontalLayout {
         add(profileMenu);
 
         Optional<Button> notificationButton = getNotificationButton();
-
         Button themeToggleButton = getThemeTogglingButton();
         add(themeToggleButton);
 
-        TextField userSearch = createUserSearchField();
+        final var userSearch = createUserSearchField();
 
         if (addRegisterAndLoginLink) {
             add(/* logo, */ homeLink, registerLink, loginLink, publishLink, /* searchField, */ profileMenu, userSearch);
         } else {
             add(/* logo, */ homeLink, publishLink, /* searchField, */ profileMenu, notificationButton.get(), userSearch);
         }
-
         setSpacing(true);
     }
 
@@ -136,15 +140,15 @@ public class NavigationBar extends HorizontalLayout {
         final List<NotificationModel> notifications = notificationService.getNotificationsForUser(userId);
         if (!notifications.isEmpty()) {
             bellIcon.setColor("red");
-            notificationButton.addClickListener(e -> createNotificationLayout(notifications));
+            notificationButton.addClickListener(e -> createNotificationLayout(notifications, userId));
         } else {
-            bellIcon.setColor("null");
+            bellIcon.setColor("badge error pill");
         }
 
         return Optional.of(notificationButton);
     }
 
-    private void createNotificationLayout(List<NotificationModel> notificationModels) {
+    private void createNotificationLayout(List<NotificationModel> notificationModels, Long userId) {
         NotificationsDialog notificationsDialog = new NotificationsDialog();
         for (NotificationModel notification : notificationModels) {
             Div notificationDiv = new Div();
@@ -156,7 +160,10 @@ public class NavigationBar extends HorizontalLayout {
                     .set("box-shadow", "0 2px 4px rgba(0, 0, 0, 0.1)");
             System.out.println(notification.getMessage());
             Span notificationItem = new Span(notification.getMessage());
-
+            notificationItem.addClickListener(l -> {
+                UI.getCurrent().navigate(String.format("/profile/%s", userService.getUsernameById(userId)));
+                notificationsDialog.close();
+            });
             Button markAsReadButton = getMarkAsReadButton(notification, notificationsDialog, notificationDiv);
 
             notificationDiv.add(notificationItem, markAsReadButton);
@@ -168,7 +175,7 @@ public class NavigationBar extends HorizontalLayout {
     private Button getMarkAsReadButton(NotificationModel notification,
                                        NotificationsDialog notificationsDialog,
                                        Component component) {
-        Button markAsReadButton = new Button("Mark as Read");
+        Button markAsReadButton = new Button(languagesController.get("mark_as_read"));
         markAsReadButton.addClickListener(event -> {
             notificationsDialog.removeComponentFromDialog(component);
             notificationService.delete(notification.getId());
@@ -218,12 +225,33 @@ public class NavigationBar extends HorizontalLayout {
         return profileImage;
     }
 
+    private void showSimilarUsername(String similarUsername) {
+        final var n = Notification.show(String.format("Do you mean: %s", similarUsername), 3000, Notification.Position.MIDDLE);
+        n.addThemeVariants(NotificationVariant.LUMO_PRIMARY);
+    }
+
     private TextField createUserSearchField() {
         TextField searchField = new TextField();
-        searchField.setPlaceholder("Search users");
+        searchField.setPlaceholder(languagesController.get("search_for_users"));
         searchField.setAutocomplete(Autocomplete.OFF);
+        searchField.setValueChangeMode(ValueChangeMode.EAGER);
         searchField.addKeyPressListener(Key.ENTER, e -> userService.searchForUser(searchField.getValue()));
 
+        Set<String> shownUsernames = new HashSet<>();
+
+        searchField.addValueChangeListener(l -> {
+            final var val = searchField.getValue();
+            if (val != null && !val.isEmpty()) {
+                // don't show same usernames multiple times
+                List<String> similarUsernames = userService.getSimilarUsernames(val);
+                List<String> newNamesToShow = similarUsernames.stream()
+                        .filter(username -> !shownUsernames.contains(username))
+                        .toList();
+
+                newNamesToShow.forEach(this::showSimilarUsername);
+                shownUsernames.addAll(newNamesToShow);
+            }
+        });
         return searchField;
     }
 

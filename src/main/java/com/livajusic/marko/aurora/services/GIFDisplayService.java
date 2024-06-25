@@ -100,6 +100,10 @@ public class GIFDisplayService {
         HorizontalLayout userInfoLayout = new HorizontalLayout(profilePicture, usernameLabel);
         userInfoLayout.setAlignItems(FlexComponent.Alignment.CENTER);
 
+        Span desc = new Span(String.format("%s", gif.getDescription()));
+        desc.getStyle().set("margin-top", "10px");
+        //gifDiv.add(desc);
+
         Button furtherInformationButton = getFurtherInformationButton(gif);
         final var gifId = gif.getId();
         final var likers = likeService.getLikers(gifId);
@@ -113,7 +117,7 @@ public class GIFDisplayService {
 
         HorizontalLayout buttonsLayout = new HorizontalLayout(likeUnlikeButton, openCommentsBtn, furtherInformationButton);
         buttonsLayout.setSpacing(true);
-        VerticalLayout gifLayout = getVerticalLayout(userInfoLayout, image, buttonsLayout, amountLikes);
+        VerticalLayout gifLayout = getVerticalLayout(userInfoLayout, image, desc, buttonsLayout, amountLikes);
         gifDiv.add(gifLayout);
 
         if (loggedIn) {
@@ -177,7 +181,7 @@ public class GIFDisplayService {
             for (Object[] liker : likers) {
                 final String likersUsername = (String)liker[0];
                 final byte[] pfpBytes = (byte[])liker[1];
-                Div likerCard = getLikerCard(likersUsername, pfpBytes);
+                Div likerCard = getLikerCard(likersUsername, pfpBytes, fd);
                 fd.addComponentToDialog(likerCard);
             }
             fd.open();
@@ -192,8 +196,8 @@ public class GIFDisplayService {
         return image;
     }
 
-    private VerticalLayout getVerticalLayout(HorizontalLayout userInfoLayout, Image image, HorizontalLayout buttonsLayout, Span amountLikes) {
-        VerticalLayout gifLayout = new VerticalLayout(userInfoLayout, image, buttonsLayout, amountLikes);
+    private VerticalLayout getVerticalLayout(HorizontalLayout userInfoLayout, Image image, Span desc, HorizontalLayout buttonsLayout, Span amountLikes) {
+        VerticalLayout gifLayout = new VerticalLayout(userInfoLayout, image, desc, buttonsLayout, amountLikes);
         gifLayout.setDefaultHorizontalComponentAlignment(FlexComponent.Alignment.CENTER);
         gifLayout.getStyle()
                 .set("border", "1.5px solid hsl(214, 100%, 70%)")
@@ -215,7 +219,7 @@ public class GIFDisplayService {
         return openCommentsBtn;
     }
 
-    private Div getLikerCard(String likersUsername, byte[] profilePictureBytes) {
+    private Div getLikerCard(String likersUsername, byte[] profilePictureBytes, FurtherInformationDialog fd) {
         Image profileImage = getImage(profilePictureBytes);
 
         profileImage.getStyle()
@@ -234,6 +238,10 @@ public class GIFDisplayService {
                 .set("border-radius", "8px")
                 .set("box-shadow", "0 2px 5px rgba(0, 0, 0, 0.1)");
 
+        likerCard.addClickListener(l -> {
+            UI.getCurrent().navigate(String.format("/profile/%s", likersUsername));
+            fd.close();
+        });
         Span likerNameSpan = new Span(likersUsername);
         likerNameSpan.getStyle().set("margin-left", "10px");
         likerCard.add(profileImage, likerNameSpan);
@@ -249,10 +257,6 @@ public class GIFDisplayService {
             FurtherInformationDialog furtherInformationDialog = new FurtherInformationDialog();
             VerticalLayout contentLayout = new VerticalLayout();
             contentLayout.setSpacing(true);
-
-            Span license = new Span(String.format("License: %s", gif.getLicense()));
-            license.getStyle().set("margin-top", "10px");
-            contentLayout.add(license);
 
             final List<String> categoriesList = gifService.getGifsCategories(gif.getId());
             for (String category : categoriesList) {

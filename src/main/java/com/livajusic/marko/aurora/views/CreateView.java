@@ -20,6 +20,7 @@
  */
 package com.livajusic.marko.aurora.views;
 
+import com.vaadin.flow.component.dependency.JavaScript;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.component.html.H3;
@@ -27,6 +28,7 @@ import jakarta.annotation.security.RolesAllowed;
 
 @Route("/create")
 @RolesAllowed(value = {"user", "mod", "admin"})
+// @JavaScript("/frontend/my-script.js")
 public class CreateView extends HorizontalLayout {
 
     public CreateView() {

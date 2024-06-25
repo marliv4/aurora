@@ -37,9 +37,9 @@ public class AuroraUser {
     @Column(unique = true)
     private String email;
     @Column
-    private String bio;
-    @Column
     private String password;
+    @Column
+    private String bio;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<AuroraGIF> gifs;
@@ -94,7 +94,6 @@ public class AuroraUser {
     public void setBio(String bio) {
         this.bio = bio;
     }
-
 
     public String getPassword() {
         return password;

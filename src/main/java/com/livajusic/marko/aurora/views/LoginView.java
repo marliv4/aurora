@@ -63,16 +63,8 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
         add(login);
         login.addLoginListener(l -> {
                     UI.getCurrent().navigate("/");
-                    /*
-                    final var userId = userService.getCurrentUserId();
-                    System.out.println("tester" + userId);
-                    String lang = settingsService.getUsersLanguage(userId);
-                    System.out.println(lang);
-                    languagesController.switchLanguage(lang);
-                    */
                 }
         );
-
     }
 
     @Override

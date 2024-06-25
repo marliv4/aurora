@@ -43,6 +43,11 @@ public class NotificationService {
         this.entityManager = entityManager;
     }
 
+    public enum NotificationType {
+        NEW_POST,
+        PERSONAL_MESSAGE
+    }
+
     public List<NotificationModel> getNotificationsForUser(Long userId) {
         Query query = entityManager.createQuery("SELECT n FROM NotificationModel n WHERE intendedUser.userId = :userId");
         query.setParameter("userId", userId);
@@ -50,10 +55,8 @@ public class NotificationService {
         return (List<NotificationModel>)query.getResultList();
     }
 
-    public void save(AuroraUser uploader, AuroraUser intendedUser) {
+    public void save(AuroraUser intendedUser, String msg) {
         final var date = UploadView.AuroraDateManager.getSqlDate(UploadView.AuroraDateManager.getUtilDate());
-        final var dateStr = UploadView.AuroraDateManager.getFormattedDate(date);
-        String msg = String.format("%s has uploaded a new GIF on %s", uploader.getUsername(), dateStr);
         NotificationModel notificationModel = new NotificationModel(intendedUser, msg, date);
         notificationRepo.save(notificationModel);
     }
