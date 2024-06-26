@@ -46,6 +46,7 @@ public class LikeService {
     private final LikeRepo likeRepository;
 
     private EntityManager entityManager;
+
     @Autowired
     public LikeService(
             UserRepo userRepo,
@@ -90,7 +91,7 @@ public class LikeService {
         query.setParameter("userId", userId);
         query.setParameter("gifId", gifId);
 
-        return (Long)query.getSingleResult() > 0;
+        return (Long) query.getSingleResult() > 0;
     }
 
     public List<Object[]> getLikers(Long gifId) {
@@ -116,7 +117,8 @@ public class LikeService {
                         "GROUP BY u.username, g, pfp.imageData " +
                         "ORDER BY COUNT(l) DESC"
         );
-        final var list = query.getResultList();;
+        final var list = query.getResultList();
+        ;
         if (list.isEmpty()) return null;
         return list;
     }
@@ -133,5 +135,18 @@ public class LikeService {
         final var list = query.getResultList();
         if (list.isEmpty()) return null;
         return list;
+    }
+
+    public List<AuroraGIF> getPostsUserLiked(Long userId) {
+        Query query = entityManager.createQuery(
+                        "SELECT ag " +
+                                "FROM AuroraGIF ag " +
+                                "JOIN Like l " +
+                                "ON ag.gifId = l.gif.gifId " +
+                                "WHERE l.user.userId = :userId")
+                .setParameter("userId", userId);
+
+        List<AuroraGIF> resultList = (List<AuroraGIF>)query.getResultList();
+        return resultList.isEmpty() ? null : resultList;
     }
 }

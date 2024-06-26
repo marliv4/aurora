@@ -30,8 +30,8 @@ import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.shared.Tooltip;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.component.textfield.TextField;
@@ -136,18 +136,25 @@ public class SettingsView extends VerticalLayout {
     private VerticalLayout createPrivacyLayout(Long userId) {
         VerticalLayout layout = new VerticalLayout();
 
-        Checkbox seeFollowersCheckbox = new Checkbox("Allow others to see my followers");
+        Checkbox seeFollowersCheckbox = new Checkbox(languagesController.get("allow_others_to_see_my_followers"));
         seeFollowersCheckbox.setValue(settingsService.canOthersSeeFollowers(userId));
-        seeFollowersCheckbox.addValueChangeListener(event -> {
-            settingsService.updateCanOthersSeeFollowers(userId, event.getValue());
-        });
+        seeFollowersCheckbox.addValueChangeListener(event ->
+            settingsService.updateCanOthersSeeFollowers(userId, event.getValue())
+        );
 
-        Checkbox seeFollowingCheckbox = new Checkbox("Allow others to see who I am following");
+        Checkbox seeFollowingCheckbox = new Checkbox(languagesController.get("allow_others_to_see_who_i_am_following"));
         seeFollowingCheckbox.setValue(settingsService.canOthersSeeFollowing(userId));
-        seeFollowingCheckbox.addValueChangeListener(event -> {
-            settingsService.updateCanOthersSeeFollowing(userId, event.getValue());
-        });
-        layout.add(seeFollowersCheckbox, seeFollowingCheckbox);
+        seeFollowingCheckbox.addValueChangeListener(event ->
+            settingsService.updateCanOthersSeeFollowing(userId, event.getValue())
+        );
+
+        Checkbox canOthersSeeWhatILikedSwitch = new Checkbox(languagesController.get("allow_others_to_see_what_i_liked"));
+        canOthersSeeWhatILikedSwitch.setTooltipText(languagesController.get("liked_tooltip"));
+        canOthersSeeWhatILikedSwitch.setValue(settingsService.canOthersSeeWhatILiked(userId));
+        canOthersSeeWhatILikedSwitch.addValueChangeListener(event ->
+                settingsService.updateCanOthersSeeWhatILiked(userId, event.getValue())
+        );
+        layout.add(seeFollowersCheckbox, seeFollowingCheckbox, canOthersSeeWhatILikedSwitch);
         return layout;
     }
 

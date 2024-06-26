@@ -20,9 +20,6 @@
  */
 package com.livajusic.marko.aurora.services;
 
-import com.livajusic.marko.aurora.AuroraUserDetailService;
-import com.livajusic.marko.aurora.db_repos.RoleRepo;
-import com.livajusic.marko.aurora.db_repos.UserRepo;
 import com.livajusic.marko.aurora.tables.AuroraUser;
 import com.livajusic.marko.aurora.views.MyProfileView;
 import com.livajusic.marko.aurora.views.UserProfileView;
@@ -35,7 +32,6 @@ import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -52,23 +48,12 @@ public class UserService {
 
     private final AuthenticationContext authenticationContext;
 
-    private final AuroraUserDetailService userDetailService;
-
     private final PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private UserRepo userRepo;
-
-    @Autowired
-    private RoleRepo roleRepo;
-
 
     public UserService(
             AuthenticationContext authenticationContext,
-            AuroraUserDetailService userDetailService,
             PasswordEncoder passwordEncoder) {
         this.authenticationContext = authenticationContext;
-        this.userDetailService = userDetailService;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -188,7 +173,8 @@ public class UserService {
     }
 
     @Transactional
-    public void searchForUser(String username) {
+    public void searchForUser(String username) throws InterruptedException {
+        UI.getCurrent().navigate("/");
         // If user exists, go to his profile
         if (getEmail(username) != null) {
             System.out.println("Searching for: " + username);
@@ -254,7 +240,6 @@ public class UserService {
         query.setParameter("userId", userId);
 
         final var list = (List<String>) query.getResultList();
-        ;
         for (Object l : list) {
             System.out.println(l);
         }

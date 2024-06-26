@@ -65,7 +65,7 @@ public class NavigationBar extends HorizontalLayout {
     private final NotificationService notificationService;
     private final SettingsService settingsService;
     private final LanguagesController languagesController;
-    private boolean dark = true;
+    private boolean dark = false;
 
     private ComboBox<String> searchComboBox;
 
@@ -189,18 +189,21 @@ public class NavigationBar extends HorizontalLayout {
 
 
     private Button getThemeTogglingButton() {
-        Button themeToggleButton = new Button(new Icon(VaadinIcon.MOON));
+        Button themeToggleButton = new Button(VaadinIcon.MOON.create());
+        dark = false;
+        changeTheme();
+
         themeToggleButton.addClickListener(event -> {
             Icon currentIcon = (Icon) themeToggleButton.getIcon();
             char theme = ' ';
             if (currentIcon.getElement().getAttribute("icon").equals(VaadinIcon.MOON.create().getElement().getAttribute("icon"))) {
                 theme = 'l';
                 dark = false;
-                themeToggleButton.setIcon(new Icon(VaadinIcon.SUN_DOWN));
+                themeToggleButton.setIcon(VaadinIcon.SUN_DOWN.create());
             } else {
                 theme = 'd';
                 dark = true;
-                themeToggleButton.setIcon(new Icon(VaadinIcon.MOON));
+                themeToggleButton.setIcon(VaadinIcon.MOON.create());
             }
 
             if (userService.isLoggedIn()) {
@@ -226,7 +229,8 @@ public class NavigationBar extends HorizontalLayout {
     }
 
     private void showSimilarUsername(String similarUsername) {
-        final var n = Notification.show(String.format("Do you mean: %s", similarUsername), 3000, Notification.Position.MIDDLE);
+        String l = languagesController.get("do_you_mean");
+        final var n = Notification.show(String.format("%s: %s", l, similarUsername), 3000, Notification.Position.MIDDLE);
         n.addThemeVariants(NotificationVariant.LUMO_PRIMARY);
     }
 
@@ -235,7 +239,13 @@ public class NavigationBar extends HorizontalLayout {
         searchField.setPlaceholder(languagesController.get("search_for_users"));
         searchField.setAutocomplete(Autocomplete.OFF);
         searchField.setValueChangeMode(ValueChangeMode.EAGER);
-        searchField.addKeyPressListener(Key.ENTER, e -> userService.searchForUser(searchField.getValue()));
+        searchField.addKeyPressListener(Key.ENTER, e -> {
+            try {
+                userService.searchForUser(searchField.getValue());
+            } catch (InterruptedException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
 
         Set<String> shownUsernames = new HashSet<>();
 

@@ -167,7 +167,7 @@ public class RegisterView extends VerticalLayout {
         );
         userRepo.save(newUser);
 
-        Settings settings = new Settings(newUser, true, true, "English", 'd');
+        Settings settings = new Settings(newUser, true, true, true, "English", 'd');
         settingsRepo.save(settings);
         Role standardRole = new Role(newUser.getId(), "user");
         roleRepo.save(standardRole);

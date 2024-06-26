@@ -41,6 +41,9 @@ public class Settings {
     private boolean othersCanSeeWhoIAmFollowing;
 
     @Column
+    private boolean othersCanSeeWhatILiked;
+
+    @Column
     private String language;
 
     @Column
@@ -67,11 +70,13 @@ public class Settings {
     public Settings(AuroraUser user,
                     boolean othersCanSeeMyFollowers,
                     boolean othersCanSeeWhoIAmFollowing,
+                    boolean othersCanSeeWhatILiked,
                     String language,
                     char theme) {
         this.user = user;
         this.othersCanSeeMyFollowers = othersCanSeeMyFollowers;
         this.othersCanSeeWhoIAmFollowing = othersCanSeeWhoIAmFollowing;
+        this.othersCanSeeWhatILiked = othersCanSeeWhatILiked;
         this.language = language;
         this.theme = theme;
     }
@@ -82,6 +87,14 @@ public class Settings {
 
     public void setOthersCanSeeMyFollowers(boolean othersCanSeeMyFollowers) {
         this.othersCanSeeMyFollowers = othersCanSeeMyFollowers;
+    }
+
+    public boolean isOthersCanSeeWhatILiked() {
+        return othersCanSeeWhatILiked;
+    }
+
+    public void setOthersCanSeeWhatILiked(boolean othersCanSeeWhatILiked) {
+        this.othersCanSeeWhatILiked = othersCanSeeWhatILiked;
     }
 
     public boolean getOthersCanSeeWhoIAmFollowing() {

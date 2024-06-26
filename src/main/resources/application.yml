@@ -14,7 +14,7 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        ddl-auto: create
+        ddl-auto: update
     database: postgresql
     generate-ddl: true
   servlet:

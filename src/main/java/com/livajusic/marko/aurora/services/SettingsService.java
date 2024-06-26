@@ -115,4 +115,25 @@ public class SettingsService {
         query.executeUpdate();
         entityManager.flush();
     }
+
+    public boolean canOthersSeeWhatILiked(Long userId) {
+        Query query = entityManager.createQuery("SELECT othersCanSeeWhatILiked " +
+                "FROM Settings " +
+                "WHERE user.userId = :userId");
+        query.setParameter("userId", userId);
+
+        return (boolean)query.getSingleResult();
+    }
+
+    @Transactional
+    public void updateCanOthersSeeWhatILiked(Long userId, boolean yes) {
+        Query query = entityManager.createQuery("UPDATE Settings s " +
+                "SET s.othersCanSeeWhatILiked = :yes " +
+                "WHERE user.userId = :userId");
+        query.setParameter("userId", userId);
+        query.setParameter("yes", yes);
+
+        query.executeUpdate();
+        entityManager.flush();
+    }
 }

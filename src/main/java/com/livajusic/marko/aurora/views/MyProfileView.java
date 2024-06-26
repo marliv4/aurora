@@ -31,7 +31,11 @@ import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.tabs.Tab;
+import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.router.PageTitle;
@@ -58,36 +62,34 @@ public class MyProfileView extends VerticalLayout {
     private PasswordEncoder passwordEncoder;
 
     private final UserRepo userRepo;
-    private final FileService fileService;
-    private final FollowService followService;
-    private final GifRepo gifRepo;
     private final ProfilePictureService profilePictureService;
     private final GIFDisplayService gifDisplayService;
+    private final LikeService likeService;
+    private VerticalLayout gifsLayout;
 
     public MyProfileView(
             UserService userService,
             UserRepo userRepo,
-            FileService fileService,
             FollowService followService,
             GifRepo gifRepo,
             LanguagesController languagesController,
             ProfilePictureService profilePictureService,
             SettingsService settingsService,
             GIFDisplayService gifDisplayService,
-            NotificationService notificationService) {
+            NotificationService notificationService,
+            LikeService likeService) {
         this.userService = userService;
         this.userRepo = userRepo;
-        this.fileService = fileService;
-        this.followService = followService;
-        this.gifRepo = gifRepo;
         this.profilePictureService = profilePictureService;
         this.gifDisplayService = gifDisplayService;
+        this.likeService = likeService;
 
         NavigationBar navbar = new NavigationBar(userService, profilePictureService, languagesController, settingsService, notificationService);
         add(navbar);
 
-        setAlignItems(Alignment.CENTER);
-        setJustifyContentMode(JustifyContentMode.CENTER);
+        setDefaultHorizontalComponentAlignment(Alignment.CENTER);
+        setWidthFull();
+        getStyle().set("margin", "0 auto");
 
         final var username = userService.getCurrentUsername();
         final var userId = userService.getUserIdByUsername(username).get();
@@ -99,8 +101,9 @@ public class MyProfileView extends VerticalLayout {
         header.getStyle().set("font-size", "24px").set("font-weight", "bold");
         add(header);
 
+        Optional<ProfilePicture> pfpOptional;
         if (profilePictureService.userHasPfp(userId)) {
-            final var pfpOptional = profilePictureService.getPfpByUserId(userId);
+            pfpOptional = profilePictureService.getPfpByUserId(userId);
             if (pfpOptional.isPresent()) {
                 final var pfp = pfpOptional.get();
                 StreamResource resource = new StreamResource("Profile Picture",
@@ -112,6 +115,8 @@ public class MyProfileView extends VerticalLayout {
                 profileImage.getStyle().set("border-radius", "50%");
                 add(profileImage);
             }
+        } else {
+            pfpOptional = null;
         }
 
         MemoryBuffer buffer = new MemoryBuffer();
@@ -124,14 +129,48 @@ public class MyProfileView extends VerticalLayout {
         });
         add(upload);
 
-        // List<AuroraGIF> gifs = gifRepo.findAllByUserId(userId);
-        List<Object[]> gifs = userService.findAllByUserIdAndPfp(userId);
+        Tab usersPostsTab = new Tab(languagesController.get("posts"));
+        Tab likedPostsTab = new Tab(languagesController.get("liked"));
+
+        Tabs tabs = new Tabs(usersPostsTab, likedPostsTab);
+        tabs.setSelectedTab(usersPostsTab);
+        tabs.setWidthFull();
+        add(tabs);
+
+        gifsLayout = new VerticalLayout();
+        gifsLayout.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
+        gifsLayout.setWidth("80%");
+        gifsLayout.getStyle().set("align-items", "center");
+        add(gifsLayout);
+
+        tabs.addSelectedChangeListener(event -> {
+            gifsLayout.removeAll();
+            Tab selectedTab = event.getSelectedTab();
+            if (selectedTab.equals(usersPostsTab)) {
+                displayGifs(userId, gifsLayout);
+            } else if (selectedTab.equals(likedPostsTab)) {
+                displayLikedGifs(username, userId, pfpOptional.get().getImageData());
+            }
+        });
+
+        displayGifs(userId, gifsLayout);
+    }
+
+    private void displayLikedGifs(String username, Long userId, byte[] pfpBytes) {
+        final List<AuroraGIF> gifs = likeService.getPostsUserLiked(userId);
+        for (AuroraGIF gif : gifs) {
+            Div gifDiv = gifDisplayService.displaySingleGif(username, gif, pfpBytes);
+            gifsLayout.add(gifDiv);
+        }
+    }
+
+    private void displayGifs(Long userId, VerticalLayout gifsLayout) {
+        final List<Object[]> gifs = userService.findAllByUserIdAndPfp(userId);
         for (Object[] o : gifs) {
-            final var gif = (AuroraGIF)o[0];
-            final byte[] pfp = (byte[])o[1];
-            Div gifDiv = gifDisplayService.displaySingleGif(username, gif, pfp);
-            add(gifDiv);
-            // componentsToDelete.add(gifDiv);
+            final var gif = (AuroraGIF) o[0];
+            final byte[] pfp = (byte[]) o[1];
+            Div gifDiv = gifDisplayService.displaySingleGif(userService.getCurrentUsername(), gif, pfp);
+            gifsLayout.add(gifDiv);
         }
     }
 

@@ -22,6 +22,7 @@ package com.livajusic.marko.aurora.services;
 
 import com.livajusic.marko.aurora.LanguagesController;
 import com.livajusic.marko.aurora.tables.AuroraGIF;
+import com.livajusic.marko.aurora.views.MyProfileView;
 import com.livajusic.marko.aurora.views.dialogs.CommentsDialog;
 import com.livajusic.marko.aurora.views.dialogs.FurtherInformationDialog;
 import com.vaadin.flow.component.UI;
@@ -37,6 +38,7 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.server.StreamResource;
+import jakarta.persistence.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -69,9 +71,9 @@ public class GIFDisplayService {
         List<Div> lout = new ArrayList<>();
 
         for (Object[] o : gifsAndPfps) {
-            final AuroraGIF g = (AuroraGIF)o[0];
+            final AuroraGIF g = (AuroraGIF) o[0];
             final var username = g.getUser().getUsername();
-            final byte[] pfpBytes = (byte[])o[1];
+            final byte[] pfpBytes = (byte[]) o[1];
             Div gifDiv = displaySingleGif(username, g, pfpBytes);
             lout.add(gifDiv);
         }
@@ -179,8 +181,8 @@ public class GIFDisplayService {
             FurtherInformationDialog fd = new FurtherInformationDialog();
             fd.setTitle(languagesController.get("who_likes_this_post"));
             for (Object[] liker : likers) {
-                final String likersUsername = (String)liker[0];
-                final byte[] pfpBytes = (byte[])liker[1];
+                final String likersUsername = (String) liker[0];
+                final byte[] pfpBytes = (byte[]) liker[1];
                 Div likerCard = getLikerCard(likersUsername, pfpBytes, fd);
                 fd.addComponentToDialog(likerCard);
             }
@@ -192,8 +194,7 @@ public class GIFDisplayService {
 
     public Image getImage(byte[] postersPfpBytes) {
         StreamResource img = new StreamResource("image", () -> new ByteArrayInputStream(postersPfpBytes));
-        Image image = new Image(img, "image");
-        return image;
+        return new Image(img, "image");
     }
 
     private VerticalLayout getVerticalLayout(HorizontalLayout userInfoLayout, Image image, Span desc, HorizontalLayout buttonsLayout, Span amountLikes) {
@@ -239,7 +240,12 @@ public class GIFDisplayService {
                 .set("box-shadow", "0 2px 5px rgba(0, 0, 0, 0.1)");
 
         likerCard.addClickListener(l -> {
-            UI.getCurrent().navigate(String.format("/profile/%s", likersUsername));
+            // check if same
+            if (userService.getCurrentUsername().equals(likersUsername)) {
+                UI.getCurrent().navigate(MyProfileView.class);
+            } else {
+                UI.getCurrent().navigate(String.format("/profile/%s", likersUsername));
+            }
             fd.close();
         });
         Span likerNameSpan = new Span(likersUsername);
@@ -261,9 +267,6 @@ public class GIFDisplayService {
             final List<String> categoriesList = gifService.getGifsCategories(gif.getId());
             for (String category : categoriesList) {
                 Span s = new Span(String.format("#%s ", category));
-                s.addClickListener(e -> {
-
-                });
                 s.getStyle().set("padding", "2px 0");
                 contentLayout.add(s);
             }

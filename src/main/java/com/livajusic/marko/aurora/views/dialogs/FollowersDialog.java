@@ -25,6 +25,9 @@ import com.livajusic.marko.aurora.services.FollowService;
 import com.livajusic.marko.aurora.services.GIFDisplayService;
 import com.livajusic.marko.aurora.services.UserService;
 import com.livajusic.marko.aurora.tables.AuroraUser;
+import com.livajusic.marko.aurora.views.MyProfileView;
+import com.livajusic.marko.aurora.views.UserProfileView;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Span;
@@ -74,7 +77,7 @@ public class FollowersDialog extends BaseDialog {
 
         for (Object[] userInfo : entries) {
             AuroraUser user = (AuroraUser) userInfo[0];
-            byte[] imageData = (byte[])userInfo[1];
+            byte[] imageData = (byte[]) userInfo[1];
             HorizontalLayout userCard = createUserCard(user.getUsername(), imageData);
             dialogLayout.add(userCard);
         }
@@ -102,6 +105,14 @@ public class FollowersDialog extends BaseDialog {
         pfp.getStyle().set("border-radius", "50%");
 
         Span usernameSpan = new Span(username);
+        usernameSpan.addClickListener(l -> {
+            if (username.equals(userService.getCurrentUsername())) {
+                UI.getCurrent().navigate(MyProfileView.class);
+                return;
+            }
+            UI.getCurrent().navigate(UserProfileView.class, username);
+            close();
+        });
         usernameSpan.getStyle().set("font-weight", "bold")
                 .set("margin-left", "10px")
                 .set("align-self", "center");
