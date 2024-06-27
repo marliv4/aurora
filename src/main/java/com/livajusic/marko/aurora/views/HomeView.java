@@ -178,7 +178,6 @@ public class HomeView extends VerticalLayout {
         selectCriteria.setValue(languagesController.get("oldest"));
 
         selectCriteria.addValueChangeListener(event -> {
-            String selectedCriteria = event.getValue();
             clearCurrentlyDisplayedGIFs();
             displayBasedOnCriteria();
         });
@@ -195,12 +194,12 @@ public class HomeView extends VerticalLayout {
         List<Object> list = new ArrayList<>();
         if (languagesController.get("top_likes").equals(selectCriteria.getValue())) {
             list = likeService.getMostLikedGIFs();
-        } else if ("Recent".equals(selectCriteria.getValue())) {
+        } else if (languagesController.get("recent").equals(selectCriteria.getValue())) {
             list = likeService.getMostRecentGIFs();
         } else {
             final var displayList = gifService.getAllGifsWithPfp();
             if (displayList != null) {
-                displayGifsFromArray(gifService.getAllGifsWithPfp());
+                displayGifsFromArray(displayList);
                 Filtered.filteredByCriteria = false;
             }
         }

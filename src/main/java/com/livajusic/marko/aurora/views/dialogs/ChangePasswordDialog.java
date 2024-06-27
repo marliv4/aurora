@@ -48,10 +48,6 @@ public class ChangePasswordDialog extends BaseDialog {
         final var layout = createLayout();
         dialog.add(layout);
         dialog.open();
-        /*
-        this.followService = followService;
-        this.userService = userService;
-    */
     }
 
     public VerticalLayout createLayout() {

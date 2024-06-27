@@ -118,7 +118,6 @@ public class LikeService {
                         "ORDER BY COUNT(l) DESC"
         );
         final var list = query.getResultList();
-        ;
         if (list.isEmpty()) return null;
         return list;
     }

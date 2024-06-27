@@ -105,13 +105,11 @@ public class UploadView extends VerticalLayout {
 
         Button submitButton = new Button("Submit");
         submitButton.addClickListener(e -> {
-            /*
-            if (gifService.hasUserUploadedGIFInLastNMinutes(userService.getCurrentUserId(), 10)) {
+            if (gifService.hasUserUploadedGIFInLastNMinutes(userService.getCurrentUserId(), 1)) {
                 final var n = Notification.show("You uploaded a GIF in previous 10 minutes!", 1500, Notification.Position.MIDDLE);
                 n.addThemeVariants(NotificationVariant.LUMO_ERROR);
                 return;
             }
-             */
 
             // Send all users who follow me a notification that I uploaded a GIF!
             // For that:
@@ -122,6 +120,7 @@ public class UploadView extends VerticalLayout {
             for (Object[] entry : usersWhoFollowMe) {
                 AuroraUser uploader = userService.getUserById(userId);
                 AuroraUser intendedUser = (AuroraUser)entry[0];
+
                 final var date = UploadView.AuroraDateManager.getSqlDate(UploadView.AuroraDateManager.getUtilDate());
                 final var dateStr = UploadView.AuroraDateManager.getFormattedDate(date);
                 String msg = String.format("%s has uploaded a new GIF on %s", uploader.getUsername(), dateStr);

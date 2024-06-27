@@ -60,7 +60,7 @@ public class AuroraUser {
         this.email = email;
         this.password = password;
         // Die Biografie soll später in den Einstellungen geändert werden.
-        this.bio = "";
+        this.bio = "I have no biography (yet).";
     }
 
     public Long getId() {
