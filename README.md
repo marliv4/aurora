@@ -12,7 +12,7 @@ Aurora is a social media platform designed for connecting people and sharing exp
 - **Notifications (which are really just messages)**: Inform your followers that you posted something (automatically) or send them a message you desire.
 ## Documentation
 
-You can find detailed documentation in the `/docs` folder. Currently, it's in German and will soon be translated into English for wider accessibility.
+You can find detailed documentation in the `/docs/out` folder. Currently, it's in German and will soon be translated into English for wider accessibility.
 
 ## Build instructions
 To build Aurora from scratch:
@@ -25,8 +25,14 @@ To build Aurora from scratch:
    ```bash
     cd aurora
    ```
-3. Run maven
-
+3. Compile with Maven
+   ```bash
+    mvn compile
+   ```
+4. Run!
+   ```bash
+    mvn spring-boot:run
+   ```
 
 ## Contribution
 Contributions to Aurora are welcome. Feel free to submit pull requests or open issues on GitHub for ideas, bug reports, or improvements.
