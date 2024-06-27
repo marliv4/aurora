@@ -2,12 +2,12 @@ spring:
   application:
     name: aurora
   datasource:
-    # url: jdbc:psotgresql://c9tiftt16dc3eo.cluster-czz5s0kz4scl.eu-west-1.rds.amazonaws.com:5432/ddt2988qgiarh5
-    # username: ucvd51v8l8m1jl
-    # password: pce15b38ef9169b5f60bcae064b70202747cb647db8e757ff3e5ffe4f83c6a5d5
-    url: jdbc:postgresql://localhost:5432/auroradb
-    username: marko
-    password: root
+    url: jdbc:psotgresql://c9tiftt16dc3eo.cluster-czz5s0kz4scl.eu-west-1.rds.amazonaws.com:5432/ddt2988qgiarh5
+    username: ucvd51v8l8m1jl
+    password: pce15b38ef9169b5f60bcae064b70202747cb647db8e757ff3e5ffe4f83c6a5d5
+    # url: jdbc:postgresql://localhost:5432/auroradb
+    # username: marko
+    # password: root
     driver-class-name: org.postgresql.Driver
   jpa:
     show-sql: true
