@@ -129,7 +129,9 @@ public class HomeView extends VerticalLayout {
             } else {
                 clearCurrentlyDisplayedGIFs();
                 // Criteria: false, category: false
-                displayGifsFromArray(gifService.getAllGifsWithPfp());
+                final var gifs = gifService.getAllGifsWithPfp();
+                if (gifs != null && !gifs.isEmpty())
+                    displayGifsFromArray(gifs);
             }
         });
 
@@ -137,11 +139,12 @@ public class HomeView extends VerticalLayout {
         if (userService.isLoggedIn()) {
             System.out.println("displaying gifs from users one is following.");
             final var gifs = followService.getGifsFromFollowingUsers(userService.getCurrentUserId());
-            displayGifsFromArray(gifs);
+            if (gifs != null && !gifs.isEmpty()) displayGifsFromArray(gifs);
         }
 
         if (!Filtered.filteredByCriteria && !Filtered.filteredByCategory) {
-            displayGifsFromArray(gifService.getAllGifsWithPfp());
+            final var gifs = gifService.getAllGifsWithPfp();
+            if (gifs != null && !gifs.isEmpty()) displayGifsFromArray(gifs);
         }
         setAlignItems(Alignment.CENTER);
         setJustifyContentMode(JustifyContentMode.CENTER);
