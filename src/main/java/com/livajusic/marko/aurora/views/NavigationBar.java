@@ -53,10 +53,7 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.theme.lumo.Lumo;
 
 import java.io.ByteArrayInputStream;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @StyleSheet("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap")
 // @CssImport("styles.css")
@@ -110,6 +107,15 @@ public class NavigationBar extends HorizontalLayout {
 
             dark = settingsService.getUsersTheme(userId).equals("Dark");
             changeTheme();
+
+/*
+            LanguagesController.Language preferredLanguage = settingsService.getUsersLanguage(userId);
+            if (!UI.getCurrent().getLocale().getLanguage().equals(new Locale(preferredLanguage.toString()).getLanguage())) {
+                System.out.println("ened switch lang");
+                languagesController.switchLanguage(preferredLanguage);
+                settingsService.updateUsersLanguage(userId, preferredLanguage.toString());
+            }
+            */
         }
         add(profileMenu);
 

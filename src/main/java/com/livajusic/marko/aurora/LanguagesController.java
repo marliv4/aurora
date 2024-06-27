@@ -33,6 +33,7 @@ import org.springframework.web.servlet.i18n.SessionLocaleResolver;
 
 import java.util.Locale;
 import java.util.ResourceBundle;
+
 import org.springframework.context.support.ResourceBundleMessageSource;
 
 @Component
@@ -57,25 +58,23 @@ public class LanguagesController {
         VaadinSession.getCurrent().setLocale(locale);
     }
 
-    public String getCurrentLanguage() {
-        final var locale = VaadinSession.getCurrent().getLocale();
-        String out = "English";
-        if (locale == Locale.GERMAN) {
-            out = "German";
-        }
-        return out;
+    public enum Language {
+        English,
+        German
     }
 
-    public void switchLanguage(String language) {
-        Locale locale;
-        switch (language) {
-            case "German":
-                setLocale(Locale.GERMAN);
-                break;
-            default:
-                setLocale(Locale.ENGLISH);
-                break;
+    public void switchLanguage(Language language) {
+        Locale locale = null;
+        if (language == Language.German) {
+            locale = Locale.GERMAN;
+            setLocale(Locale.GERMAN);
+        } else {
+            locale = Locale.ENGLISH;
+            setLocale(Locale.ENGLISH);
         }
+
+        UI.getCurrent().getLocale();
+        UI.getCurrent().setLocale(locale);
         UI.getCurrent().getPage().reload();
     }
 

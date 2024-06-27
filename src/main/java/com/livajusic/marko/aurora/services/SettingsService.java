@@ -20,6 +20,7 @@
  */
 package com.livajusic.marko.aurora.services;
 
+import com.livajusic.marko.aurora.LanguagesController;
 import com.livajusic.marko.aurora.db_repos.SettingsRepo;
 import com.livajusic.marko.aurora.tables.Settings;
 import jakarta.persistence.EntityManager;
@@ -44,10 +45,13 @@ public class SettingsService {
 
     public SettingsService() {}
 
-    public String getUsersLanguage(Long userId) {
+    public LanguagesController.Language getUsersLanguage(Long userId) {
         Query query = entityManager.createQuery("SELECT language FROM Settings WHERE user.userId = :userId");
         query.setParameter("userId", userId);
-        return (String)query.getSingleResult();
+        String lang =  (String)query.getSingleResult();
+        if (lang.equals("ENGLISH")) return LanguagesController.Language.English;
+
+        else return LanguagesController.Language.German;
     }
 
     @Transactional

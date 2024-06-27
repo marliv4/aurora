@@ -43,6 +43,7 @@ import jakarta.annotation.security.RolesAllowed;
 import org.springframework.beans.factory.annotation.Value;
 import java.io.*;
 import java.sql.Date;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -214,7 +215,12 @@ public class UploadView extends VerticalLayout {
         }
 
         public static java.sql.Date getSqlDate(java.util.Date utilDate) {
-            return new java.sql.Date(utilDate.getTime());
+            if (utilDate == null) {
+                throw new IllegalArgumentException("The utilDate parameter cannot be null");
+            }
+            Instant instant = utilDate.toInstant();
+            LocalDate localDate = instant.atZone(ZoneId.systemDefault()).toLocalDate();
+            return java.sql.Date.valueOf(localDate);
         }
 
         public static String getFormattedDate(Date date) {

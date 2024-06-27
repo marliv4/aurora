@@ -147,14 +147,6 @@ public class HomeView extends VerticalLayout {
         setJustifyContentMode(JustifyContentMode.CENTER);
     }
 
-    private void setLang(SettingsService settingsService) {
-        final var userId = userService.getCurrentUserId();
-        System.out.println("tester" + userId);
-        String lang = settingsService.getUsersLanguage(userId);
-        System.out.println(String.format("%s logged in, settings his language to %s", userId, lang));
-        languagesController.switchLanguage(lang);
-    }
-
     private HorizontalLayout createHorizontalLayout() {
         HorizontalLayout horizontalLayout = new HorizontalLayout();
         horizontalLayout.setWidthFull();

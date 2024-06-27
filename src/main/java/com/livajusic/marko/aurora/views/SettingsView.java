@@ -40,6 +40,7 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import jakarta.annotation.security.RolesAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -139,13 +140,13 @@ public class SettingsView extends VerticalLayout {
         Checkbox seeFollowersCheckbox = new Checkbox(languagesController.get("allow_others_to_see_my_followers"));
         seeFollowersCheckbox.setValue(settingsService.canOthersSeeFollowers(userId));
         seeFollowersCheckbox.addValueChangeListener(event ->
-            settingsService.updateCanOthersSeeFollowers(userId, event.getValue())
+                settingsService.updateCanOthersSeeFollowers(userId, event.getValue())
         );
 
         Checkbox seeFollowingCheckbox = new Checkbox(languagesController.get("allow_others_to_see_who_i_am_following"));
         seeFollowingCheckbox.setValue(settingsService.canOthersSeeFollowing(userId));
         seeFollowingCheckbox.addValueChangeListener(event ->
-            settingsService.updateCanOthersSeeFollowing(userId, event.getValue())
+                settingsService.updateCanOthersSeeFollowing(userId, event.getValue())
         );
 
         Checkbox canOthersSeeWhatILikedSwitch = new Checkbox(languagesController.get("allow_others_to_see_what_i_liked"));
@@ -171,12 +172,15 @@ public class SettingsView extends VerticalLayout {
         languageSelect.setItems("English", "German");
 
         final var userId = userService.getCurrentUserId();
-        languageSelect.setValue(settingsService.getUsersLanguage(userId));
+        final var lang = settingsService.getUsersLanguage(userId);
+        languageSelect.setValue(lang.toString());
 
         languageSelect.addValueChangeListener(l -> {
             String selectedLanguage = l.getValue();
-            languagesController.switchLanguage(selectedLanguage);
-            settingsService.updateUsersLanguage(userId, selectedLanguage);
+            if (!selectedLanguage.equals(lang.toString())) {
+                languagesController.switchLanguage(lang);
+                settingsService.updateUsersLanguage(userId, selectedLanguage);
+            }
         });
         formLayout.addFormItem(languageSelect, languagesController.get("select_language"));
 
