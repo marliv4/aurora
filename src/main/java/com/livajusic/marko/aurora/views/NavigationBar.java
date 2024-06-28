@@ -98,7 +98,6 @@ public class NavigationBar extends HorizontalLayout {
             MenuItem profileMenuItem = profileMenu.addItem(profileImage);
             profileMenuItem.getSubMenu().addItem(languagesController.get("my_profile"), e -> navigateToProfile());
             profileMenuItem.getSubMenu().addItem(languagesController.get("settings"), e -> navigateToSettings());
-            profileMenuItem.getSubMenu().addItem(languagesController.get("create"), e -> navigateToCreate());
             profileMenuItem.getSubMenu().addItem(languagesController.get("logout"), e -> {
                 userService.logout();
                 getUI().get().getPage().reload();
@@ -110,7 +109,6 @@ public class NavigationBar extends HorizontalLayout {
 
             LanguagesController.Language preferredLanguage = settingsService.getUsersLanguage(userId);
             final var currentLang = UI.getCurrent().getLocale().getLanguage();
-            System.out.println(currentLang + " is current");
             String comparableLang = "";
             if (currentLang.equals("en")) {
                 comparableLang = "English";
@@ -119,7 +117,6 @@ public class NavigationBar extends HorizontalLayout {
             }
 
             String l = new Locale(preferredLanguage.toString()).getLanguage();
-            System.out.println("l is "+ l);
             if (!comparableLang.toLowerCase().equals(l)) {
                 languagesController.switchLanguage(preferredLanguage);
                 final var n = Notification.show(languagesController.get("lang_not"));
@@ -287,11 +284,6 @@ public class NavigationBar extends HorizontalLayout {
     private void navigateToSettings() {
         // RouteConfiguration.forSessionScope().setRoute("settings", SettingsView.class);
         UI.getCurrent().navigate("settings");
-    }
-
-    private void navigateToCreate() {
-        // RouteConfiguration.forSessionScope().setRoute("create", SettingsView.class);
-        UI.getCurrent().navigate("create");
     }
 
     private void changeTheme() {
