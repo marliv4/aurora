@@ -211,15 +211,17 @@ public class HomeView extends VerticalLayout {
         Filtered.filteredByCriteria = true;
         List<Object> list = getFiltered();
 
-        if (!list.isEmpty()) {
-            for (Object o : list) {
-                Object[] row = (Object[]) o;
-                final var username = (String) row[1];
-                final var gif = (AuroraGIF) row[2];
-                final byte[] pfpBytes = (byte[]) row[3];
-                Div div = gifDisplayService.displaySingleGif(username, gif, pfpBytes);
-                add(div);
-                displayedGifs.add(div);
+        if (list != null) {
+            if (!list.isEmpty()) {
+                for (Object o : list) {
+                    Object[] row = (Object[]) o;
+                    final var username = (String) row[1];
+                    final var gif = (AuroraGIF) row[2];
+                    final byte[] pfpBytes = (byte[]) row[3];
+                    Div div = gifDisplayService.displaySingleGif(username, gif, pfpBytes);
+                    add(div);
+                    displayedGifs.add(div);
+                }
             }
         }
     }

@@ -108,14 +108,23 @@ public class NavigationBar extends HorizontalLayout {
             dark = settingsService.getUsersTheme(userId).equals("Dark");
             changeTheme();
 
-/*
             LanguagesController.Language preferredLanguage = settingsService.getUsersLanguage(userId);
-            if (!UI.getCurrent().getLocale().getLanguage().equals(new Locale(preferredLanguage.toString()).getLanguage())) {
-                System.out.println("ened switch lang");
-                languagesController.switchLanguage(preferredLanguage);
-                settingsService.updateUsersLanguage(userId, preferredLanguage.toString());
+            final var currentLang = UI.getCurrent().getLocale().getLanguage();
+            System.out.println(currentLang + " is current");
+            String comparableLang = "";
+            if (currentLang.equals("en")) {
+                comparableLang = "English";
+            } else {
+                comparableLang = "German";
             }
-            */
+
+            String l = new Locale(preferredLanguage.toString()).getLanguage();
+            System.out.println("l is "+ l);
+            if (!comparableLang.toLowerCase().equals(l)) {
+                languagesController.switchLanguage(preferredLanguage);
+                final var n = Notification.show(languagesController.get("lang_not"));
+                n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            }
         }
         add(profileMenu);
 

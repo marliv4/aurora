@@ -72,10 +72,11 @@ public class LanguagesController {
             locale = Locale.ENGLISH;
             setLocale(Locale.ENGLISH);
         }
-
+/*
         UI.getCurrent().getLocale();
         UI.getCurrent().setLocale(locale);
         UI.getCurrent().getPage().reload();
+    */
     }
 
 }

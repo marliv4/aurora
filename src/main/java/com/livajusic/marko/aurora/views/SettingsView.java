@@ -174,16 +174,20 @@ public class SettingsView extends VerticalLayout {
         final var userId = userService.getCurrentUserId();
         final var lang = settingsService.getUsersLanguage(userId);
         languageSelect.setValue(lang.toString());
-
         languageSelect.addValueChangeListener(l -> {
             String selectedLanguage = l.getValue();
-            if (!selectedLanguage.equals(lang.toString())) {
-                languagesController.switchLanguage(lang);
-                settingsService.updateUsersLanguage(userId, selectedLanguage);
+            LanguagesController.Language langUser = null;
+            if (selectedLanguage.equals("English")) {
+                langUser = LanguagesController.Language.English;
+            } else {
+                langUser = LanguagesController.Language.German;
             }
+            languagesController.switchLanguage(langUser);
+            settingsService.updateUsersLanguage(userId, selectedLanguage);
+            final var n = Notification.show(languagesController.get("lang_not"));
+            n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
         });
         formLayout.addFormItem(languageSelect, languagesController.get("select_language"));
-
         layout.add(formLayout);
         return layout;
     }

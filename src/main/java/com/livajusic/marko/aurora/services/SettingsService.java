@@ -49,7 +49,7 @@ public class SettingsService {
         Query query = entityManager.createQuery("SELECT language FROM Settings WHERE user.userId = :userId");
         query.setParameter("userId", userId);
         String lang =  (String)query.getSingleResult();
-        if (lang.equals("ENGLISH")) return LanguagesController.Language.English;
+        if (lang.equals("English")) return LanguagesController.Language.English;
 
         else return LanguagesController.Language.German;
     }
