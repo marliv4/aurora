@@ -191,18 +191,26 @@ public class UserProfileView extends Div implements HasUrlParameter<String> {
             if (selectedTab.equals(usersPostsTab)) {
                 displayGifs(targetUserId, gifsLayout);
             } else if (selectedTab.equals(likedPostsTab)) {
-                displayLikedGifs(username, targetUserId, targetUserPfpOptional.get().getImageData(), gifsLayout);
+                // TODO: profile picture of gif poster, not users profile.
+                displayLikedGifs(targetUserId, gifsLayout);
             }
         });
 
         displayGifs(targetUserId, gifsLayout);
     }
 
-    private void displayLikedGifs(String username, Long targetUserId, byte[] pfpBytes, VerticalLayout gifsLayout) {
+    private void displayLikedGifs(Long targetUserId, VerticalLayout gifsLayout) {
+        System.out.println("displayLikedGifs");
         final List<AuroraGIF> gifs = likeService.getPostsUserLiked(targetUserId);
-        for (AuroraGIF gif : gifs) {
-            Div gifDiv = gifDisplayService.displaySingleGif(username, gif, pfpBytes);
-            gifsLayout.add(gifDiv);
+        if (gifs != null && !gifs.isEmpty()) {
+            for (AuroraGIF gif : gifs) {
+                final var user = gif.getUser();
+                final var opUsername = user.getUsername();
+                final var opId = user.getId();
+                final var opPfp = profilePictureService.getPfpByUserId(opId).get().getImageData();
+                Div gifDiv = gifDisplayService.displaySingleGif(opUsername, gif, opPfp);
+                gifsLayout.add(gifDiv);
+            }
         }
     }
 
