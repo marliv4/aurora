@@ -202,20 +202,21 @@ public class NavigationBar extends HorizontalLayout {
 
     private Button getThemeTogglingButton() {
         Button themeToggleButton = new Button(VaadinIcon.MOON.create());
+        themeToggleButton.click();
         dark = false;
         changeTheme();
 
         themeToggleButton.addClickListener(event -> {
             Icon currentIcon = (Icon) themeToggleButton.getIcon();
             char theme = ' ';
-            if (currentIcon.getElement().getAttribute("icon").equals(VaadinIcon.MOON.create().getElement().getAttribute("icon"))) {
+            if (currentIcon.getElement().getAttribute("icon").equals(VaadinIcon.SUN_DOWN.create().getElement().getAttribute("icon"))) {
                 theme = 'l';
                 dark = false;
-                themeToggleButton.setIcon(VaadinIcon.SUN_DOWN.create());
+                themeToggleButton.setIcon(VaadinIcon.MOON.create());
             } else {
                 theme = 'd';
                 dark = true;
-                themeToggleButton.setIcon(VaadinIcon.MOON.create());
+                themeToggleButton.setIcon(VaadinIcon.SUN_DOWN.create());
             }
 
             if (userService.isLoggedIn()) {
