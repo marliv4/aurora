@@ -21,6 +21,8 @@
 package com.livajusic.marko.aurora.services;
 
 import com.livajusic.marko.aurora.db_repos.GifRepo;
+import com.livajusic.marko.aurora.tables.AuroraGIF;
+import com.livajusic.marko.aurora.tables.AuroraUser;
 import com.vaadin.flow.component.UI;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
@@ -95,6 +97,16 @@ public class GIFService {
         }
         Timestamp queryRes = (Timestamp) list.get(0);
         return DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(queryRes.toLocalDateTime());
+    }
+
+    public AuroraGIF getGifById(Long gifId) {
+        Query query = entityManager.createQuery("SELECT ag " +
+                "from AuroraGIF ag " +
+                "WHERE gifId = :gifId"
+        );
+        query.setParameter("gifId", gifId);
+
+        return (AuroraGIF)query.getSingleResult();
     }
 
     public boolean hasUserUploadedGIFInLastNMinutes(Long userId, int nMinutes) {

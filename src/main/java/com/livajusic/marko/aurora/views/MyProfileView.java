@@ -158,10 +158,11 @@ public class MyProfileView extends VerticalLayout {
 
     private void displayLikedGifs(String username, Long userId, byte[] pfpBytes) {
         final List<AuroraGIF> gifs = likeService.getPostsUserLiked(userId);
-        for (AuroraGIF gif : gifs) {
-            Div gifDiv = gifDisplayService.displaySingleGif(username, gif, pfpBytes);
-            gifsLayout.add(gifDiv);
-        }
+        if (gifs != null && !gifs.isEmpty())
+            for (AuroraGIF gif : gifs) {
+                Div gifDiv = gifDisplayService.displaySingleGif(username, gif, pfpBytes);
+                gifsLayout.add(gifDiv);
+            }
     }
 
     private void displayGifs(Long userId, VerticalLayout gifsLayout) {

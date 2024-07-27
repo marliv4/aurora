@@ -148,7 +148,13 @@ public class FollowService {
                         " JOIN Follows f ON au.userId = f.followsUser.userId" +
                         " JOIN ProfilePicture pfp " +
                         " ON ag.user.userId = pfp.user.userId " +
-                        " WHERE f.user.userId = :userId"
+                        " WHERE f.user.userId = :userId " +
+                        " AND ag.gifId NOT IN (" +
+                        "   SELECT v.id.gifId " +
+                        "   FROM ViewedPost v " +
+                        "   WHERE v.id.userId = :userId" +
+                        " ) " +
+                        " ORDER BY ag.publishDate DESC"
         );
         query.setParameter("userId", userId);
 

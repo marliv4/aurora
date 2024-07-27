@@ -25,20 +25,22 @@ import com.livajusic.marko.aurora.db_repos.GifCategoryRepo;
 import com.livajusic.marko.aurora.db_repos.GifRepo;
 import com.livajusic.marko.aurora.services.*;
 import com.livajusic.marko.aurora.tables.AuroraGIF;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.sidenav.SideNav;
-import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.awt.*;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @PageTitle("Main")
@@ -47,11 +49,8 @@ import java.util.stream.Collectors;
 // @CssImport("./styles.css")
 public class HomeView extends VerticalLayout {
 
-    private final GifRepo gifRepo;
-    private final GifCategoryRepo gifCategoryRepo;
     private final LikeService likeService;
     private final GIFDisplayService gifDisplayService;
-    private final FollowService followService;
     private final GIFService gifService;
 
     @Autowired
@@ -78,13 +77,10 @@ public class HomeView extends VerticalLayout {
                     FollowService followService,
                     NotificationService notificationService,
                     GIFService gifService) {
-        this.gifRepo = gifRepo;
-        this.gifCategoryRepo = gifCategoryRepo;
         this.likeService = likeService;
         this.userService = userService;
         this.gifDisplayService = gifDisplayService;
         this.languagesController = languagesController;
-        this.followService = followService;
         this.gifService = gifService;
 
         displayedGifs = new ArrayList<>();
@@ -96,58 +92,46 @@ public class HomeView extends VerticalLayout {
 
         final var horizontalLayout = createHorizontalLayout();
 
+        final var textField = createTextField(horizontalLayout);
+        // horizontalLayout.add(textField);
+
         searchField.setPlaceholder(languagesController.get("filter_by_categories"));
-        searchField.addValueChangeListener(event -> {
-            if (!event.getValue().isEmpty()) {
-                // Check if any criteria is selected.
-                if (Filtered.filteredByCriteria) {
-                    // Criteria: true, category: true
-                    System.out.println("filtered by criteria already.");
-                    // Get GIFS filtered through criteria.
-                    final List<Object> list = getFiltered();
-                    List<Long> gifIds = list.stream()
-                            .map(obj -> ((AuroraGIF) ((Object[]) obj)[2]).getId())
-                            .collect(Collectors.toList());
-
-                    final var latest = gifService.filterGivenGifsByCategory(gifIds, Arrays.asList(searchField.getValue().split(",")));
-                    if (latest != null && !latest.isEmpty()) {
-                        clearCurrentlyDisplayedGIFs();
-                        displayGifsFromArray(latest);
-                        Filtered.filteredByCategory = true;
-                        Filtered.filteredByCriteria = true;
-                    }
-                } else {
-                    // Criteria: false, category: true
-                    final var newGifs = gifService.filterGifsByCategory(event.getValue());
-                    if (newGifs != null) {
-                        clearCurrentlyDisplayedGIFs();
-                        displayGifsFromArray(newGifs);
-                        Filtered.filteredByCategory = true;
-                        Filtered.filteredByCriteria = false;
-                    }
-                }
-            } else {
-                clearCurrentlyDisplayedGIFs();
-                // Criteria: false, category: false
-                final var gifs = gifService.getAllGifsWithPfp();
-                if (gifs != null && !gifs.isEmpty())
-                    displayGifsFromArray(gifs);
-            }
-        });
-
         // Display GIFS of following users.
         if (userService.isLoggedIn()) {
             System.out.println("displaying gifs from users one is following.");
-            final var gifs = followService.getGifsFromFollowingUsers(userService.getCurrentUserId());
+            /**
+             * 1. Get GIFs from users I am following which are not in Views table.
+             */
+            final var current = userService.getCurrentUserId();
+            System.out.println("Current User Id: " + current);
+            final var gifs = followService.getGifsFromFollowingUsers(current);
             if (gifs != null && !gifs.isEmpty()) displayGifsFromArray(gifs);
         }
 
-        if (!Filtered.filteredByCriteria && !Filtered.filteredByCategory) {
-            final var gifs = gifService.getAllGifsWithPfp();
-            if (gifs != null && !gifs.isEmpty()) displayGifsFromArray(gifs);
-        }
         setAlignItems(Alignment.CENTER);
         setJustifyContentMode(JustifyContentMode.CENTER);
+    }
+
+    private TextField createTextField(HorizontalLayout hz) {
+        TextField out = new TextField();
+        out.setPlaceholder("What's on your mind today?");
+
+        com.vaadin.flow.component.button.Button submitButton = new com.vaadin.flow.component.button.Button(languagesController.get("submit"));
+        submitButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        submitButton.addClickListener(event -> {
+            if (userService.isLoggedIn()) {
+                final var txt = out.getValue();
+                System.out.println(txt);
+            } else {
+                final var n = Notification.show(languagesController.get("like"), 1000, Notification.Position.MIDDLE);
+                n.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
+        });
+
+        hz.add(out, submitButton);
+
+        return out;
     }
 
     private HorizontalLayout createHorizontalLayout() {
@@ -159,6 +143,7 @@ public class HomeView extends VerticalLayout {
         createFilterCriteria();
         searchField = new TextField();
         horizontalLayout.add(selectCriteria, searchField);
+
         add(horizontalLayout);
 
         return horizontalLayout;
@@ -174,8 +159,11 @@ public class HomeView extends VerticalLayout {
 
     private void createFilterCriteria() {
         selectCriteria = new ComboBox<>(languagesController.get("select_criteria"));
-        selectCriteria.setItems(languagesController.get("top_likes"), languagesController.get("recent"), languagesController.get("oldest"));
-        selectCriteria.setValue(languagesController.get("oldest"));
+        selectCriteria.setItems(languagesController.get("top_likes"), languagesController.get("recent"));
+        add(selectCriteria);
+        selectCriteria.setValue(languagesController.get("recent"));
+        clearCurrentlyDisplayedGIFs();
+        displayBasedOnCriteria();
 
         selectCriteria.addValueChangeListener(event -> {
             clearCurrentlyDisplayedGIFs();

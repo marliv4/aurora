@@ -21,10 +21,7 @@
 package com.livajusic.marko.aurora.views;
 
 import com.livajusic.marko.aurora.LanguagesController;
-import com.livajusic.marko.aurora.services.NotificationService;
-import com.livajusic.marko.aurora.services.ProfilePictureService;
-import com.livajusic.marko.aurora.services.SettingsService;
-import com.livajusic.marko.aurora.services.UserService;
+import com.livajusic.marko.aurora.services.*;
 import com.livajusic.marko.aurora.tables.NotificationModel;
 import com.livajusic.marko.aurora.tables.ProfilePicture;
 import com.livajusic.marko.aurora.views.dialogs.NotificationsDialog;
@@ -63,8 +60,8 @@ public class NavigationBar extends HorizontalLayout {
     private final SettingsService settingsService;
     private final LanguagesController languagesController;
     private boolean dark = false;
-
     private ComboBox<String> searchComboBox;
+
 
     public NavigationBar(UserService userService,
                          ProfilePictureService profilePictureService,
@@ -267,12 +264,14 @@ public class NavigationBar extends HorizontalLayout {
             if (val != null && !val.isEmpty()) {
                 // don't show same usernames multiple times
                 List<String> similarUsernames = userService.getSimilarUsernames(val);
+                if (similarUsernames != null && !similarUsernames.isEmpty()) {
                 List<String> newNamesToShow = similarUsernames.stream()
                         .filter(username -> !shownUsernames.contains(username))
-                        .toList();
+                            .toList();
 
-                newNamesToShow.forEach(this::showSimilarUsername);
-                shownUsernames.addAll(newNamesToShow);
+                    newNamesToShow.forEach(this::showSimilarUsername);
+                    shownUsernames.addAll(newNamesToShow);
+                }
             }
         });
         return searchField;

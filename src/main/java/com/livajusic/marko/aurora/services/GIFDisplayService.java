@@ -22,6 +22,7 @@ package com.livajusic.marko.aurora.services;
 
 import com.livajusic.marko.aurora.LanguagesController;
 import com.livajusic.marko.aurora.tables.AuroraGIF;
+import com.livajusic.marko.aurora.tables.AuroraUser;
 import com.livajusic.marko.aurora.views.MyProfileView;
 import com.livajusic.marko.aurora.views.dialogs.CommentsDialog;
 import com.livajusic.marko.aurora.views.dialogs.FurtherInformationDialog;
@@ -38,7 +39,6 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.server.StreamResource;
-import jakarta.persistence.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -53,18 +53,21 @@ public class GIFDisplayService {
     private final CommentService commentService;
     private final LanguagesController languagesController;
     private final GIFService gifService;
+    private final ViewedPostService viewedPostService;
 
     @Autowired
     public GIFDisplayService(LikeService likeService,
                              UserService userService,
                              CommentService commentService,
                              LanguagesController languagesController,
-                             GIFService gifService) {
+                             GIFService gifService,
+                             ViewedPostService viewedPostService) {
         this.likeService = likeService;
         this.userService = userService;
         this.commentService = commentService;
         this.languagesController = languagesController;
         this.gifService = gifService;
+        this.viewedPostService = viewedPostService;
     }
 
     public List<Div> createDivFromGifArray(List<Object[]> gifsAndPfps) {
@@ -161,7 +164,11 @@ public class GIFDisplayService {
                     n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                 } else {
                     likeService.likeGif(currentUserId, gifId);
+                    AuroraUser current = userService.getUserById(currentUserId);
+                    AuroraGIF gif = gifService.getGifById(gifId);
                     likeUnlikeButton.setText(languagesController.get("unlike"));
+                    viewedPostService.add(currentUserId, gifId);
+
                     final var n = Notification.show("Liked!", 1500, Notification.Position.BOTTOM_CENTER);
                     n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                 }
